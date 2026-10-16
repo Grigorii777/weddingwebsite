@@ -32,6 +32,19 @@ All notable changes to this project are documented here, newest at the top.
 ### Fixed
 - **The dependency audit is clean.** `next` moves to 16.3.8 (clearing the image-optimizer, cache-poisoning, and SSRF advisories), `sharp` to 0.35.5 (clearing the libheif and librsvg advisories), `source-map-js` to 1.2.2 (clearing the event-loop DoS), and `nodemailer` to 10.1.0 (clearing the recipient-parsing and DNS-cache advisories). Everything stayed in range except the `nodemailer` 9-to-10 major: the site's mail code uses only `createTransport` and `sendMail`, which 10 keeps. The lint-only dev chain (braces via `eslint-config-next`) is left as-is — its fix needs a breaking bump, and the standalone runtime image does not carry dev dependencies.
 
+## v0.10.7 — [Unreleased] RSVP by link (`feat/rsvp-magic-link`, 2026-10-14 03:14)
+
+### Added
+- **RSVPs go by email link.** The guest types their name — anyone in the party can use their own — and the site mails them a link to the address it already holds for their household. The link opens the RSVP form with the household filled in, and submitting sends the link's token along with the answers. A name that is not on the list gets the same answer as one that is, so the page cannot be used to read who is invited.
+- **The link carries a signed token, good for 60 minutes, and nothing else** — no names, no email addresses, no details. It is signed with the same key as the admin session, so there is no new variable to set, and with no key set no links are issued. `SITE_URL` (optional) decides where the link points; the request's own host otherwise.
+- **Sending the link is an online act, and the offline worker knows it.** The link request is on the worker's never-queued list next to the other writes that need the server, so it cannot sit in the outbox and mail on some later morning.
+
+### Security
+- **The name lookup no longer carries the household's details.** The guest verification answered the household's email, phone, party size, party members and existing RSVP to anyone who could read an invitation — the details now travel behind the link, exchanged for the token by the new link-verify route, which re-reads the household from the database (a link dies with an un-invited or deleted household, without saying so). The name lookup's job is now "that name is on the list, and it is this seat of the party."
+- **The write is gated on the link.** An RSVP for a household on the guest list is refused without a valid link minted for that exact household, checked before anything is written — a link for one household cannot open another's RSVP, and an update resolves its household through the existing RSVP row's name, so an id cannot be aimed at a household its row does not belong to. A name the admin never listed is unchanged: it writes nothing and needs no link (the demo instance lives entirely in it).
+- **The link's endpoints carry the rate limits of the other public writes.** A request for a link is five per ten minutes per IP (a verify, twenty), so a script cannot mail the same household in a loop.
+- **The gate now checks the household it actually writes to, not just the one named in the request body.** On an update, the gate resolved the household from the existing RSVP's own id and checked the link against that — but the write itself resolved its target independently, from the household name sent alongside it. The two could disagree: a guest's own valid link (for their own existing RSVP's id) could carry a different household's name, and the write would land on that other household instead of the one the gate had just checked, overwriting its contact details, answer and message. The gate now also confirms that name resolves to the same household before anything is written.
+
 ## v0.10.6 — [Unreleased] SMTP email surface (`feat/smtp-compatibility`, 2026-10-14 01:07)
 
 ### Added

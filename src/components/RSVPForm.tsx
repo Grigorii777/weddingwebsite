@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DEFAULT_ROOM_BLOCK_MESSAGE } from '@/lib/roomBlock';
 
 interface PartyMember {
@@ -137,6 +137,16 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
     const [existingRsvp, setExistingRsvp] = useState<ExistingRsvp | null>(null);
     const [guestNameInput, setGuestNameInput] = useState('');
     const [verificationError, setVerificationError] = useState('');
+    // Where the name path has got to: 'offer' is the confirmed name waiting
+    // for its link, 'sent' is the "on its way" message. Cleared by
+    // "Use a different name".
+    const [linkStage, setLinkStage] = useState<'idle' | 'offer' | 'sent'>('idle');
+    const [linkSentMessage, setLinkSentMessage] = useState('');
+    const [sendingLink, setSendingLink] = useState(false);
+    // The token from the link that opened this page (if any). Read once from
+    // the URL, stripped out of it, and carried here — it is what the write
+    // gate on /api/rsvp checks before anything is saved.
+    const [rsvpToken, setRsvpToken] = useState<string | null>(null);
     const [verifying, setVerifying] = useState(false);
     const [config, setConfig] = useState<RsvpPageConfig | null>(null);
 
@@ -161,6 +171,73 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
             .catch(err => console.error('Error fetching config:', err));
     }, []);
 
+    // What a verified door into the form fills: the household's details, the
+    // party cards and the pre-filled contact fields. (The name path no longer
+    // opens the form — its details ride in the link — so only the link uses
+    // this, but it fills exactly the way the old verified response did.)
+    const hydrateVerified = useCallback((data: {
+        guest: { name: string; party_size: number; email?: string | null; phone?: string | null; party_members?: PartyMember[] };
+        matched: { name: string; isPrimary: boolean } | null;
+        existingRsvp: ExistingRsvp | null;
+    }) => {
+        setVerifiedGuest(data.guest);
+        setMatched(data.matched || null);
+        setExistingRsvp(data.existingRsvp);
+
+        const existingDietary = Array.isArray(data.existingRsvp?.dietaryRestrictions)
+            ? data.existingRsvp.dietaryRestrictions
+            : [];
+
+        setCards(buildCards(data.guest.name, data.guest.party_members || [], existingDietary, !!data.existingRsvp));
+
+        setFormData({
+            guestName: data.guest.name,
+            email: data.existingRsvp?.email || data.guest.email || '',
+            phone: data.existingRsvp?.phone || data.guest.phone || '',
+            attending: data.existingRsvp ? (data.existingRsvp.attending ? 'yes' : 'no') : 'yes',
+            message: data.existingRsvp?.message || '',
+        });
+
+        setStep('form');
+    }, []);
+
+    // The link flow: the page can open with `?token=` from the mail we send.
+    // The token is stripped from the URL the moment it is read — a shared
+    // link must not keep carrying it, and a refresh must not re-spend it —
+    // then exchanged for the household's details. A dead token leaves a
+    // one-line note on this step; the name form below still works and sends
+    // a fresh one.
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
+        if (!token) return;
+
+        params.delete('token');
+        const nextSearch = params.toString();
+        window.history.replaceState(window.history.state, '',
+            `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}`);
+
+        fetch('/api/rsvp/magic-link/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token }),
+        })
+            .then(res => res.json().catch(() => ({})))
+            .then(data => {
+                if (data.verified) {
+                    setRsvpToken(token);
+                    hydrateVerified(data);
+                } else {
+                    setVerificationError('That link is not valid or has expired — enter your name below and we\'ll send a fresh one.');
+                }
+            })
+            .catch(err => {
+                console.error('RSVP link error:', err);
+                setVerificationError('That link is not valid or has expired — enter your name below and we\'ll send a fresh one.');
+            });
+        // Once on mount: the token is a one-time read from the URL.
+    }, [hydrateVerified]);
+
     const handleVerification = async (e: React.FormEvent) => {
         e.preventDefault();
         setVerifying(true);
@@ -176,25 +253,12 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
             const data = await response.json();
 
             if (data.verified) {
-                setVerifiedGuest(data.guest);
+                // The name is on the list — but the details no longer ride out
+                // of this response (it carries only the matched seat). They
+                // come from the link in the guest's own inbox, so the next
+                // step is to offer sending it, not to open the form.
                 setMatched(data.matched || null);
-                setExistingRsvp(data.existingRsvp);
-
-                const existingDietary = Array.isArray(data.existingRsvp?.dietaryRestrictions)
-                    ? data.existingRsvp.dietaryRestrictions
-                    : [];
-
-                setCards(buildCards(data.guest.name, data.guest.party_members || [], existingDietary, !!data.existingRsvp));
-
-                setFormData({
-                    guestName: data.guest.name,
-                    email: data.existingRsvp?.email || data.guest.email || '',
-                    phone: data.existingRsvp?.phone || data.guest.phone || '',
-                    attending: data.existingRsvp ? (data.existingRsvp.attending ? 'yes' : 'no') : 'yes',
-                    message: data.existingRsvp?.message || '',
-                });
-
-                setStep('form');
+                setLinkStage('offer');
             } else {
                 setVerificationError(data.message || 'Guest not found on the list.');
             }
@@ -204,6 +268,43 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
         } finally {
             setVerifying(false);
         }
+    };
+
+    // Ask for the link for the confirmed name. The server answers the same
+    // way for a found name, an unconfigured mail and a missing name, so the
+    // message is shown verbatim and nothing here can tell what happened.
+    const requestLink = async () => {
+        setSendingLink(true);
+        setVerificationError('');
+        try {
+            const response = await fetch('/api/rsvp/magic-link', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: guestNameInput }),
+            });
+
+            const data = await response.json().catch(() => ({}));
+
+            if (response.ok && data.ok) {
+                setLinkSentMessage(data.message || 'If that name is on our list, an RSVP link is on its way to the email we have for it.');
+                setLinkStage('sent');
+            } else {
+                setVerificationError(data.error || 'Something went wrong sending the link. Please try again.');
+            }
+        } catch (error) {
+            console.error('Link request error:', error);
+            setVerificationError('Something went wrong sending the link. Please try again.');
+        } finally {
+            setSendingLink(false);
+        }
+    };
+
+    // Back to the name input — clears whatever the name path has got to.
+    const resetNameStep = () => {
+        setGuestNameInput('');
+        setVerificationError('');
+        setLinkSentMessage('');
+        setLinkStage('idle');
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -276,6 +377,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                 body: JSON.stringify({
                     ...formData,
                     ...(isUpdate ? { id: existingRsvp.id } : {}),
+                    ...(rsvpToken ? { token: rsvpToken } : {}),
                     attending: formData.attending === 'yes',
                     guestCount,
                     dietaryRestrictions,
@@ -418,6 +520,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                     </p>
                 </div>
 
+                {linkStage === 'idle' && (
                 <form onSubmit={handleVerification} className="space-y-6">
                     <div>
                         <label htmlFor="guestNameInput" className="block text-sm font-medium text-gray-700 ml-1 mb-2">
@@ -451,6 +554,62 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                         {verifying ? 'Verifying...' : 'Continue'}
                     </button>
                 </form>
+                )}
+
+                {linkStage === 'offer' && (
+                    <div className="space-y-6">
+                        {verificationError && (
+                            <div className="rounded-2xl bg-red-50 p-4 flex gap-3">
+                                <svg className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                </svg>
+                                <p className="text-sm font-medium text-red-800">{verificationError}</p>
+                            </div>
+                        )}
+                        <div className="rounded-2xl bg-accent/5 border border-accent/20 p-5 text-center">
+                            <p className="text-sm font-medium text-gray-800">
+                                We found {matched?.name ? <span className="font-semibold">{matched.name}</span> : 'your name'} on the list.
+                            </p>
+                            <p className="text-sm text-gray-600 mt-2">
+                                Your details come from the email we send you, so we&apos;ll mail you a link
+                                that opens your RSVP — no need to type them in here.
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={requestLink}
+                            disabled={sendingLink}
+                            className="w-full flex justify-center py-3 px-6 border border-transparent rounded-full shadow-md text-base font-medium text-white bg-accent hover:bg-accent-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 transition-all transform hover:-translate-y-0.5"
+                        >
+                            {sendingLink ? 'Sending your link...' : 'Send me my RSVP link'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={resetNameStep}
+                            className="w-full flex justify-center py-3 px-6 border border-gray-300 rounded-full text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all"
+                        >
+                            Use a different name
+                        </button>
+                    </div>
+                )}
+
+                {linkStage === 'sent' && (
+                    <div className="space-y-6">
+                        <div className="rounded-2xl bg-green-50 border border-green-200 p-5 text-center">
+                            <p className="text-sm font-medium text-green-800">{linkSentMessage}</p>
+                            <p className="text-xs text-gray-500 mt-2">
+                                Keep an eye on your inbox — the link opens your RSVP form and is good for an hour.
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={resetNameStep}
+                            className="w-full flex justify-center py-3 px-6 border border-gray-300 rounded-full text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all"
+                        >
+                            Use a different name
+                        </button>
+                    </div>
+                )}
             </div>
         );
     }

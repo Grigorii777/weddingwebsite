@@ -12,6 +12,9 @@ import { getSiteConfig } from '@/lib/config';
  * Anything this module sends goes to an address the server holds, never one a
  * caller typed: there is no destination parameter anywhere in the mail paths,
  * so none of them can be pointed at an arbitrary address.
+ * The one function that takes an address is `sendRsvpLinkMail`, and its `to` is
+ * the household's own email, read out of the guest list by the single caller
+ * that has it — still an address the server holds, never one a guest typed.
  */
 
 /** The host the mail goes out through, or null when there is none. The password is never surfaced. */
@@ -71,6 +74,33 @@ export async function sendTestMail(): Promise<{ ok: boolean; error?: string }> {
             to,
             subject: 'Wedding website — email test',
             text: `This is a test mail from the wedding website's admin panel.\n\nIf you are reading this, the SMTP settings on this instance are working.\n\n— ${couple}`,
+        });
+        return { ok: true };
+    } catch (error) {
+        return { ok: false, error: error instanceof Error ? error.message : String(error) };
+    }
+}
+
+/**
+ * The link mail a guest gets when their name is on the list.
+ *
+ * The destination is a parameter, but the rule above is not broken: its only
+ * caller passes the address the server already holds for that household
+ * (`guest_list.email`, read out of the database), so a guest's typed input
+ * can never steer the mail anywhere. The body is plain text on purpose — the
+ * link is the payload, and an HTML version would only give it a place to be
+ * mistyped.
+ */
+export async function sendRsvpLinkMail(to: string, linkUrl: string): Promise<{ ok: boolean; error?: string }> {
+    if (!isMailConfigured()) return { ok: false, error: 'Email is not configured.' };
+    try {
+        const couple = getCoupleName();
+        const transporter = createTransporter();
+        await transporter.sendMail({
+            from: `"${couple.replace(/"/g, '')}" <${process.env.SMTP_USER}>`,
+            to,
+            subject: 'Your RSVP link',
+            text: `Click the link below to RSVP for your party.\n\n${linkUrl}\n\n— ${couple}`,
         });
         return { ok: true };
     } catch (error) {

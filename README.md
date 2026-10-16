@@ -96,6 +96,7 @@ optional and each feature says so in the UI when its variable is missing:
 | `FLIGHT_API_KEY` | *Fill in from schedule* on a travel leg — a RapidAPI key subscribed to AeroDataBox |
 | `GEOCODER_USER_AGENT` | Identifies you to OpenStreetMap's geocoder, which refuses anonymous-looking callers. Worth setting |
 | `NOMINATIM_URL` / `OSRM_URL` | Your own geocoder / routing server instead of the public ones |
+| `SITE_URL` | The URL the RSVP links point at (the request's own host if it is not set) |
 
 - **[Installation](https://github.com/Soccerbeats/weddingwebsite/wiki/Installation)** — Portainer, plain Compose, or local
 - **[Deployment](https://github.com/Soccerbeats/weddingwebsite/wiki/Deployment)** — what a merge publishes, and how it reaches a running server on its own
@@ -137,6 +138,30 @@ stack but missing from the compose file never reaches the container, and one
 listed but unset arrives as an empty string, which is exactly the
 "unconfigured" state. To see what the container actually has, run
 `docker exec <web container> printenv SMTP_HOST`.
+
+## RSVP links
+
+RSVPs go by email link: a guest types their name — anyone in the party can
+use their own — and the site mails them a link to the address it already
+holds for their household. The link opens the RSVP form with the household
+already filled in, and submitting sends the link's token along with the
+answers.
+
+- **The link carries a signed token, good for 60 minutes, and nothing
+  else.** No names, no email addresses, no details. It is signed with the
+  same key as the admin session (`JWT_SECRET`, falling back to
+  `ADMIN_PASSWORD`), so there is nothing extra to set — and with neither
+  set, no links are issued at all.
+- **`SITE_URL`** is optional. When it is set, the link points at it (a
+  trailing slash is stripped); otherwise the link is built from the
+  request's own host, which is also where the protocol comes from (`X-
+  Forwarded-Proto` behind a proxy, `http` otherwise).
+- **The gate.** A household on the guest list can only be RSVP'd through a
+  valid link minted for it — the write is refused without one, and the name
+  lookup answers only "that name is on the list, and it is this seat of the
+  party" rather than the household's contact details. A name the guest list
+  does not know behaves exactly as before: nothing is written, no link is
+  needed.
 
 ## Screenshots
 

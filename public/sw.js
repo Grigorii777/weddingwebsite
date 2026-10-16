@@ -57,10 +57,13 @@ const STALE_AFTER_MS = 12 * 60 * 60 * 1000;
 const OFFLINE_WRITE_MESSAGE = "You're offline — this wasn't saved. Try again when you're back online.";
 
 /**
- * Admin writes that are never kept for later: lookups against other services
- * (they only make sense with a connection), uploads, and the few actions whose
- * answer the page needs from the server itself — a share link's token, a
- * restored archive. Offline these fail with the message above, as before.
+ * Writes that are never kept for later: lookups against other services (they
+ * only make sense with a connection), uploads, the few actions whose answer
+ * the page needs from the server itself — a share link's token, a restored
+ * archive — and the guest's RSVP link request, which sends mail (an online
+ * act; it is not an admin write, so it was never queueable, and the entry
+ * keeps the decision next to the others). Offline these fail with the
+ * message above, as before.
  */
 const NOT_QUEUED = [
     '/api/admin/honeymoon/weather',
@@ -77,6 +80,7 @@ const NOT_QUEUED = [
     '/api/admin/registry-items/import',
     '/api/admin/seating/export',
     '/api/admin/settings/test-email',
+    '/api/rsvp/magic-link',
 ];
 
 /** The site config, which the worker can show with queued edits merged in. */

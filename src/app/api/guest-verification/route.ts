@@ -1,6 +1,19 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 
+/**
+ * Is that name on the guest list, and which seat did they type?
+ *
+ * That is the whole answer now: the matched seat's stored name and whether
+ * it is the primary guest. The household's email, phone, party size, party
+ * members and existing RSVP used to ride out of this endpoint too, so anyone
+ * who could read an invitation could read the household's contact details —
+ * and the write path sat on the same name, so seeing the details and editing
+ * the RSVP were one guess apart. Those details now travel behind the email
+ * link (the form exchanges it at `/api/rsvp/magic-link/verify`), and this
+ * endpoint's job is to say "yes, that name is here, and it is this seat of
+ * the party" — nothing more.
+ */
 export async function POST(request: Request) {
   try {
     const { guest_name } = await request.json();
@@ -41,7 +54,7 @@ export async function POST(request: Request) {
     if (guestResult.rows.length > 0) {
       const guest = guestResult.rows[0];
 
-      // Who actually logged in, using the stored spelling rather than what they typed.
+      // Who actually typed in, using the stored spelling rather than what they typed.
       const isPrimary = (guest.guest_name || '').trim().toLowerCase() === normalized;
       const members = Array.isArray(guest.party_members) ? guest.party_members : [];
       const matchedMember = members.find(
@@ -54,40 +67,11 @@ export async function POST(request: Request) {
         ? guest.guest_name
         : (matchedMember?.name || matchedPlusOne || typedName);
 
-      // The RSVP is always filed under the primary guest, so look it up by that name
-      // (not the name that was typed) or a plus-one would never find the existing RSVP.
-      const rsvpResult = await pool.query(
-        'SELECT * FROM rsvps WHERE LOWER(guest_name) = LOWER($1) ORDER BY created_at DESC LIMIT 1',
-        [(guest.guest_name || '').trim()]
-      );
-
-      let existingRsvp = null;
-      if (rsvpResult.rows.length > 0) {
-        const rsvp = rsvpResult.rows[0];
-        existingRsvp = {
-          id: rsvp.id,
-          attending: rsvp.attending,
-          guestCount: rsvp.number_of_guests,
-          email: rsvp.email,
-          phone: rsvp.phone,
-          dietaryRestrictions: rsvp.dietary_restrictions,
-          message: rsvp.message,
-        };
-      }
-
+      // Only the seat: the household's details now travel behind the email
+      // link, so a name alone cannot read a household it is not meant to see.
       return NextResponse.json({
         verified: true,
-        guest: {
-          name: guest.guest_name,
-          party_size: guest.party_size,
-          email: guest.email,
-          phone: guest.phone,
-          party_members: guest.party_members || [],
-        },
-        // Lets the form greet whoever actually signed in, so a plus-one isn't
-        // confused by seeing the primary guest's name.
         matched: { name: matchedName, isPrimary },
-        existingRsvp,
       });
     }
 
