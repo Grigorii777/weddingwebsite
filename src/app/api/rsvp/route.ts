@@ -1,27 +1,6 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
-import nodemailer from 'nodemailer';
-import { getSiteConfig } from '@/lib/config';
-
-/**
- * Escape a value before it goes into an HTML email body.
- *
- * The confirmation email interpolated the guest's own typed name straight into
- * markup. The form sends that email to whatever address was entered, so anyone
- * could have used the RSVP form to deliver a wedding-branded email carrying
- * markup of their choosing to a third party. The name is the only free-text
- * field that reaches the HTML version — the notification to the couple is plain
- * text — but the fix belongs at the boundary, not in a note about which fields
- * happen to be safe today.
- */
-function escapeHtml(value: string): string {
-    return value
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
+import { createTransporter, escapeHtml, getCoupleName, isMailConfigured } from '@/lib/mail';
 
 interface RsvpInput {
     guestName: string;
@@ -157,20 +136,10 @@ async function saveRsvp(input: RsvpInput): Promise<{ id: number; isUpdate: boole
 }
 
 async function sendEmails(input: RsvpInput) {
-    if (!process.env.SMTP_HOST || !process.env.SMTP_USER) return;
-    const config = getSiteConfig();
-    const couple = config.brideName && config.groomName
-        ? `${config.brideName} & ${config.groomName}`
-        : 'The Couple';
-    const port = parseInt(process.env.SMTP_PORT || '587', 10);
+    if (!isMailConfigured()) return;
+    const couple = getCoupleName();
     try {
-        const transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port,
-            // Implicit TLS on 465; STARTTLS is negotiated on 587/25.
-            secure: port === 465,
-            auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-        });
+        const transporter = createTransporter();
 
         const status = input.attending ? 'Attending' : 'Not Attending';
         await transporter.sendMail({

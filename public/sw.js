@@ -76,6 +76,7 @@ const NOT_QUEUED = [
     '/api/admin/fetch-meta',
     '/api/admin/registry-items/import',
     '/api/admin/seating/export',
+    '/api/admin/settings/test-email',
 ];
 
 /** The site config, which the worker can show with queued edits merged in. */

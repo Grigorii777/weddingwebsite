@@ -50,6 +50,15 @@ services:
       # to *asking for a password* rather than standing wide open.
       - ADMIN_PASSWORD=demo
       - NODE_ENV=production
+      # Optional — RSVP email notifications. Written ${VAR:-} like the prod
+      # stack, so an unset one arrives as an empty string and the site reports
+      # mail as unconfigured, rather than a compose warning at boot. The
+      # seeder never sets them.
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - NOTIFICATION_EMAIL=${NOTIFICATION_EMAIL:-}
     volumes:
       - demo_photos:/app/public/photos
       - demo_config:/app/public/config

@@ -101,6 +101,43 @@ optional and each feature says so in the UI when its variable is missing:
 - **[Deployment](https://github.com/Soccerbeats/weddingwebsite/wiki/Deployment)** — what a merge publishes, and how it reaches a running server on its own
 - **[The demo instance](https://github.com/Soccerbeats/weddingwebsite/wiki/The-Demo-Instance)** — how the read-only copy at [weddingwebsitedemo.com](https://weddingwebsitedemo.com) is put together, and how to host your own
 
+## Email (SMTP)
+
+RSVPs can trigger two emails, and the admin can check that they would work:
+
+1. **The guest gets a confirmation** — "We received your RSVP!", signed with the
+   names from your settings, the moment they answer.
+2. **You get a notification** — their name, their answer, the headcount, their
+   contact details and any message they left.
+3. **You can test it first.** *Admin → Settings → Email (SMTP)* shows whether
+   the mail is configured (and which host it would use) and whether a test
+   recipient is set, and **Send test email** mails the notification address —
+   so you find out about a bad password before your first RSVP, not after.
+
+Nothing is sent until the variables are set: an unset mail is a supported
+state, the RSVPs simply do not email, and the admin's Settings page says so.
+
+| Variable | What it is |
+|---|---|
+| `SMTP_HOST` | Your SMTP server's address |
+| `SMTP_PORT` | `587` (STARTTLS) or `465` (implicit TLS) |
+| `SMTP_USER` | The account that sends — the mail's from address |
+| `SMTP_PASS` | Its password — an app password, not your login password |
+| `NOTIFICATION_EMAIL` | Where the "new RSVP" mail goes, and where the test mail goes |
+
+**A working example (Brevo).** A free Brevo account: `SMTP_HOST` is
+`smtp-relay.brevo.com`, `SMTP_PORT` is `587`, `SMTP_USER` is the Brevo SMTP
+user it assigns you, and `SMTP_PASS` is the SMTP password you generate in
+Brevo's *SMTP, API and Webhooks* settings (it is not your account password).
+Set `NOTIFICATION_EMAIL` to an address you have verified in Brevo.
+
+**On a Portainer stack**, set the variables in the stack's **Environment**.
+The compose files pass them through as `${VAR:-}` — so a variable set on the
+stack but missing from the compose file never reaches the container, and one
+listed but unset arrives as an empty string, which is exactly the
+"unconfigured" state. To see what the container actually has, run
+`docker exec <web container> printenv SMTP_HOST`.
+
 ## Screenshots
 
 > Every screenshot below comes from the [live demo](https://weddingwebsitedemo.com),

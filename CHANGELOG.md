@@ -11,6 +11,14 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.6 — [Unreleased] SMTP email surface (`feat/smtp-compatibility`, 2026-10-14 01:07)
+
+### Added
+- **A shared mail module** (`src/lib/mail.ts`) — the transporter, the HTML escaping and the "is it configured" answer now live in one place, and the RSVP route and the admin's Email section both read from it, so the two surfaces cannot drift.
+- **An Email section in the admin's Settings** — whether the mail is configured (and which host it would use), whether a test recipient is set, and **Send test email**, which mails the notification address only: there is no destination field anywhere in the mail paths, so the button cannot be pointed at an address a caller types. A test send is an online-only act, so the offline worker refuses to queue it for later.
+- **The demo stack passes the mail variables through** — the five `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `NOTIFICATION_EMAIL` variables, written `${VAR:-}` like the production stack, so an unset one arrives as an empty string and the demo reports mail as unconfigured rather than warning at boot.
+- **The README's Email (SMTP) section** — what the three mails are, the five variables, a Brevo example that works, and where the variables live on a Portainer stack.
+
 ## v0.10.5 — [Released] Edit offline, and an app that keeps itself current (`main`, 2026-10-10 19:43)
 
 Austin: the site is on my iPhone as an app. When I open it, the entire site should be saved on the phone — the public site and all the admin data, not the photos that aren't used anywhere. Offline I want to be able to make changes in the admin, especially the honeymoon section, and have them pushed to the server when I have a connection. And opening the app should automatically check whether anything on the server changed and update its saved copy.

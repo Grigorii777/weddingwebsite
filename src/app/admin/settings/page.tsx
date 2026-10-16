@@ -22,6 +22,46 @@ export default function AdminSettings() {
     });
     const [loaded, setLoaded] = useState(false);
 
+    // The Email (SMTP) section. Its settings live in the stack's environment, so
+    // this page only reads their state and offers a test send — nothing here
+    // accepts an address, and the recipient is NOTIFICATION_EMAIL alone.
+    const [emailStatus, setEmailStatus] = useState<{
+        configured: boolean;
+        host: string | null;
+        notificationEmailSet: boolean;
+    } | null>(null);
+    const [testState, setTestState] = useState<'idle' | 'sending' | 'ok' | 'error'>('idle');
+    const [testMessage, setTestMessage] = useState('');
+
+    useEffect(() => {
+        fetch('/api/admin/settings/email-status')
+            .then(res => res.json())
+            .then(data => setEmailStatus({
+                configured: data.configured === true,
+                host: typeof data.host === 'string' ? data.host : null,
+                notificationEmailSet: data.notificationEmailSet === true,
+            }))
+            .catch(() => setEmailStatus(null));
+    }, []);
+
+    const sendTestMail = useCallback(async () => {
+        setTestState('sending');
+        setTestMessage('');
+        try {
+            const res = await fetch('/api/admin/settings/test-email', { method: 'POST' });
+            const data = await res.json();
+            if (!res.ok) {
+                setTestState('error');
+                setTestMessage(typeof data.error === 'string' ? data.error : String(res.status));
+            } else {
+                setTestState('ok');
+            }
+        } catch {
+            setTestState('error');
+            setTestMessage('The test mail request could not be sent.');
+        }
+    }, []);
+
     useEffect(() => {
         fetch('/api/admin/site-config')
             .then(res => res.json())
@@ -244,6 +284,50 @@ export default function AdminSettings() {
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <div className="pt-6 border-t border-gray-100">
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Email (SMTP)</h2>
+                    <p className="text-sm text-gray-500 mb-4">
+                        The RSVP confirmation and the notification to you go out over SMTP. The credentials live
+                        in the stack&apos;s environment, not in this page — here you can see their state and send a
+                        test mail.
+                    </p>
+                    {emailStatus === null ? (
+                        <p className="text-sm text-gray-500">Checking the mail settings…</p>
+                    ) : (
+                        <div className="p-4 bg-white/50 rounded-lg border border-accent/30">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <h3 className="font-semibold text-gray-900">
+                                        {emailStatus.configured ? `Configured — ${emailStatus.host}` : 'Not configured'}
+                                    </h3>
+                                    <p className="text-sm text-gray-600 mt-1">
+                                        {emailStatus.configured
+                                            ? 'Guests get a confirmation and you get a notification when an RSVP arrives.'
+                                            : 'Set SMTP_HOST and SMTP_USER (and NOTIFICATION_EMAIL for the test recipient) in the stack environment to switch it on.'}
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={sendTestMail}
+                                    disabled={testState === 'sending'}
+                                    className="relative py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-accent hover:bg-accent-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {testState === 'sending' ? 'Sending…' : 'Send test email'}
+                                </button>
+                            </div>
+                            <p className="mt-3 text-sm text-gray-500">
+                                Test recipient (NOTIFICATION_EMAIL): {emailStatus.notificationEmailSet ? 'set' : 'not set'}
+                            </p>
+                            {testState === 'ok' && (
+                                <p className="mt-2 text-sm text-green-600">Test mail sent — it went to the notification address.</p>
+                            )}
+                            {testState === 'error' && (
+                                <p className="mt-2 text-sm text-red-600">{testMessage}</p>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </div >
