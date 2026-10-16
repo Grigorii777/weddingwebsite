@@ -28,9 +28,28 @@ export function rateLimit(key: string, limit: number, windowMs: number): { ok: b
     return { ok: true, retryAfterSeconds: 0 };
 }
 
-/** The caller's address, as seen through a reverse proxy. */
+/**
+ * The caller's address, as seen through a reverse proxy.
+ *
+ * `cf-connecting-ip` first — only a Cloudflare front sets it, and it holds the
+ * real client when Cloudflare is in the chain (the `X-Forwarded-For` it leaves
+ * behind ends with Cloudflare's own egress address, not the guest's). Then the
+ * LAST `X-Forwarded-For` entry: a standard proxy appends the peer it actually
+ * saw, so everything the client put in the header sits before the one entry
+ * the nearest proxy wrote — the first entry, taken in the past, was
+ * client-controllable and let a script mint a fresh identity per request and
+ * walk through every per-IP limit. Then `x-real-ip` (set by an nginx-style
+ * proxy). With no proxy in front, every one of these headers is something the
+ * caller typed — the shared `unknown` bucket is the honest answer, and it is
+ * stricter than any of them, never looser.
+ */
 export function clientIp(headers: { get(name: string): string | null }): string {
+    const connecting = headers.get('cf-connecting-ip');
+    if (connecting) return connecting.trim();
     const forwarded = headers.get('x-forwarded-for');
-    if (forwarded) return forwarded.split(',')[0].trim();
-    return headers.get('x-real-ip') || headers.get('cf-connecting-ip') || 'unknown';
+    if (forwarded) {
+        const last = forwarded.split(',').pop()?.trim();
+        if (last) return last;
+    }
+    return headers.get('x-real-ip') || 'unknown';
 }
