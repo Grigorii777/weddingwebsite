@@ -11,6 +11,12 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.9 — [Unreleased] Security headers (`fix/security-headers`, 2026-10-14 05:46)
+
+### Added
+- **Every response now carries the security headers.** HSTS (a year, including subdomains), `nosniff`, `X-Frame-Options: DENY`, and a referrer policy — the site is not a frame target, so the clickjacking vector closes outright.
+- **A content policy, in report-only mode, plus `security.txt`.** The policy lists exactly what the site loads — itself and the three tile servers the honeymoon maps draw from — and ships as *report-only* on purpose: a future addition that violates it shows up in the console as a report instead of breaking the page. Promoting it to enforcing is a follow-up once the reports are quiet.
+
 ## v0.10.8 — [Unreleased] Dependency audit clean (`fix/npm-audit-bump`, 2026-10-14 05:23)
 
 ### Fixed
