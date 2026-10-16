@@ -50,6 +50,9 @@ public/config/site.json
 # Claude Code
 .claude/settings.local.json
 
+# Superpowers (Claude Code plugin) brainstorm working area — per-session mockups and server logs/pids
+.superpowers/
+
 # Scratch space for dropping files for Claude (spreadsheets, exports, screenshots)
 /dropbox/*
 !/dropbox/README.md

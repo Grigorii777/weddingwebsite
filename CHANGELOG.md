@@ -11,6 +11,11 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.12 — [Unreleased] The brainstorm scratch stops shipping with the site (`fix/superpowers-cleanup`, 2026-10-14 06:12)
+
+### Changed
+- **`.superpowers/` is now ignored, and the files committed under it are removed.** The Superpowers plugin (the brainstorming workflow used while building the site) drops per-session working files in that directory — HTML design mockups, and its local preview server's log and pid. Nineteen of them had been committed; nothing in the app reads them, and the logs carry paths from the machine they were made on. The directory joins the other agent scratch in `.gitignore` (`.claude/`, `dropbox/`). The `docs/superpowers/` plans and specs are real documentation and stay.
+
 ## v0.10.10 — [Unreleased] Rate limits by the real caller (`fix/rate-limit-client-ip`, 2026-10-14 05:55)
 
 ### Fixed
