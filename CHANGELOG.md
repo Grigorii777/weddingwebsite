@@ -11,6 +11,11 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.13 — [Unreleased] The app's port stays off the LAN, without breaking the proxy (`main`, 2026-10-16 05:03)
+
+### Fixed
+- **The app's port no longer answers the LAN directly — closed at the host, not the container.** #20 proposed binding the published port to `127.0.0.1:3000:3000`, which was tried live and rejected: the reverse proxy fronting this site reaches it through its own Docker bridge network, routed host-to-host between the two bridges rather than over loopback, so a loopback-only bind made Docker's NAT rule stop matching the proxy's own traffic too (the site 502'd until reverted). The port stays published to every interface, as it always was, and is instead kept off the LAN by a host firewall rule (`docker-portguard`, in the `DOCKER-USER` chain Docker never rewrites, matched on the original destination port so a container recreate — which changes its IP — does not reopen it). Verified from a separate LAN host after the rule: direct access to the port refused, the site through the proxy unaffected.
+
 ## v0.10.12 — [Unreleased] The brainstorm scratch stops shipping with the site (`fix/superpowers-cleanup`, 2026-10-14 06:12)
 
 ### Changed

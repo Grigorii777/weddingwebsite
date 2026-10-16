@@ -11,6 +11,16 @@ services:
     image: ghcr.io/soccerbeats/weddingwebsite:latest
     container_name: wedding-web-prod
     restart: always
+    # Published to every interface, not loopback — and that is deliberate, not
+    # an oversight. Nginx Proxy Manager reaches this port through its own
+    # Docker bridge network, routed by the host between the two bridges, so
+    # its traffic never arrives on loopback: binding this to 127.0.0.1 makes
+    # Docker's NAT rule stop matching the proxy's own traffic too (confirmed
+    # live — the site 502'd through the proxy until reverted). The port is
+    # kept off the LAN instead by a host firewall rule on docker-server
+    # (/usr/local/sbin/docker-portguard.sh, in the DOCKER-USER chain Docker
+    # never rewrites, matched on the original destination port so it survives
+    # this container's IP changing on every recreate).
     ports:
       - '3000:3000'
     environment:
