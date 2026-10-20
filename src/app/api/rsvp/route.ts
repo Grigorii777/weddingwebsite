@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
+import { getSiteConfig } from '@/lib/config';
 import { createTransporter, escapeHtml, getCoupleName, isMailConfigured } from '@/lib/mail';
 import { verifyRsvpLink } from '@/lib/rsvpLink';
+import { effectiveRsvpMode } from '@/lib/rsvpMode';
+import { existingRsvpFor } from '@/lib/rsvpHousehold';
 
 interface RsvpInput {
     guestName: string;
@@ -59,19 +62,16 @@ function parseInput(body: unknown): RsvpInput | string {
  * Save an RSVP for a guest on the list.
  *
  * Both POST and PUT land here and behave the same: the household is identified
- * by the primary guest's name — the one the form was filled with from a
- * verified link — and the write itself never trusts a client-supplied
- * household id. The gate above this function is the part that reads `body.id`
- * on a PUT: it loads the existing RSVP row to find out which household the
- * update belongs to, and the household is still matched by name. There is one
- * RSVP row per household: a second submission updates the first rather than
- * adding a duplicate that the dashboard would then count twice.
+ * by the primary guest's name — `input.guestName`, resolved to its stored
+ * spelling via `guest_list` — and never by a client-supplied household id,
+ * whatever the gate in `handle()` did above this call. There is one RSVP row
+ * per household: a second submission updates the first rather than adding a
+ * duplicate that the dashboard would then count twice.
  *
  * A name that is not on the guest list is refused. It used to be inserted into
  * `guest_list` as an invited guest, which meant the public form could grow the
  * guest list without anyone noticing. That refusal is also why an unlisted
- * name needs no link in the gate: there is nothing for a token to stand in
- * front of.
+ * name passes every mode's gate uncontested: there is nothing to protect.
  */
 async function saveRsvp(input: RsvpInput): Promise<{ id: number; isUpdate: boolean }> {
     const client = await pool.connect();
@@ -236,38 +236,59 @@ async function handle(request: Request, method: 'POST' | 'PUT') {
     const record = (body && typeof body === 'object' ? body : {}) as Record<string, unknown>;
 
     try {
-        // The write gate: a household on the guest list may only be RSVP'd
-        // through a link the guest got by email. The token must be valid and
-        // minted for *this* household — a token for one household cannot open
-        // another's RSVP — and it is checked before anything is written.
+        // The write gate — shape depends on the site's RSVP mode
+        // (`effectiveRsvpMode()`, never trusted from the client):
         //
-        // A name that matches no household skips the gate and falls into
-        // `saveRsvp`'s refusal below: a name the admin never listed writes
-        // nothing, so it needs no link. That is deliberately left as-is (the
-        // demo instance lives entirely in it) and is out of scope for the
-        // household leak this gate closes.
-        const household = await householdFor(method, record, input.guestName);
-        if (household) {
-            const link = await verifyRsvpLink(typeof record.token === 'string' ? record.token : null);
-            if (!link || link.guestListId !== household.id) {
-                return NextResponse.json(
-                    { error: 'This RSVP needs a valid link from your email. Ask for a fresh one on the RSVP page.' },
-                    { status: 403 }
-                );
-            }
+        // - 'simple' skips this block entirely: no household resolution, no
+        //   check, `saveRsvp` runs straight off `input.guestName` exactly as
+        //   it did before either of the other modes existed. An admin's
+        //   explicit choice to reopen that gap, not a default.
+        // - 'link' and 'verify' both resolve which household this write
+        //   targets before anything is saved — a POST by the name in the
+        //   body, a PUT by the existing RSVP row it edits (`body.id`) — and
+        //   both then confirm `body.guestName` resolves to that *same*
+        //   household: without that check a guest's own valid proof (their
+        //   own link, or their own on-file email) could carry a different
+        //   household's name, and the write below — which saves by
+        //   `input.guestName`, not by id — would land on that other
+        //   household instead of the one just gated.
+        // - 'link' then requires a token minted for that household. 'verify'
+        //   only requires anything when that household already has an RSVP
+        //   on file (nothing to protect on a first one): the email in this
+        //   request must match the email already on file for it.
+        //
+        // A name that matches no household skips the gate in every mode and
+        // falls into `saveRsvp`'s refusal below: a name the admin never
+        // listed writes nothing, so it needs no proof. That is deliberately
+        // left as-is (the demo instance lives entirely in it).
+        const mode = effectiveRsvpMode(getSiteConfig().rsvpMode, isMailConfigured());
 
-            // On a PUT, the household above comes from `body.id` — the RSVP row
-            // being edited — not from `body.guestName`, which is what `saveRsvp`
-            // actually writes through below. Without this check the two could
-            // disagree: a guest's own valid link (minted for their own existing
-            // RSVP's id) could carry a different household's name, and the write
-            // would land on that other household instead of the one just gated.
-            const writeTarget = await matchHousehold(input.guestName);
-            if (!writeTarget || writeTarget.id !== household.id) {
-                return NextResponse.json(
-                    { error: 'This RSVP needs a valid link from your email. Ask for a fresh one on the RSVP page.' },
-                    { status: 403 }
-                );
+        if (mode !== 'simple') {
+            const household = await householdFor(method, record, input.guestName);
+            if (household) {
+                const writeTarget = await matchHousehold(input.guestName);
+                const sameHousehold = !!writeTarget && writeTarget.id === household.id;
+
+                if (mode === 'link') {
+                    const link = await verifyRsvpLink(typeof record.token === 'string' ? record.token : null);
+                    if (!link || link.guestListId !== household.id || !sameHousehold) {
+                        return NextResponse.json(
+                            { error: 'This RSVP needs a valid link from your email. Ask for a fresh one on the RSVP page.' },
+                            { status: 403 }
+                        );
+                    }
+                } else {
+                    const existingRsvp = await existingRsvpFor(household.guest_name);
+                    if (existingRsvp) {
+                        const onFile = (existingRsvp.email || '').trim().toLowerCase();
+                        if (!onFile || onFile !== input.email.trim().toLowerCase() || !sameHousehold) {
+                            return NextResponse.json(
+                                { error: "That doesn't match our records. Go back and verify with the email on file, or ask us for help." },
+                                { status: 403 }
+                            );
+                        }
+                    }
+                }
             }
         }
 
@@ -295,9 +316,10 @@ export async function POST(request: Request) {
 }
 
 /**
- * Same gate as POST, but the household comes from the existing RSVP row the
- * update edits — `body.id` — not from the name in the body. The write itself
- * still lands by the household's primary name, as always.
+ * Same gate as POST in 'link' and 'verify' mode, but the household it checks
+ * comes from the existing RSVP row the update edits — `body.id` — not from
+ * the name in the body. 'simple' mode skips the gate on both the same way.
+ * The write itself still lands by the household's primary name, as always.
  */
 export async function PUT(request: Request) {
     return handle(request, 'PUT');

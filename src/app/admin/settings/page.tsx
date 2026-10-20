@@ -3,6 +3,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AutosaveHeader, useAutosave } from '@/components/admin/useAutosave';
 import { DEFAULT_ROOM_BLOCK_MESSAGE } from '@/lib/roomBlock';
+import { effectiveRsvpMode, type RsvpModeSetting } from '@/lib/rsvpMode';
+
+const RSVP_MODE_LABEL: Record<'link' | 'verify' | 'simple', string> = {
+    link: 'Email link',
+    verify: 'Verify by email',
+    simple: 'Simple (no verification)',
+};
 
 export default function AdminSettings() {
     const [config, setConfig] = useState({
@@ -19,6 +26,7 @@ export default function AdminSettings() {
         roomBlockMessage: '',
         countdownMode: 'full',
         logoMode: false,
+        rsvpMode: 'auto',
     });
     const [loaded, setLoaded] = useState(false);
 
@@ -327,6 +335,48 @@ export default function AdminSettings() {
                                 <p className="mt-2 text-sm text-red-600">{testMessage}</p>
                             )}
                         </div>
+                    )}
+                </div>
+
+                <div className="pt-6 border-t border-gray-100">
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4">RSVP Verification</h2>
+                    <p className="text-sm text-gray-500 mb-4">
+                        How an RSVP proves it belongs to the household it edits.
+                    </p>
+                    <div className="space-y-3">
+                        {([
+                            { value: 'auto', label: 'Automatic (recommended)', help: 'Email link when SMTP is set up, otherwise Verify by email.' },
+                            { value: 'link', label: 'Email link', help: "Strongest. A guest gets a link by email for every RSVP, first one or an update. Needs SMTP — with none set up, guests can't get in." },
+                            { value: 'verify', label: 'Verify by email', help: "No email needed to send. A first RSVP opens right away; changing one already on file needs the email it was sent with — a knowledge check, not proof of that inbox." },
+                            { value: 'simple', label: 'Simple (not recommended)', help: 'No check at all, even on an update — the way the form worked before either mode existed. Anyone who knows a name can see and change that RSVP.' },
+                        ] as { value: RsvpModeSetting; label: string; help: string }[]).map((opt) => (
+                            <label
+                                key={opt.value}
+                                className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
+                                    config.rsvpMode === opt.value ? 'border-accent bg-accent/5' : 'border-gray-200 hover:bg-gray-50'
+                                }`}
+                            >
+                                <input
+                                    type="radio"
+                                    name="rsvpMode"
+                                    value={opt.value}
+                                    checked={config.rsvpMode === opt.value}
+                                    onChange={() => setConfig(prev => ({ ...prev, rsvpMode: opt.value }))}
+                                    className="mt-1 h-4 w-4 text-accent focus:ring-accent"
+                                />
+                                <div>
+                                    <p className="text-sm font-medium text-gray-900">{opt.label}</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">{opt.help}</p>
+                                </div>
+                            </label>
+                        ))}
+                    </div>
+                    {config.rsvpMode === 'auto' && (
+                        <p className="mt-3 text-sm text-gray-600">
+                            Currently using: <span className="font-medium">
+                                {RSVP_MODE_LABEL[effectiveRsvpMode('auto', emailStatus?.configured ?? false)]}
+                            </span>{emailStatus === null ? ' (checking mail settings…)' : !emailStatus.configured ? " — SMTP isn't set up yet" : ''}
+                        </p>
                     )}
                 </div>
             </div>

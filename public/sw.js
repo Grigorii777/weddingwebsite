@@ -81,6 +81,7 @@ const NOT_QUEUED = [
     '/api/admin/seating/export',
     '/api/admin/settings/test-email',
     '/api/rsvp/magic-link',
+    '/api/rsvp/verify-email',
 ];
 
 /** The site config, which the worker can show with queued edits merged in. */

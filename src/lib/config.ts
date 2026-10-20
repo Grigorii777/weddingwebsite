@@ -55,6 +55,11 @@ export interface SiteConfig {
     rsvpDeadline?: string;
     /** Shown on the RSVP page for guests having trouble. */
     contactEmail?: string;
+    /**
+     * How an RSVP proves it belongs to the household it edits. `undefined`
+     * means 'auto'. See `src/lib/rsvpMode.ts` for how this resolves.
+     */
+    rsvpMode?: 'auto' | 'link' | 'verify' | 'simple';
     // Accommodations / room block (shown on RSVP confirmation)
     roomBlockHotel?: string;
     roomBlockUrl?: string;

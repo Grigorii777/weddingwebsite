@@ -37,6 +37,7 @@ const PUBLIC_WRITE_LIMITS: Record<string, { limit: number; windowMs: number }> =
     '/api/rsvp': { limit: 20, windowMs: 10 * 60_000 },
     '/api/rsvp/magic-link': { limit: 5, windowMs: 10 * 60_000 },
     '/api/rsvp/magic-link/verify': { limit: 20, windowMs: 10 * 60_000 },
+    '/api/rsvp/verify-email': { limit: 20, windowMs: 10 * 60_000 },
     '/api/guest-verification': { limit: 30, windowMs: 10 * 60_000 },
 };
 

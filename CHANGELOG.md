@@ -11,6 +11,15 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.14 — [Unreleased] RSVPs work without SMTP: verify by email, or turn verification off (`main`, 2026-10-20 01:45)
+
+### Added
+- **Two more ways an RSVP can prove it belongs to a household, picked in Settings → RSVP Verification.** The email link (v0.10.7) needed SMTP configured, or a guest typing their name got a promise of a link that never arrived.
+  - **Verify by email** — no mail setup needed. A first RSVP for a household opens straight away, same as before either mode existed — there is nothing on it yet to protect. Updating one that already has an RSVP on file asks for the email it was sent with; a wrong guess gets a generic "doesn't match," never confirmation of which part (name or email) was off. Weaker than the link — it checks that the typist *knows* the address on file, not that they *control* it — but it stops a casual guest from overwriting someone else's answer with no SMTP required.
+  - **Simple** — no check at all, on a first RSVP or an update, exactly how the form worked before the link existed. An admin's explicit, named choice to reopen that gap, never a default.
+  - **Automatic** (the default, unchanged behavior for anyone who already has SMTP set up) resolves to the email link when mail is configured, and to verify-by-email otherwise — so a site with no SMTP set up now has a working RSVP flow instead of a guest waiting on a link that was never going to arrive.
+- **The write gate enforces whichever mode is actually active, independent of what the client claims.** 'verify' mode's email check happens again on the save itself, the same way the link's token already did — the two share the same guard against a request's `id` and `guestName` naming different households, the gap closed in v0.10.7's own write-up above.
+
 ## v0.10.13 — [Unreleased] The app's port stays off the LAN, without breaking the proxy (`main`, 2026-10-16 05:03)
 
 ### Fixed

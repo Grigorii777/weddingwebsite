@@ -137,15 +137,19 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
     const [existingRsvp, setExistingRsvp] = useState<ExistingRsvp | null>(null);
     const [guestNameInput, setGuestNameInput] = useState('');
     const [verificationError, setVerificationError] = useState('');
-    // Where the name path has got to: 'offer' is the confirmed name waiting
-    // for its link, 'sent' is the "on its way" message. Cleared by
-    // "Use a different name".
-    const [linkStage, setLinkStage] = useState<'idle' | 'offer' | 'sent'>('idle');
+    // Where the name path has got to, once a name is confirmed on the list:
+    // 'link-offer' waits to send the email link, 'link-sent' is the "on its
+    // way" message, 'email-verify' asks for the email on file ('verify' mode,
+    // with something already on file for this household). Cleared by "Use a
+    // different name" / "try again".
+    const [nameStage, setNameStage] = useState<'idle' | 'link-offer' | 'link-sent' | 'email-verify'>('idle');
     const [linkSentMessage, setLinkSentMessage] = useState('');
     const [sendingLink, setSendingLink] = useState(false);
+    const [verifyEmailInput, setVerifyEmailInput] = useState('');
+    const [verifyingEmail, setVerifyingEmail] = useState(false);
     // The token from the link that opened this page (if any). Read once from
     // the URL, stripped out of it, and carried here — it is what the write
-    // gate on /api/rsvp checks before anything is saved.
+    // gate on /api/rsvp checks before anything is saved, in 'link' mode.
     const [rsvpToken, setRsvpToken] = useState<string | null>(null);
     const [verifying, setVerifying] = useState(false);
     const [config, setConfig] = useState<RsvpPageConfig | null>(null);
@@ -171,10 +175,11 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
             .catch(err => console.error('Error fetching config:', err));
     }, []);
 
-    // What a verified door into the form fills: the household's details, the
-    // party cards and the pre-filled contact fields. (The name path no longer
-    // opens the form — its details ride in the link — so only the link uses
-    // this, but it fills exactly the way the old verified response did.)
+    // What any verified door into the form fills: the household's details,
+    // the party cards and the pre-filled contact fields. Every door reaches
+    // this with the same shape — the email link, the name path directly in
+    // 'simple' mode or on a fresh household in 'verify' mode, and the email
+    // check in 'verify' mode on an existing one.
     const hydrateVerified = useCallback((data: {
         guest: { name: string; party_size: number; email?: string | null; phone?: string | null; party_members?: PartyMember[] };
         matched: { name: string; isPrimary: boolean } | null;
@@ -252,15 +257,27 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
 
             const data = await response.json();
 
-            if (data.verified) {
-                // The name is on the list — but the details no longer ride out
-                // of this response (it carries only the matched seat). They
-                // come from the link in the guest's own inbox, so the next
-                // step is to offer sending it, not to open the form.
-                setMatched(data.matched || null);
-                setLinkStage('offer');
-            } else {
+            if (!data.verified) {
                 setVerificationError(data.message || 'Guest not found on the list.');
+                return;
+            }
+
+            if (data.guest) {
+                // 'simple' mode, or 'verify' mode with nothing on file yet —
+                // the details ride straight out of this response.
+                hydrateVerified(data);
+                return;
+            }
+
+            setMatched(data.matched || null);
+            if (data.hasExistingRsvp) {
+                // 'verify' mode, something already on file — ask for the
+                // email on it before handing out anything.
+                setNameStage('email-verify');
+            } else {
+                // 'link' mode — the details come from the email in the
+                // guest's own inbox, so the next step is to offer sending it.
+                setNameStage('link-offer');
             }
         } catch (error) {
             console.error('Verification error:', error);
@@ -287,7 +304,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
 
             if (response.ok && data.ok) {
                 setLinkSentMessage(data.message || 'If that name is on our list, an RSVP link is on its way to the email we have for it.');
-                setLinkStage('sent');
+                setNameStage('link-sent');
             } else {
                 setVerificationError(data.error || 'Something went wrong sending the link. Please try again.');
             }
@@ -299,12 +316,41 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
         }
     };
 
+    // 'verify' mode's second step: the email already on file for this
+    // household, typed back. A wrong guess just says so — the server never
+    // confirms whether the name part was even right, so this cannot be used
+    // to check an email against a name one field at a time.
+    const verifyByEmail = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setVerifyingEmail(true);
+        setVerificationError('');
+        try {
+            const response = await fetch('/api/rsvp/verify-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: guestNameInput, email: verifyEmailInput }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (response.ok && data.verified) {
+                hydrateVerified(data);
+            } else {
+                setVerificationError(data.error || "That doesn't match our records. Please try again.");
+            }
+        } catch (error) {
+            console.error('Email verification error:', error);
+            setVerificationError('Something went wrong. Please try again.');
+        } finally {
+            setVerifyingEmail(false);
+        }
+    };
+
     // Back to the name input — clears whatever the name path has got to.
     const resetNameStep = () => {
         setGuestNameInput('');
         setVerificationError('');
         setLinkSentMessage('');
-        setLinkStage('idle');
+        setVerifyEmailInput('');
+        setNameStage('idle');
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -520,7 +566,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                     </p>
                 </div>
 
-                {linkStage === 'idle' && (
+                {nameStage === 'idle' && (
                 <form onSubmit={handleVerification} className="space-y-6">
                     <div>
                         <label htmlFor="guestNameInput" className="block text-sm font-medium text-gray-700 ml-1 mb-2">
@@ -556,7 +602,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                 </form>
                 )}
 
-                {linkStage === 'offer' && (
+                {nameStage === 'link-offer' && (
                     <div className="space-y-6">
                         {verificationError && (
                             <div className="rounded-2xl bg-red-50 p-4 flex gap-3">
@@ -593,7 +639,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                     </div>
                 )}
 
-                {linkStage === 'sent' && (
+                {nameStage === 'link-sent' && (
                     <div className="space-y-6">
                         <div className="rounded-2xl bg-green-50 border border-green-200 p-5 text-center">
                             <p className="text-sm font-medium text-green-800">{linkSentMessage}</p>
@@ -609,6 +655,56 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                             Use a different name
                         </button>
                     </div>
+                )}
+
+                {nameStage === 'email-verify' && (
+                    <form onSubmit={verifyByEmail} className="space-y-6">
+                        <div className="rounded-2xl bg-accent/5 border border-accent/20 p-5 text-center">
+                            <p className="text-sm font-medium text-gray-800">
+                                We found {matched?.name ? <span className="font-semibold">{matched.name}</span> : 'your name'} on the list,
+                                with an RSVP already on file.
+                            </p>
+                            <p className="text-sm text-gray-600 mt-2">
+                                To protect it, please confirm the email you used before.
+                            </p>
+                        </div>
+                        <div>
+                            <label htmlFor="verifyEmailInput" className="block text-sm font-medium text-gray-700 ml-1 mb-2">
+                                Email on your RSVP *
+                            </label>
+                            <input
+                                type="email"
+                                id="verifyEmailInput"
+                                value={verifyEmailInput}
+                                onChange={(e) => setVerifyEmailInput(e.target.value)}
+                                placeholder="you@example.com"
+                                required
+                                className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-2xl shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-accent focus:border-accent sm:text-sm transition-shadow"
+                            />
+                        </div>
+                        {verificationError && (
+                            <div className="rounded-2xl bg-red-50 p-4 flex gap-3">
+                                <svg className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                </svg>
+                                <p className="text-sm font-medium text-red-800">{verificationError}</p>
+                            </div>
+                        )}
+                        <button
+                            type="submit"
+                            disabled={verifyingEmail || !verifyEmailInput.trim()}
+                            className="w-full flex justify-center py-3 px-6 border border-transparent rounded-full shadow-md text-base font-medium text-white bg-accent hover:bg-accent-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 transition-all transform hover:-translate-y-0.5"
+                        >
+                            {verifyingEmail ? 'Checking...' : 'Continue'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={resetNameStep}
+                            className="w-full flex justify-center py-3 px-6 border border-gray-300 rounded-full text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all"
+                        >
+                            Use a different name
+                        </button>
+                    </form>
                 )}
             </div>
         );
