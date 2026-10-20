@@ -11,6 +11,11 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.15 — [Unreleased] A from address that isn't the SMTP login (`main`, 2026-10-20 02:29)
+
+### Added
+- **`SMTP_FROM`, optional.** Some providers' SMTP login isn't a mailbox at all — Brevo's is a generated id, not an address a guest would recognize. Every mail now goes out `from` `SMTP_FROM` when it's set, falling back to `SMTP_USER` exactly as before when it isn't, so existing setups are unaffected.
+
 ## v0.10.14 — [Unreleased] RSVPs work without SMTP: verify by email, or turn verification off (`main`, 2026-10-20 01:45)
 
 ### Added

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSiteConfig } from '@/lib/config';
-import { createTransporter, escapeHtml, getCoupleName, isMailConfigured } from '@/lib/mail';
+import { createTransporter, escapeHtml, getCoupleName, getMailFrom, isMailConfigured } from '@/lib/mail';
 import { verifyRsvpLink } from '@/lib/rsvpLink';
 import { effectiveRsvpMode } from '@/lib/rsvpMode';
 import { existingRsvpFor } from '@/lib/rsvpHousehold';
@@ -204,7 +204,7 @@ async function sendEmails(input: RsvpInput) {
 
         const status = input.attending ? 'Attending' : 'Not Attending';
         await transporter.sendMail({
-            from: `"${couple.replace(/"/g, '')}" <${process.env.SMTP_USER}>`,
+            from: `"${couple.replace(/"/g, '')}" <${getMailFrom()}>`,
             to: input.email,
             subject: 'We received your RSVP!',
             text: `Hi ${input.guestName},\n\nThank you so much for RSVPing to our wedding. We have confirmed your response: ${status}.\n\nWe can't wait to celebrate with you!\n\nBest,\n${couple}`,
@@ -213,7 +213,7 @@ async function sendEmails(input: RsvpInput) {
 
         if (process.env.NOTIFICATION_EMAIL) {
             await transporter.sendMail({
-                from: `"Wedding Bot" <${process.env.SMTP_USER}>`,
+                from: `"Wedding Bot" <${getMailFrom()}>`,
                 to: process.env.NOTIFICATION_EMAIL,
                 subject: `New RSVP from ${input.guestName}`,
                 text: `Name: ${input.guestName}\nAttending: ${input.attending ? 'Yes' : 'No'}\nGuests: ${input.attending ? input.guestCount : 0}\nEmail: ${input.email}\nPhone: ${input.phone}\nMessage: ${input.message ?? ''}`,

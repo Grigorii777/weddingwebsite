@@ -92,7 +92,7 @@ optional and each feature says so in the UI when its variable is missing:
 | Variable | Turns on |
 |---|---|
 | `JWT_SECRET` | A session cookie signed independently of the admin password |
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `NOTIFICATION_EMAIL` | Email when an RSVP arrives |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` / `NOTIFICATION_EMAIL` | Email when an RSVP arrives |
 | `FLIGHT_API_KEY` | *Fill in from schedule* on a travel leg — a RapidAPI key subscribed to AeroDataBox |
 | `GEOCODER_USER_AGENT` | Identifies you to OpenStreetMap's geocoder, which refuses anonymous-looking callers. Worth setting |
 | `NOMINATIM_URL` / `OSRM_URL` | Your own geocoder / routing server instead of the public ones |
@@ -122,8 +122,9 @@ state, the RSVPs simply do not email, and the admin's Settings page says so.
 |---|---|
 | `SMTP_HOST` | Your SMTP server's address |
 | `SMTP_PORT` | `587` (STARTTLS) or `465` (implicit TLS) |
-| `SMTP_USER` | The account that sends — the mail's from address |
+| `SMTP_USER` | The SMTP login — also the from address unless `SMTP_FROM` is set |
 | `SMTP_PASS` | Its password — an app password, not your login password |
+| `SMTP_FROM` | Optional. The from address, when it differs from the login (Brevo's login is not a mailbox) |
 | `NOTIFICATION_EMAIL` | Where the "new RSVP" mail goes, and where the test mail goes |
 
 **A working example (Brevo).** A free Brevo account: `SMTP_HOST` is
