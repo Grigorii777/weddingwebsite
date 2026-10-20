@@ -135,6 +135,12 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
     // Who typed their name in — may be a plus-one/party member rather than the primary guest.
     const [matched, setMatched] = useState<{ name: string; isPrimary: boolean } | null>(null);
     const [existingRsvp, setExistingRsvp] = useState<ExistingRsvp | null>(null);
+    // Set once a verified response says the wedding day has arrived. The
+    // lookup still works either way; this only decides whether the 'form'
+    // step renders as an editable form or a read-only summary — the write
+    // gate on /api/rsvp is the real enforcement, this is just the UI not
+    // offering a submit that would fail anyway.
+    const [locked, setLocked] = useState(false);
     const [guestNameInput, setGuestNameInput] = useState('');
     const [verificationError, setVerificationError] = useState('');
     // Where the name path has got to, once a name is confirmed on the list:
@@ -184,10 +190,12 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
         guest: { name: string; party_size: number; email?: string | null; phone?: string | null; party_members?: PartyMember[] };
         matched: { name: string; isPrimary: boolean } | null;
         existingRsvp: ExistingRsvp | null;
+        locked?: boolean;
     }) => {
         setVerifiedGuest(data.guest);
         setMatched(data.matched || null);
         setExistingRsvp(data.existingRsvp);
+        setLocked(!!data.locked);
 
         const existingDietary = Array.isArray(data.existingRsvp?.dietaryRestrictions)
             ? data.existingRsvp.dietaryRestrictions
@@ -706,6 +714,63 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                         </button>
                     </form>
                 )}
+            </div>
+        );
+    }
+
+    // Past the wedding day: the lookup worked (verifiedGuest/existingRsvp are
+    // populated same as ever), but there is no form to submit — just what is
+    // on file, or a note that there is nothing. The write gate on /api/rsvp
+    // is what actually refuses a change; this is only the UI not offering one.
+    if (locked) {
+        const attendees = cards.filter(c => c.attendance === 'yes' && c.name?.trim());
+        return (
+            <div className="text-center py-12 bg-white rounded-3xl shadow-xl border-t-4 border-accent p-8">
+                <h2 className="text-2xl font-serif text-gray-900 mb-2">RSVPs Are Closed</h2>
+                <p className="text-gray-600 max-w-md mx-auto">
+                    The wedding day has arrived, so RSVPs can no longer be changed.
+                    {existingRsvp ? " Here's what we have on file for you." : ''}
+                </p>
+
+                {existingRsvp ? (
+                    <div className="mt-6 mx-auto max-w-xl text-left bg-gray-50 border border-gray-200 rounded-2xl p-5">
+                        <div className="flex items-center justify-between border-b border-dashed border-gray-300 pb-3 mb-3">
+                            <span className="text-xs uppercase tracking-widest text-gray-400 font-semibold">On file for {matched?.name || verifiedGuest?.name}</span>
+                            <span className={`text-sm font-semibold ${existingRsvp.attending ? 'text-green-700' : 'text-gray-500'}`}>
+                                {existingRsvp.attending ? 'Attending' : 'Not Attending'}
+                            </span>
+                        </div>
+                        {existingRsvp.attending ? (
+                            <ul className="space-y-2">
+                                {attendees.map((c, i) => (
+                                    <li key={i} className="flex items-center gap-2 text-sm text-gray-800">
+                                        <svg className="h-4 w-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <span>{c.name}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-sm text-gray-600">We&apos;ll miss you, but thank you for letting us know.</p>
+                        )}
+                        {existingRsvp.message && (
+                            <p className="mt-3 text-sm text-gray-500 italic">&quot;{existingRsvp.message}&quot;</p>
+                        )}
+                    </div>
+                ) : (
+                    <p className="mt-6 text-sm text-gray-500">
+                        We don&apos;t have an RSVP on file for {matched?.name || 'you'}. Please contact us directly.
+                    </p>
+                )}
+
+                <button
+                    type="button"
+                    onClick={() => { setStep('verification'); resetNameStep(); }}
+                    className="mt-8 inline-flex justify-center py-2 px-6 border border-gray-300 rounded-full text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all"
+                >
+                    Look up a different name
+                </button>
             </div>
         );
     }

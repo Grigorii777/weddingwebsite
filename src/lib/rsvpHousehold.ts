@@ -1,4 +1,6 @@
 import pool from '@/lib/db';
+import { getSiteConfig } from '@/lib/config';
+import { isPastWeddingDay } from '@/lib/weddingDate';
 
 /**
  * Finding a household by a typed name, and building what the form hydrates
@@ -97,6 +99,12 @@ export function buildVerifiedPayload(
 ) {
     return {
         verified: true,
+        // Once the wedding day itself arrives, the form this hydrates still
+        // opens — the lookup is unaffected — but it opens read-only: the
+        // write gate in `src/app/api/rsvp/route.ts` refuses every write past
+        // this point regardless of mode, and this flag is what tells the
+        // form not to let a guest start filling one in only to have it fail.
+        locked: isPastWeddingDay(getSiteConfig().weddingDate),
         guest: {
             name: guest.guest_name,
             party_size: guest.party_size,

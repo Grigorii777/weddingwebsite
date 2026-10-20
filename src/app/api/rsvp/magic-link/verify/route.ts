@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
+import { getSiteConfig } from '@/lib/config';
 import { verifyRsvpLink } from '@/lib/rsvpLink';
+import { isPastWeddingDay } from '@/lib/weddingDate';
 
 /**
  * Exchange an RSVP link for the household's details.
@@ -65,6 +67,11 @@ export async function POST(request: Request) {
 
         return NextResponse.json({
             verified: true,
+            // Once the wedding day arrives the form this opens still shows
+            // the household's RSVP, but offers no way to change it — the
+            // write gate in src/app/api/rsvp/route.ts refuses every write
+            // past this point regardless of mode.
+            locked: isPastWeddingDay(getSiteConfig().weddingDate),
             guest: {
                 name: guest.guest_name,
                 party_size: guest.party_size,

@@ -3,6 +3,7 @@ import { getSiteConfig } from '@/lib/config';
 import { isMailConfigured } from '@/lib/mail';
 import { effectiveRsvpMode } from '@/lib/rsvpMode';
 import { matchHouseholdByName, matchedSeat, existingRsvpFor, buildVerifiedPayload } from '@/lib/rsvpHousehold';
+import { isPastWeddingDay } from '@/lib/weddingDate';
 
 /**
  * Is that name on the guest list, and which seat did they type?
@@ -22,6 +23,11 @@ import { matchHouseholdByName, matchedSeat, existingRsvpFor, buildVerifiedPayloa
  *   (nothing to protect); otherwise just the seat plus `hasExistingRsvp:
  *   true`, so the page asks for the email on file before handing out details
  *   (`/api/rsvp/verify-email`).
+ *
+ * `locked` says whether the wedding day has arrived — the lookup still
+ * works either way, but the form it opens into should offer no way to
+ * submit once it has, since the write gate in `src/app/api/rsvp/route.ts`
+ * will refuse it regardless of mode.
  */
 export async function POST(request: Request) {
   try {
@@ -46,9 +52,10 @@ export async function POST(request: Request) {
 
     const matched = matchedSeat(guest, typedName);
     const mode = effectiveRsvpMode(getSiteConfig().rsvpMode, isMailConfigured());
+    const locked = isPastWeddingDay(getSiteConfig().weddingDate);
 
     if (mode === 'link') {
-      return NextResponse.json({ verified: true, mode, matched });
+      return NextResponse.json({ verified: true, mode, matched, locked });
     }
 
     if (mode === 'simple') {
@@ -60,7 +67,7 @@ export async function POST(request: Request) {
     if (!existingRsvp) {
       return NextResponse.json({ ...buildVerifiedPayload(guest, matched, null), mode });
     }
-    return NextResponse.json({ verified: true, mode, matched, hasExistingRsvp: true });
+    return NextResponse.json({ verified: true, mode, matched, hasExistingRsvp: true, locked });
   } catch (error) {
     console.error('Error verifying guest:', error);
     return NextResponse.json(

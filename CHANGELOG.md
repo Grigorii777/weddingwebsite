@@ -11,6 +11,11 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.16 — [Unreleased] RSVPs close on the wedding day (`main`, 2026-10-20 02:40)
+
+### Added
+- **Once the wedding day itself arrives, no RSVP can be written — first one or an update, in any mode.** The lookup is unaffected: a guest can still look theirs up and see what's on file, the form just offers no way to submit once it has. Checked against local midnight on the wedding date (not the ceremony's own start time — the headcount needs to be final by morning), reusing the same free-text date parser the homepage countdown already relies on. An admin who never set a wedding date never has this trigger by surprise.
+
 ## v0.10.15 — [Unreleased] A from address that isn't the SMTP login (`main`, 2026-10-20 02:29)
 
 ### Added

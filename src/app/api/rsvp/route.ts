@@ -5,6 +5,7 @@ import { createTransporter, escapeHtml, getCoupleName, getMailFrom, isMailConfig
 import { verifyRsvpLink } from '@/lib/rsvpLink';
 import { effectiveRsvpMode } from '@/lib/rsvpMode';
 import { existingRsvpFor } from '@/lib/rsvpHousehold';
+import { isPastWeddingDay } from '@/lib/weddingDate';
 
 interface RsvpInput {
     guestName: string;
@@ -234,6 +235,19 @@ async function handle(request: Request, method: 'POST' | 'PUT') {
     const input = parseInput(body);
     if (typeof input === 'string') return NextResponse.json({ error: input }, { status: 400 });
     const record = (body && typeof body === 'object' ? body : {}) as Record<string, unknown>;
+
+    // Once the wedding day itself arrives, no RSVP write happens at all —
+    // first one or an update, whatever the mode. This is checked before the
+    // mode gate below and is not part of it: looking an RSVP up still works
+    // after this point (every read path still answers; it just marks its
+    // answer `locked` so the form it opens into offers no way to submit),
+    // only writing stops.
+    if (isPastWeddingDay(getSiteConfig().weddingDate)) {
+        return NextResponse.json(
+            { error: "RSVPs are closed — the wedding day has arrived. Please contact us directly if you need to make a change." },
+            { status: 403 },
+        );
+    }
 
     try {
         // The write gate — shape depends on the site's RSVP mode

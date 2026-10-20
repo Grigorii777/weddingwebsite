@@ -75,3 +75,17 @@ export function weddingDateTime(date: string | undefined | null, time?: string |
     const result = new Date(d.year, d.month, d.day, t.hours, t.minutes, 0, 0);
     return Number.isNaN(result.getTime()) ? null : result;
 }
+
+/**
+ * Has the wedding day itself arrived (midnight local time on the wedding
+ * date), regardless of `weddingTime`? Used to lock RSVP edits once the day
+ * starts rather than waiting on the ceremony's own start time — by the
+ * morning of, the headcount needs to be final.
+ *
+ * `false` when the date is unset or unparseable: an admin who never typed a
+ * wedding date never has RSVPs locked by surprise.
+ */
+export function isPastWeddingDay(date: string | undefined | null, now: Date = new Date()): boolean {
+    const start = weddingDateTime(date);
+    return start !== null && now.getTime() >= start.getTime();
+}
