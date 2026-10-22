@@ -11,6 +11,11 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.21 — [Released] Today's header holds still while you swipe (`main`, 2026-10-22 12:31)
+
+### Fixed
+- **Swiping between days on Today now slides only the day itself.** The trip name, "Day 3 of 15", the date line, the weather and the row of dots used to slide sideways with everything else; they now stay where they are and simply change, the way a page indicator should. A swipe that starts on the header still turns the page. The itinerary's day view is unchanged.
+
 ## v0.10.20 — [Released] The admin app opens at once, like Mail (`main`, 2026-10-22 12:02)
 
 ### Changed

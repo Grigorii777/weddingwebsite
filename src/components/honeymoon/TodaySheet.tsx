@@ -97,6 +97,10 @@ export default function TodaySheet({
                         </div>
                     )}
 
+                    {/* What slides when swiping between days. The header ("Day 3
+                        of 15", the date), the weather and the dots hold still and
+                        only change. */}
+                    <div data-swipe-slide>
                     {plan.standing === 'before' && plan.daysUntil != null && (
                         <Banner>
                             {plan.daysUntil === 0
@@ -254,6 +258,7 @@ export default function TodaySheet({
                     </div>
 
                     {footer}
+                    </div>
                 </div>
             </div>
         </div>

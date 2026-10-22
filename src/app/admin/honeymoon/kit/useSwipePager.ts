@@ -21,7 +21,16 @@ import { useEffect, useLayoutEffect, useRef } from 'react';
  * `pageKey` is whatever identifies the page shown (the day's id): when it
  * changes after a swipe, the new page is animated in. Changes from anywhere
  * else (tapping a day in the strip) also slide, in the direction of travel.
+ *
+ * A descendant marked `data-swipe-slide` is the part that moves, when there is
+ * one; the element the ref is on still takes the swipe. Today marks the day
+ * under its header, so the header and the day dots hold still.
  */
+/** What moves: the marked part of the page if there is one, else the whole of it. */
+function slideTarget(root: HTMLElement): HTMLElement {
+    return root.querySelector<HTMLElement>('[data-swipe-slide]') ?? root;
+}
+
 export function useSwipePager<T extends HTMLElement>({
     pageKey, order, onPrev, onNext, canPrev, canNext, enabled = true,
 }: {
@@ -59,9 +68,11 @@ export function useSwipePager<T extends HTMLElement>({
             return false;
         };
 
+        const moving = () => slideTarget(node);
         const setX = (x: number, opacity = 1) => {
-            node.style.transform = x ? `translate3d(${x}px,0,0)` : '';
-            node.style.opacity = opacity === 1 ? '' : String(opacity);
+            const target = moving();
+            target.style.transform = x ? `translate3d(${x}px,0,0)` : '';
+            target.style.opacity = opacity === 1 ? '' : String(opacity);
         };
 
         const onStart = (event: TouchEvent) => {
@@ -69,7 +80,7 @@ export function useSwipePager<T extends HTMLElement>({
             const t = event.touches[0];
             startX = t.clientX; startY = t.clientY; startT = performance.now();
             dx = 0; axis = null; tracking = true;
-            node.style.transition = '';
+            moving().style.transition = '';
         };
 
         const onMove = (event: TouchEvent) => {
@@ -90,7 +101,7 @@ export function useSwipePager<T extends HTMLElement>({
         };
 
         const settle = () => {
-            node.style.transition = 'transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 260ms';
+            moving().style.transition = 'transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 260ms';
             setX(0);
         };
 
@@ -122,13 +133,14 @@ export function useSwipePager<T extends HTMLElement>({
     const lastKey = useRef(pageKey);
     const lastOrder = useRef(order);
     useLayoutEffect(() => {
-        const node = ref.current;
+        const root = ref.current;
         if (lastKey.current === pageKey) return;
         const forward = swipedRef.current ? swipedRef.current === 'next' : order > lastOrder.current;
         lastKey.current = pageKey;
         lastOrder.current = order;
         swipedRef.current = null;
-        if (!node || typeof node.animate !== 'function' || !enabled) return;
+        if (!root || typeof root.animate !== 'function' || !enabled) return;
+        const node = slideTarget(root);
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         node.style.transition = '';
         node.style.transform = '';
