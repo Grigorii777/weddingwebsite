@@ -134,6 +134,11 @@ idempotent — matches on place name, never reverts an edit) and
    above the floating tab bar with `--hm-nav-clearance`. Nothing `fixed` goes
    inside a swipe wrapper or the toolbar: a transform or a backdrop filter makes
    that box, not the screen, what `fixed` is measured against.
+   Tabs switch with no server round trip (v0.10.22): the shell draws the tab from
+   the path (`TabView.tsx`) and tab links go through `goTab()` in
+   `kit/navigate.ts`, which uses `history.pushState`. **A new tab goes in
+   `TAB_PATHS` and `TabView` as well as its `page.tsx`**, or links to it fall back
+   to a normal, server-backed navigation.
    `npm run check:honeymoon:ui` covers the entry points and the phone layout.
 9. **Every new page goes in `src/lib/offline.ts`.** The whole site works offline
    (v0.10.3): `public/sw.js` keeps a copy of every page, its data, its photos and

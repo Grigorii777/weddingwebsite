@@ -177,7 +177,7 @@ const onPage = (text: string) => p.evaluate((wanted) => document.body.innerText.
     || [...document.querySelectorAll('input, textarea')].some((el) => (el as HTMLInputElement).value === wanted), text);
 await p.goto(`${BASE}/admin/honeymoon/checklist`, { waitUntil: 'load' });
 await p.waitForTimeout(1500);
-const box = p.locator('input[placeholder^="Renew passports"]').first();
+const box = p.locator('input[placeholder^="Add a to-do"], input[placeholder^="Renew passports"]').first();
 check('the checklist opens offline with its add box', (await box.count()) > 0);
 if (await box.count()) {
     await box.fill(typed);

@@ -11,6 +11,11 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.22 — [Released] Honeymoon tabs switch instantly (`main`, 2026-10-22 12:42)
+
+### Changed
+- **Tapping a tab in the honeymoon portal no longer waits for the server.** Every tab already had its data in memory, but each tap still asked the server for the new page first, a round trip on every tap. Now the portal switches the tab in the browser and only updates the address. On a simulated weak signal, 300 ms per request, a tap took 370 to 820 ms and made two to seven requests. It now takes 50 to 200 ms, mostly the tap itself, and asks the server for nothing. It works with no connection at all. This covers the bottom bar, the More sheet, the desktop tab row, the Places, Stays and Excursions switch, the keyboard shortcuts and links between tabs. Refreshing, bookmarks and the back button still land on the right tab.
+
 ## v0.10.21 — [Released] Today's header holds still while you swipe (`main`, 2026-10-22 12:31)
 
 ### Fixed

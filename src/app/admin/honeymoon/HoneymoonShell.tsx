@@ -12,6 +12,8 @@ import SearchPalette from './SearchPalette';
 import ReauthModal from './ReauthModal';
 import { UndoToast } from './ui';
 import { useHoneymoon } from './useHoneymoon';
+import TabView from './TabView';
+import { goTab } from './kit/navigate';
 
 const BASE = '/admin/honeymoon';
 
@@ -70,7 +72,32 @@ export default function HoneymoonShell({ children }: { children: React.ReactNode
      * switch. Short, because it must never feel like waiting.
      */
     const pageRef = useRef<HTMLDivElement | null>(null);
+
+    /*
+     * Tab links switch with no server round trip.
+     *
+     * Caught here, in the capture phase, so it covers every link to a tab —
+     * the bars, the More sheet, and the links inside the tabs ("Open →",
+     * "Travel documents") — without each one knowing. Calling preventDefault
+     * is what makes Next's <Link> stand down (it checks after running its own
+     * onClick, so a sheet still closes). New tabs, downloads and modified
+     * clicks are left to the browser.
+     */
     useEffect(() => {
+        const onClick = (event: MouseEvent) => {
+            if (event.defaultPrevented || event.button !== 0
+                || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            const anchor = (event.target as Element | null)?.closest?.('a[href]') as HTMLAnchorElement | null;
+            if (!anchor || anchor.target === '_blank' || anchor.hasAttribute('download')) return;
+            if (goTab(anchor.href)) event.preventDefault();
+        };
+        window.addEventListener('click', onClick, true);
+        return () => window.removeEventListener('click', onClick, true);
+    }, []);
+
+    useEffect(() => {
+        // A new tab starts at its top, as a page load would.
+        document.querySelector('[data-hm-scroll]')?.scrollTo({ top: 0 });
         const node = pageRef.current;
         if (!node || typeof node.animate !== 'function') return;
         if (!window.matchMedia('(max-width: 767px)').matches) return;
@@ -197,7 +224,7 @@ export default function HoneymoonShell({ children }: { children: React.ReactNode
         const onKey = (event: KeyboardEvent) => {
             setGoto(false);
             const href = targets[event.key.toLowerCase()];
-            if (href) { event.preventDefault(); router.push(href); }
+            if (href) { event.preventDefault(); if (!goTab(href)) router.push(href); }
         };
         window.addEventListener('keydown', onKey, { once: true });
         const timer = setTimeout(() => setGoto(false), 2000);
@@ -385,14 +412,14 @@ export default function HoneymoonShell({ children }: { children: React.ReactNode
                     the bar with --hm-nav-clearance. Every other tab pads its
                     bottom by the same value so the last row can scroll clear. */}
                 {isMap ? (
-                    <div ref={pageRef} className="flex-1 min-h-0 md:px-6 md:pb-6">{children}</div>
+                    <div ref={pageRef} className="flex-1 min-h-0 md:px-6 md:pb-6"><TabView pathname={pathname}>{children}</TabView></div>
                 ) : (
                     <div className="flex-1 min-h-0 overflow-auto overscroll-contain" data-hm-scroll>
                         <div
                             ref={pageRef}
                             className="w-full px-4 md:px-6 pb-[calc(var(--hm-nav-clearance)+1.25rem)] md:pb-6"
                         >
-                            {children}
+                            <TabView pathname={pathname}>{children}</TabView>
                         </div>
                     </div>
                 )}

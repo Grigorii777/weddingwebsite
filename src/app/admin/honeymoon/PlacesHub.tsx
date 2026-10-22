@@ -7,6 +7,7 @@ import { useHoneymoonApi } from './HoneymoonContext';
 import PlacesTab from './PlacesTab';
 import StaysTab from './StaysTab';
 import { Segmented } from './kit/Segmented';
+import { goTab } from './kit/navigate';
 
 export type PlacesSegment = 'all' | 'stays' | 'excursions';
 
@@ -43,7 +44,7 @@ export default function PlacesHub({ segment }: { segment: PlacesSegment }) {
         <Segmented<PlacesSegment>
             ariaLabel="Which places"
             value={segment}
-            onChange={(next) => router.push(HREF[next])}
+            onChange={(next) => { if (!goTab(HREF[next])) router.push(HREF[next]); }}
             options={[
                 { key: 'all', label: 'All', count: counts.all },
                 { key: 'stays', label: 'Stays', count: counts.stays },
