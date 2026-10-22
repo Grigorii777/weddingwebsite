@@ -16,10 +16,20 @@ import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
 
 export const ADMIN_COOKIE = 'admin_token';
 export const ADMIN_HINT_COOKIE = 'admin_hint';
-/** How long a session lasts from its last refresh. */
-export const SESSION_SECONDS = 2 * 60 * 60;
-/** A valid token with less than this left is re-issued on the next request. */
-export const REFRESH_BELOW_SECONDS = 60 * 60;
+/**
+ * How long a session lasts from its last refresh: a week.
+ *
+ * It was two hours, which on the installed phone app meant signing in again
+ * every time it was picked up — and on the honeymoon, where the app is opened
+ * a few times a day with long gaps between, that was nearly every time. A week
+ * of not opening it at all still signs you out.
+ */
+export const SESSION_SECONDS = 7 * 24 * 60 * 60;
+/**
+ * A valid token with less than this left is re-issued on the next request — so
+ * a session in use is renewed about once a day, not on every request.
+ */
+export const REFRESH_BELOW_SECONDS = SESSION_SECONDS - 24 * 60 * 60;
 
 export function getJwtSecret(): Uint8Array | null {
     const raw = process.env.JWT_SECRET || process.env.ADMIN_PASSWORD;

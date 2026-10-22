@@ -3,9 +3,10 @@
 import Link from 'next/link';
 import Changelog from '@/components/admin/Changelog';
 import OfflineStatus from '@/components/offline/OfflineStatus';
-import { clearOffline } from '@/components/offline/offlineStore';
+import { clearOffline, inFrame, isStandalone } from '@/components/offline/offlineStore';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { LAST_ADMIN_PAGE_KEY, launchRestore } from '@/lib/loginReturn';
 
 export default function AdminShell({
     children,
@@ -23,6 +24,53 @@ export default function AdminShell({
             .then(res => res.json())
             .then(data => setConfig(data))
             .catch(err => console.error('Error fetching config:', err));
+    }, [pathname]);
+
+    /*
+     * Reopen the installed app where you left it.
+     *
+     * The phone opens the app at its front door (`/admin`, which is the
+     * dashboard) whenever it had been closed in the background. Once per launch,
+     * and only in the installed app, that sends you to the last page instead. A
+     * browser tab opened at /admin is a deliberate visit and is left alone.
+     *
+     * `/admin` itself is skipped, not handled: it redirects to the dashboard in
+     * the browser after this shell has mounted, and a replace issued there loses
+     * the race to that redirect. The launch is handled on the page it settles on.
+     *
+     * A full page replace, not `router.replace`: issued while the app is still
+     * starting up, the router fetched the page and then never switched to it.
+     * One extra load at launch, answered from the saved copy when offline.
+     *
+     * Declared before the effect that records the page, so it reads the page
+     * you were on before this launch rather than the dashboard it just opened.
+     *
+     * Neither effect runs in a hidden frame: the offline save pass opens every
+     * admin page in one, and they share this tab's storage — they used to spend
+     * the launch and overwrite the last page with whatever they opened last.
+     */
+    useEffect(() => {
+        if (!pathname || pathname === '/admin' || inFrame()) return;
+        try {
+            if (window.sessionStorage.getItem('admin-launch-seen')) return;
+            window.sessionStorage.setItem('admin-launch-seen', '1');
+            if (pathname === '/admin/login' || !isStandalone()) return;
+            const target = launchRestore(pathname, window.localStorage.getItem(LAST_ADMIN_PAGE_KEY));
+            if (target) window.location.replace(target);
+        } catch {
+            // No storage (a private window): nothing to restore.
+        }
+    }, [pathname]);
+
+    /* Remember the page shown, for the sign-in and the next launch to return to. */
+    useEffect(() => {
+        // `/admin` is only ever on its way to the dashboard; it is nowhere you were.
+        if (!pathname || pathname === '/admin' || pathname === '/admin/login' || inFrame()) return;
+        try {
+            window.localStorage.setItem(LAST_ADMIN_PAGE_KEY, pathname + window.location.search);
+        } catch {
+            // Storage refused: signing in falls back to the page asked for.
+        }
     }, [pathname]);
 
     // Close drawer on navigation

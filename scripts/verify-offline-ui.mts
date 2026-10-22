@@ -291,6 +291,9 @@ console.log('\nThe installed app picks up changes on the server by itself');
     const app = await context.newPage();
     // As text: the script runner would otherwise wrap the function in a helper the page lacks.
     await app.addInitScript({ content: "Object.defineProperty(navigator, 'standalone', { get: () => true })" });
+    // The installed app reopens on the last page it showed (v0.10.18), which
+    // would move this one off the dashboard mid-check; start it with none.
+    await app.addInitScript({ content: "try { localStorage.removeItem('admin-last-page') } catch {}" });
     await app.goto(`${BASE}/admin/dashboard`, { waitUntil: 'load' });
     const server = await (await context.request.get(`${BASE}/api/offline/manifest`)).json() as { data: string };
     const deadline = Date.now() + 5 * 60_000;

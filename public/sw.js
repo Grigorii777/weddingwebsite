@@ -35,8 +35,24 @@ const FILES = 'honeymoon-files-v1';
 const REMOTE = 'site-remote-images-v1';
 const KEEP = [PAGES, STATIC, DATA, PHOTOS, FILES, REMOTE];
 
-/** How long a request may hang before the saved copy answers instead. */
+/** How long a request with no saved copy may hang before it gives up. */
 const NETWORK_TIMEOUT_MS = 6000;
+/**
+ * How long a request that *has* a saved copy waits for the network first.
+ *
+ * Until v0.10.18 every request waited the full six seconds above — the page,
+ * then each of its data requests — so opening the app on a dead signal (the
+ * kind that hangs rather than failing outright) took the better part of a
+ * minute. Now the copy answers after this, and the network carries on in the
+ * background to refresh it.
+ */
+const FALLBACK_AFTER_MS = 2500;
+/**
+ * Once the network has failed or stalled, how long every request with a saved
+ * copy is answered from it at once, without asking the network at all. A probe
+ * of `/api/offline/ping` ends it early as soon as the server answers.
+ */
+const OFFLINE_HOLD_MS = 30000;
 /** Photos are saved as they are viewed; past this, the oldest go first. */
 const MAX_PHOTOS = 1500;
 /** The same for other sites' pictures and map tiles. */
@@ -146,6 +162,19 @@ function redirectTarget(requestUrl, res) {
     } catch {
         return null;
     }
+}
+
+/**
+ * How long to wait on the network before answering from the saved copy.
+ *
+ * No copy: the full timeout, because there is nothing else to show. A copy and
+ * a recent failure (`offlineAt`): no wait at all. A copy and no reason to doubt
+ * the network: a short wait, after which the copy answers.
+ */
+function fallbackWait(hasSaved, offlineAt, now) {
+    if (!hasSaved) return NETWORK_TIMEOUT_MS;
+    if (typeof offlineAt === 'number' && now - offlineAt < OFFLINE_HOLD_MS) return 0;
+    return FALLBACK_AFTER_MS;
 }
 
 function isCacheableData(res) {
@@ -267,7 +296,8 @@ function mergeSiteConfig(config, bodies) {
 /* Under Node (check:offline) only the rules above are wanted. */
 if (typeof module === 'object' && module.exports) {
     module.exports = {
-        routeFor, isCacheablePage, isCacheableData, isStale, redirectTarget, OFFLINE_WRITE_MESSAGE,
+        routeFor, isCacheablePage, isCacheableData, isStale, redirectTarget, OFFLINE_WRITE_MESSAGE, fallbackWait,
+        NETWORK_TIMEOUT_MS, FALLBACK_AFTER_MS, OFFLINE_HOLD_MS,
         isQueueable, tempIdCount, queuedResponseBody, remapIds, remapUrl, createdIds, outcomeFor, mergeSiteConfig,
     };
 }
@@ -293,6 +323,76 @@ if (typeof self !== 'undefined' && typeof self.addEventListener === 'function' &
         const timer = setTimeout(() => reject(new Error('timeout')), ms);
         promise.then((value) => { clearTimeout(timer); resolve(value); }, (error) => { clearTimeout(timer); reject(error); });
     });
+
+    /* ───────────── fast fallback: how a read picks network or copy ───────────── */
+
+    /** When the network last failed or stalled; null while it is answering. */
+    let offlineAt = null;
+    let probing = false;
+    let lastProbe = 0;
+
+    /**
+     * Ask the server, out of band, whether it is reachable again — at most every
+     * few seconds, and only while the worker believes it is not. Without this a
+     * hold could only end by timing out, since a held request never asks.
+     */
+    function probe() {
+        const now = Date.now();
+        if (probing || now - lastProbe < 5000) return;
+        probing = true;
+        lastProbe = now;
+        withTimeout(fetch('/api/offline/ping', { cache: 'no-store' }), 4000)
+            .then((response) => { if (response.ok) offlineAt = null; })
+            .catch(() => undefined)
+            .finally(() => { probing = false; });
+    }
+
+    function markOffline() {
+        if (offlineAt === null) offlineAt = Date.now();
+        probe();
+    }
+
+    /**
+     * Network first, but never stuck behind it when there is a copy to show.
+     *
+     * `store(response)` saves a good answer; it runs whenever the network does
+     * answer, even after the copy has already been shown, so the next open is
+     * fresher. Resolves to `{ response, fromCopy }`; rejects only when there is
+     * no copy and the network failed.
+     */
+    async function readThrough(request, saved, store, event) {
+        const wait = fallbackWait(Boolean(saved), offlineAt, Date.now());
+        if (wait === 0) {
+            probe();
+            return { response: saved, fromCopy: true };
+        }
+        const network = fetch(request).then(async (response) => {
+            offlineAt = null;
+            try { await store(response.clone()); } catch { /* a full disk is not the page's problem */ }
+            return response;
+        });
+        if (!saved) {
+            try {
+                return { response: await withTimeout(network, NETWORK_TIMEOUT_MS), fromCopy: false };
+            } catch (error) {
+                markOffline();
+                throw error;
+            }
+        }
+        const LATE = Symbol('late');
+        let timer;
+        const outcome = await Promise.race([
+            network.then((response) => response, () => null),
+            new Promise((resolve) => { timer = setTimeout(() => resolve(LATE), wait); }),
+        ]);
+        clearTimeout(timer);
+        if (outcome && outcome !== LATE) return { response: outcome, fromCopy: false };
+        // Late or failed: the copy answers now. A late answer still lands in the
+        // cache when it arrives.
+        if (outcome === LATE) event.waitUntil(network.catch(() => undefined));
+        markOffline();
+        return { response: saved, fromCopy: true };
+    }
 
     const offlineWrite = () => new Response(JSON.stringify({ error: OFFLINE_WRITE_MESSAGE, offline: true }), {
         status: 503,
@@ -659,19 +759,21 @@ if (typeof self !== 'undefined' && typeof self.addEventListener === 'function' &
 
     async function page(request, event) {
         const cache = await caches.open(PAGES);
-        try {
-            const response = await withTimeout(fetch(request), NETWORK_TIMEOUT_MS);
-            const key = new URL(request.url).pathname + new URL(request.url).search;
+        const url = new URL(request.url);
+        const key = url.pathname + url.search;
+        const saved = await cache.match(key, { ignoreVary: true })
+            || await cache.match(url.pathname, { ignoreVary: true, ignoreSearch: true });
+        const store = async (response) => {
             const target = redirectTarget(request.url, describe(response));
-            if (isCacheablePage(request.url, describe(response))) await cache.put(key, response.clone());
+            if (isCacheablePage(request.url, describe(response))) await cache.put(key, response);
             else if (target) await cache.put(key, Response.redirect(new URL(target, self.location.origin).href, 302));
+        };
+        try {
+            const { response, fromCopy } = await readThrough(request, saved, store, event);
+            if (fromCopy) tell(event, true);
             return response;
         } catch {
             tell(event, true);
-            const url = new URL(request.url);
-            const saved = await cache.match(url.pathname + url.search, { ignoreVary: true })
-                || await cache.match(url.pathname, { ignoreVary: true, ignoreSearch: true });
-            if (saved) return saved;
             const fallback = await cache.match('/offline', { ignoreVary: true });
             if (fallback) return fallback;
             return new Response('<h1>Offline</h1><p>This page has not been saved for offline use yet.</p>', {
@@ -697,17 +799,18 @@ if (typeof self !== 'undefined' && typeof self.addEventListener === 'function' &
         const isConfig = cacheName === DATA && new URL(request.url).pathname === SITE_CONFIG;
         const keep = cacheName !== PHOTOS || !(await fromPhotoLibrary(event));
         if (cacheName === PHOTOS && pass && keep) pass.seen.add(request.url);
+        const saved = await cache.match(request, { ignoreVary: true });
+        const store = async (response) => {
+            if (!keep || !isCacheableData(response)) return;
+            await cache.put(request, response);
+            if (cacheName === PHOTOS) void trimPhotos();
+        };
         try {
-            const response = await withTimeout(fetch(request), NETWORK_TIMEOUT_MS);
-            if (keep && isCacheableData(response)) {
-                await cache.put(request, response.clone());
-                if (cacheName === PHOTOS) void trimPhotos();
-            }
+            const { response, fromCopy } = await readThrough(request, saved, store, event);
+            if (fromCopy) tell(event, true);
             return isConfig ? withQueuedConfig(response) : response;
         } catch (error) {
             tell(event, true);
-            const saved = await cache.match(request, { ignoreVary: true });
-            if (saved) return isConfig ? withQueuedConfig(saved) : saved;
             if (cacheName === PHOTOS) {
                 // The same photo at another size (the lightbox's full size when
                 // only the gallery's thumbnail was saved) beats a broken image.

@@ -36,7 +36,12 @@ function useOnline(): boolean {
         window.addEventListener('online', apply);
         window.addEventListener('offline', apply);
         const onMessage = (event: MessageEvent) => {
-            if (event.data?.type === 'site-sw:offline') setWorkerOffline(true);
+            if (event.data?.type !== 'site-sw:offline') return;
+            setWorkerOffline(true);
+            // The worker also answers from the saved copy when the server is
+            // merely slow, so check for ourselves rather than trusting it: a
+            // reachable server clears the bar straight away.
+            if (!inFlight) recheck();
         };
         navigator.serviceWorker?.addEventListener('message', onMessage);
         navigator.serviceWorker?.startMessages?.();
@@ -46,7 +51,9 @@ function useOnline(): boolean {
         let stopped = false;
         let current: AbortController | null = null;
         let retry: ReturnType<typeof setTimeout> | null = null;
+        let inFlight = false;
         const ping = () => {
+            inFlight = true;
             current = new AbortController();
             const cap = setTimeout(() => current?.abort(), 5000);
             fetch('/api/offline/ping', { cache: 'no-store', signal: current.signal })
@@ -55,6 +62,7 @@ function useOnline(): boolean {
                 .catch(() => false)
                 .then((reached) => {
                     clearTimeout(cap);
+                    inFlight = false;
                     if (stopped) return;
                     setWorkerOffline(!reached);
                     if (!reached) retry = setTimeout(ping, 15000);

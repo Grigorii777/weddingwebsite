@@ -58,7 +58,7 @@ image:
 | `npm run check:finance` | Budget arithmetic |
 | `npm run check:finance:db` | The same against a live database |
 | `npm run check:finance:ui` | The finance UI's contracts (needs a browser; fetches Playwright on demand) |
-| `npm run check:offline` | 126 checks with no browser, in CI: the offline worker's routing and saving rules, staleness and the update rule, which writes the outbox keeps, temporary-id rewriting, repeats applied once, the honeymoon portal's offline view, and that every page in `src/app` is in the offline lists |
+| `npm run check:offline` | 147 checks with no browser, in CI: the offline worker's routing and saving rules, how long a read waits before its saved copy answers, where signing in returns you to, staleness and the update rule, which writes the outbox keeps, temporary-id rewriting, repeats applied once, the honeymoon portal's offline view, and that every page in `src/app` is in the offline lists |
 | `npm run check:offline:ui` | The whole site offline in a real browser, 72 checks: save, cut the server off (through a proxy), open every page, edit offline and reconnect, lose a save's answer, let the installed app notice a server change, sign out. Needs a **production build** (`BASE=… ADMIN_PASSWORD=…`) and writes (cleans up after itself) |
 | `npm run check:honeymoon:ui` | The honeymoon portal in a real browser, 53 checks (none of them write): the same place panel and sections from every entry point, the itinerary toolbar staying on screen, travel on both timeline shapes, overview cards never overlapping, and at 390×844 no sideways scroll and no control under 44px on any of its pages. Needs a browser and a server with honeymoon data (`BASE=… ADMIN_PASSWORD=…`, or `DEMO=1` against the demo) |
 | `npm run check:hero` | The home page's hero collapse in a real browser, at five viewport-and-input pairings — phone portrait, **phone landscape**, tablet portrait, tablet landscape, desktop — each driven by the input that device actually sends. Needs a browser and a server whose site config has a hero photo, or every case reports the placeholder instead of a pass |
@@ -350,8 +350,12 @@ order, before the commit:
   HTTP-only cookie, signed with `JWT_SECRET` (falls back to `ADMIN_PASSWORD`;
   with neither set, nothing signs and nothing verifies — never a default
   secret). All of it lives in `src/lib/auth.ts`; import from there rather than
-  re-deriving the key. Sessions last 2h and are re-issued by the middleware
-  when under an hour remains. `src/middleware.ts` protects `/admin/*` **and
+  re-deriving the key. Sessions last a week and are re-issued by the middleware
+  once a day of one has passed (v0.10.18; it was 2h, which signed the phone app out
+  every time it was picked up). A signed-out page redirects to
+  `/admin/login?next=<page>`, and the login returns there — or, when `next` is only
+  the front door, to the last admin page this device showed (`src/lib/loginReturn.ts`;
+  `AdminShell` records it, never from a hidden save-pass frame). `src/middleware.ts` protects `/admin/*` **and
   `/api/admin/*`, for every method including GET**, rate-limits the public
   write endpoints (`/api/auth/login`, `/api/rsvp`, `/api/guest-verification`;
   `src/lib/rateLimit.ts`), and **gates the WIP/hidden public pages

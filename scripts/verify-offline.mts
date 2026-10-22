@@ -19,6 +19,7 @@ import { ADMIN_PAGES, EXCLUDED_PAGES, PUBLIC_PAGES, isWarmStale, updateNeeded } 
 import { applyQueuedWrites, type QueuedWrite } from '../src/lib/honeymoonOffline';
 import type { HoneymoonPayload } from '../src/lib/honeymoon';
 import { once } from '../src/lib/outboxReplay';
+import { launchRestore, loginDestination, safeAdminPath } from '../src/lib/loginReturn';
 
 let failures = 0;
 let checks = 0;
@@ -45,6 +46,10 @@ const sw = sandbox.module.exports as unknown as {
     createdIds: (body: unknown) => (number | null)[];
     outcomeFor: (status: number, attempts: number) => string;
     mergeSiteConfig: (config: Record<string, unknown>, bodies: unknown[]) => Record<string, unknown>;
+    fallbackWait: (hasSaved: boolean, offlineAt: number | null, now: number) => number;
+    NETWORK_TIMEOUT_MS: number;
+    FALLBACK_AFTER_MS: number;
+    OFFLINE_HOLD_MS: number;
 };
 
 const O = 'https://example.com';
@@ -356,6 +361,34 @@ console.log('\nThe honeymoon portal, edited offline');
 }
 
 console.log('\nEvery page is in the offline list');
+console.log('\nHow long a read waits before the saved copy answers');
+{
+    const now = 1_000_000;
+    check('with nothing saved, the full network timeout', sw.fallbackWait(false, null, now) === sw.NETWORK_TIMEOUT_MS);
+    check('with nothing saved, the full timeout even while offline', sw.fallbackWait(false, now - 1000, now) === sw.NETWORK_TIMEOUT_MS);
+    check('with a copy and no failure, a short wait', sw.fallbackWait(true, null, now) === sw.FALLBACK_AFTER_MS);
+    check('the short wait is well under the full timeout', sw.FALLBACK_AFTER_MS * 2 <= sw.NETWORK_TIMEOUT_MS);
+    check('with a copy, just after a failure, no wait at all', sw.fallbackWait(true, now - 1000, now) === 0);
+    check('the hold ends, and the network is asked again', sw.fallbackWait(true, now - sw.OFFLINE_HOLD_MS, now) === sw.FALLBACK_AFTER_MS);
+}
+
+console.log('\nWhere signing in returns you to');
+check('the page asked for wins', loginDestination('/admin/honeymoon/map', '/admin/rsvps') === '/admin/honeymoon/map');
+check('its query string survives', loginDestination('/admin/finances?tab=items', null) === '/admin/finances?tab=items');
+check('the front door gives way to the last page', loginDestination('/admin', '/admin/honeymoon/today') === '/admin/honeymoon/today');
+check('the dashboard counts as the front door', loginDestination('/admin/dashboard', '/admin/seating') === '/admin/seating');
+check('no next, the last page', loginDestination(null, '/admin/seating') === '/admin/seating');
+check('nothing known, the admin panel', loginDestination(null, null) === '/admin');
+check('another site is ignored', loginDestination('https://evil.example/admin', null) === '/admin');
+check('a protocol-relative link is ignored', loginDestination('//evil.example/admin', null) === '/admin');
+check('a backslash trick is ignored', safeAdminPath('/admin\\@evil.example') === null);
+check('a lookalike path is ignored', safeAdminPath('/administrator') === null);
+check('the login page is never a destination', loginDestination('/admin/login?next=/admin', '/admin/login') === '/admin');
+check('a stored junk value falls back', loginDestination(null, 'javascript:alert(1)') === '/admin');
+check('opening the app at the front door restores the last page', launchRestore('/admin/dashboard', '/admin/honeymoon/map') === '/admin/honeymoon/map');
+check('opening the app anywhere else stays put', launchRestore('/admin/rsvps', '/admin/honeymoon/map') === null);
+check('a last page that is the front door restores nothing', launchRestore('/admin/dashboard', '/admin') === null);
+
 const pages: string[] = [];
 const walk = (dir: string) => {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {

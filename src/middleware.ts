@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { isDemoMode } from '@/lib/demo';
 import {
-    ADMIN_COOKIE, cookieOptions, isSecureRequest, shouldRefresh, signAdminToken, verifyAdminToken,
+    ADMIN_COOKIE, ADMIN_HINT_COOKIE, cookieOptions, isSecureRequest, shouldRefresh, signAdminToken, verifyAdminToken,
 } from '@/lib/auth';
 import { clientIp, rateLimit } from '@/lib/rateLimit';
 
@@ -183,7 +183,11 @@ export async function middleware(request: NextRequest) {
         if (pathname === '/admin/login') return NextResponse.next();
 
         if (!session) {
-            return NextResponse.redirect(new URL('/admin/login', request.url));
+            // Carry the page asked for, so signing in lands back on it rather
+            // than on the dashboard. The login page checks it stays in /admin.
+            const login = new URL('/admin/login', request.url);
+            login.searchParams.set('next', pathname + request.nextUrl.search);
+            return NextResponse.redirect(login);
         }
         return withRefreshedSession(request, session, NextResponse.next());
     }
@@ -201,10 +205,11 @@ export async function middleware(request: NextRequest) {
 /**
  * Sliding sessions.
  *
- * A token lasts two hours from its last refresh, and any authenticated request
- * made in its final hour re-issues it. An afternoon spent in the seating chart
- * or the budget no longer ends with every save quietly returning 401 at the
- * two-hour mark; only two hours of genuine inactivity signs you out.
+ * A token lasts a week from its last refresh (`SESSION_SECONDS`), and the first
+ * authenticated request once a day of it has passed re-issues it. Only a week of
+ * genuine inactivity signs you out. The nav's readable hint cookie is renewed
+ * alongside, or it would lapse on its own schedule and the nav would forget you
+ * were signed in while the session itself was still good.
  */
 async function withRefreshedSession(
     request: NextRequest,
@@ -214,7 +219,9 @@ async function withRefreshedSession(
     if (!session || !shouldRefresh(session)) return response;
     const fresh = await signAdminToken();
     if (!fresh) return response;
-    response.cookies.set(ADMIN_COOKIE, fresh, cookieOptions(isSecureRequest(request)));
+    const options = cookieOptions(isSecureRequest(request));
+    response.cookies.set(ADMIN_COOKIE, fresh, options);
+    response.cookies.set(ADMIN_HINT_COOKIE, '1', { ...options, httpOnly: false });
     return response;
 }
 

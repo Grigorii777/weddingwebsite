@@ -7,8 +7,8 @@ import { Button, TextField } from './ui';
 /**
  * "Signed out" as a question rather than a red banner.
  *
- * The admin session is two hours and a planning session is longer, so a save
- * refused with a 401 is the ordinary end of an afternoon — but the old
+ * The admin session lasts a week from its last use, so a save refused with a
+ * 401 is rare now, but it still happens after a long gap — and the old
  * behaviour was an "Unauthorized" toast over a form still holding your text,
  * with the only way forward being a full-page login that discarded it. This
  * signs back in where you are and lets the hook finish the save that failed.

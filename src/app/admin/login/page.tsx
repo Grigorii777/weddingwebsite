@@ -2,6 +2,16 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { LAST_ADMIN_PAGE_KEY, loginDestination } from '@/lib/loginReturn';
+
+/** The last admin page this device showed, if storage can be read at all. */
+function lastPage(): string | null {
+    try {
+        return window.localStorage.getItem(LAST_ADMIN_PAGE_KEY);
+    } catch {
+        return null;
+    }
+}
 
 export default function AdminLogin() {
     const [password, setPassword] = useState('');
@@ -20,7 +30,11 @@ export default function AdminLogin() {
             });
 
             if (res.ok) {
-                router.push('/admin');
+                // Back to the page that sent you here, or the one you were last
+                // on — never the dashboard by default. Replace, so Back does not
+                // return to the login form.
+                const next = new URLSearchParams(window.location.search).get('next');
+                router.replace(loginDestination(next, lastPage()));
                 router.refresh();
             } else {
                 setError('Invalid password');

@@ -11,6 +11,16 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.18 — [Released] The phone app stays signed in, remembers where you were, and opens fast offline (`main`, 2026-10-22 09:27)
+
+### Changed
+- **Sessions last a week instead of two hours.** Using the admin renews it about once a day, so only a week of not opening it at all signs you out. The phone app used to ask for the password nearly every time it was picked up.
+- **Opening the app with no connection is fast.** Every page and every piece of data used to wait up to six seconds for the network before showing the saved copy, so a page took about twelve seconds on a signal that hangs rather than failing. Now the saved copy answers after two and a half seconds, and once the network has failed, everything else answers from the saved copy at once. A quick check of the server ends that as soon as it answers again. Measured on a hanging connection, the first page went from about twelve seconds to under three, and each page after it from about twelve seconds to a fifth of a second.
+
+### Fixed
+- **Signing in again takes you back to where you were.** A signed-out page now sends its address along to the login, and the login returns there instead of the dashboard. When the app was simply reopened at its front door, the login returns to the last page this phone showed. The installed app also reopens on that last page when the phone had closed it in the background. Only pages inside the admin panel are ever followed.
+- **The offline bar no longer sticks after a slow answer.** When the saved copy answers because the server was only slow, the page now checks the connection itself and clears the bar if the server is there.
+
 ## v0.10.17 — [Released] See yourself on the honeymoon map (`main`, 2026-10-22 01:40)
 
 ### Added
