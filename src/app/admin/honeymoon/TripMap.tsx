@@ -197,6 +197,14 @@ export interface TripMapProps {
      * only way to draw one; there is no separate boundary tool.
      */
     onLassoSelect?: (ids: number[], additive: boolean, loop: LatLng[]) => void;
+    /**
+     * Where you are, from the browser's location, or null to draw nothing.
+     *
+     * A blue dot with a pale circle for the accuracy, the same picture every
+     * phone map uses, so it never reads as one of the places. Moving it never
+     * re-frames the map: the parent decides when to fly to it.
+     */
+    me?: { lat: number; lng: number; accuracy: number } | null;
     className?: string;
 }
 
@@ -204,7 +212,7 @@ export default function TripMap({
     places, routes = [], legs = [], selectedId = null, onSelect, fitSignal = 0, fitPoints = null, fitInsetRight = 0,
     cluster = true, panToSelected = false, pinLabels, layer: layerKey = 'streets', pinColors,
     selectMode = false, selectedIds, onLassoSelect,
-    measureMode = false, className = '',
+    measureMode = false, me = null, className = '',
 }: TripMapProps) {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const mapRef = useRef<LeafletNS.Map | null>(null);
@@ -226,6 +234,8 @@ export default function TripMap({
     measureModeRef.current = measureMode;
     const layerRef = useRef<LeafletNS.LayerGroup | LeafletNS.MarkerClusterGroup | null>(null);
     const routeLayerRef = useRef<LeafletNS.LayerGroup | null>(null);
+    /** The "you are here" dot, kept apart so a pin redraw never touches it. */
+    const meLayerRef = useRef<LeafletNS.LayerGroup | null>(null);
     const leafletRef = useRef<typeof LeafletNS | null>(null);
     /**
      * Flips once the map exists, and is a dependency of every draw effect below.
@@ -318,6 +328,7 @@ export default function TripMap({
 
             routeLayerRef.current = L.layerGroup().addTo(map);
             toolLayerRef.current = L.layerGroup().addTo(map);
+            meLayerRef.current = L.layerGroup().addTo(map);
 
             /*
              * Measuring owns the map's click while it is armed, and is off by
@@ -387,6 +398,7 @@ export default function TripMap({
             mapRef.current = null;
             layerRef.current = null;
             routeLayerRef.current = null;
+            meLayerRef.current = null;
             setReady(false);
         };
     }, []);
@@ -608,6 +620,37 @@ export default function TripMap({
             }
         }
     }, [routes, legs, ready]);
+
+    /* Where you are: an accuracy circle under a blue dot, above every pin. */
+    useEffect(() => {
+        const L = leafletRef.current;
+        const layer = meLayerRef.current;
+        if (!L || !layer) return;
+        layer.clearLayers();
+        if (!me) return;
+        L.circle([me.lat, me.lng], {
+            radius: me.accuracy,
+            color: '#2563eb', weight: 1, opacity: 0.4,
+            fillColor: '#3b82f6', fillOpacity: 0.12,
+            interactive: false,
+        }).addTo(layer);
+        L.marker([me.lat, me.lng], {
+            icon: L.divIcon({
+                className: 'honeymoon-me',
+                html: `<span style="
+                    display:block;width:18px;height:18px;border-radius:9999px;
+                    background:#2563eb;border:3px solid #fff;
+                    box-shadow:0 0 0 1px rgba(37,99,235,.35),0 1px 6px rgba(0,0,0,.45);
+                "></span>`,
+                iconSize: [18, 18],
+                iconAnchor: [9, 9],
+            }),
+            title: 'You are here',
+            keyboard: false,
+            interactive: false,
+            zIndexOffset: 3000,
+        }).addTo(layer);
+    }, [me, ready]);
 
     /**
      * Freehand lasso.

@@ -137,6 +137,67 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
     const [fitPoints, setFitPoints] = useState<{ lat: number; lng: number }[] | null>(null);
 
     /**
+     * Where you are, while 📍 Me is on.
+     *
+     * Off until pressed: the browser asks permission the first time, and a
+     * permission prompt on simply opening the map would be a strange welcome.
+     * It is a watch rather than a single fix, so the dot follows you on a walk.
+     * The map flies to the first fix only — after that the viewport is yours,
+     * the same rule as every other fit.
+     */
+    const [locating, setLocating] = useState(false);
+    const [me, setMe] = useState<{ lat: number; lng: number; accuracy: number } | null>(null);
+    const [meNote, setMeNote] = useState('');
+    useEffect(() => {
+        if (!locating) return;
+        let flown = false;
+        const id = navigator.geolocation.watchPosition(
+            (position) => {
+                const next = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                    accuracy: position.coords.accuracy,
+                };
+                setMe(next);
+                setMeNote('');
+                if (!flown) {
+                    flown = true;
+                    setFitPoints([next]);
+                    setFitSignal((n) => n + 1);
+                }
+            },
+            (error) => {
+                if (error.code === error.PERMISSION_DENIED) {
+                    setLocating(false);
+                    setMe(null);
+                    setMeNote('Location is blocked for this site. Allow it in the browser\'s '
+                        + 'site settings, then press 📍 Me again.');
+                } else {
+                    // Keep watching: indoors or just after landing, a fix often
+                    // arrives late, and the watch delivers it when it does.
+                    setMeNote('Still looking for your location…');
+                }
+            },
+            { enableHighAccuracy: true, maximumAge: 10_000, timeout: 30_000 },
+        );
+        return () => navigator.geolocation.clearWatch(id);
+    }, [locating]);
+    const toggleMe = () => {
+        if (locating) {
+            setLocating(false);
+            setMe(null);
+            setMeNote('');
+            return;
+        }
+        if (typeof navigator === 'undefined' || !navigator.geolocation) {
+            setMeNote('This browser cannot share its location.');
+            return;
+        }
+        setMeNote('Finding you…');
+        setLocating(true);
+    };
+
+    /**
      * Split view, and how wide each side column is.
      *
      * Both are remembered per browser rather than saved with the trip: how you
@@ -863,6 +924,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                         layer={layer}
                         pinColors={pinColors}
                         measureMode={tool === 'measure'}
+                        me={me}
                         selectMode={selectMode}
                         selectedIds={lassoed}
                         onLassoSelect={(ids, additive, loop) => {
@@ -898,6 +960,16 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                                 hover:bg-gray-100 transition"
                         >
                             ⤢ Fit
+                        </button>
+                        <button
+                            onClick={toggleMe}
+                            title={locating ? 'Stop showing where you are' : 'Show where you are on the map'}
+                            className={`shrink-0 min-h-11 md:min-h-0 rounded-full px-2.5 py-1 text-xs font-medium
+                                border transition ${locating
+                                ? 'bg-blue-600 border-blue-600 text-white'
+                                : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'}`}
+                        >
+                            {locating ? '📍 Me on' : '📍 Me'}
                         </button>
                         {/* Desktop only: three columns in 900px would leave nothing
                             worth calling a map. */}
@@ -962,6 +1034,13 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                         <p className="w-[min(18rem,100%)] rounded-2xl bg-violet-700/95 backdrop-blur
                             px-3 py-2 text-[11px] text-white shadow-lg">
                             {boundaryNote}
+                        </p>
+                    )}
+
+                    {meNote && (
+                        <p className="w-[min(16rem,100%)] rounded-2xl bg-blue-700/95 backdrop-blur
+                            px-3 py-2 text-[11px] text-white shadow-lg">
+                            {meNote}
                         </p>
                     )}
 

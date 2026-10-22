@@ -11,6 +11,11 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.17 — [Released] See yourself on the honeymoon map (`main`, 2026-10-22 01:40)
+
+### Added
+- **A 📍 Me button on the honeymoon map shows where you are.** It draws a blue dot with a pale circle for how accurate the fix is, and flies the map to you on the first fix. The dot keeps following you while the button is on, but the map only moves on its own once, so panning around is never yanked back. Nothing is asked of the browser until the button is pressed. If location is blocked for the site, the map says so instead of failing silently. Works offline too, since a phone's location comes from its GPS, not the server.
+
 ## v0.10.16 — [Unreleased] RSVPs close on the wedding day (`main`, 2026-10-20 02:40)
 
 ### Added
