@@ -16,6 +16,7 @@ import ItineraryTab from './ItineraryTab';
 import PlacesTab from './PlacesTab';
 import { usePlaceSheet } from './PlaceSheetContext';
 import { useIsPhone } from './kit/Sheet';
+import { Icon } from './kit/icons';
 import {
     BulkFieldMenu, Button, ColumnDivider, EmptyState, MiniSelect, OverflowMenu, SelectField,
 } from './ui';
@@ -734,14 +735,33 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
         ...(statusFilter ? [{ key: 'status', label: STATUSES.find((st) => st.key === statusFilter)?.label ?? statusFilter, clear: () => setStatusFilter('') }] : []),
     ];
 
+    /*
+     * A phone gets the map the way a maps app draws it: edge to edge, the
+     * filters a row of chips floating over the top that scrolls sideways, the
+     * tools a column of round buttons down the right, and adding a place a
+     * floating button above the tab bar. No zoom buttons — pinch does that
+     * (globals.css hides Leaflet's on a touch screen).
+     */
+    const toolClass = (on: boolean, onTone = 'bg-slate-900 border-slate-900 text-white') => phone
+        ? `flex size-11 shrink-0 items-center justify-center rounded-full border shadow-md backdrop-blur
+            transition active:scale-95 motion-reduce:active:scale-100 ${on ? onTone : 'border-gray-200/70 bg-white/90 text-gray-700'}`
+        : `shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium transition
+            ${on ? onTone : 'border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100'}`;
+
     return (
-        <div className="h-full flex flex-col gap-2">
+        // The map runs under the floating tab bar on a phone; Leaflet's
+        // attribution sits just above the bar rather than behind it.
+        <div data-map-tab className="relative h-full flex flex-col gap-2 max-md:gap-0
+            max-md:[&_.leaflet-bottom]:mb-[var(--hm-nav-clearance)]">
             {/* ---- Filters: one row ----
                 The country stays out in the open because it is saved with the
                 trip; everything else that narrows the pins is behind Filters, the
                 two overlays are chips, and the base map lives in the ⋯ menu. The
                 card that held all ten took more room than the map on a phone. */}
-            <div className="shrink-0 flex flex-wrap items-center gap-2">
+            <div className="shrink-0 flex flex-wrap items-center gap-2
+                hm-scroll-row max-md:absolute max-md:inset-x-0 max-md:top-0 max-md:z-[510] max-md:flex-nowrap
+                max-md:overflow-x-auto max-md:px-3 max-md:pt-3 max-md:pb-2 max-md:pointer-events-none
+                max-md:[&>*]:pointer-events-auto max-md:[&>*]:shadow-md">
                 <MiniSelect
                     value={country}
                     aria-label="Country"
@@ -826,7 +846,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                     },
                     { label: 'Reset filters', onClick: resetFilters },
                 ]} />
-                <div className="basis-full flex flex-wrap items-center gap-2">
+                <div className="basis-full flex flex-wrap items-center gap-2 max-md:hidden">
                     <FilterChips active={activeFilters} />
                     <p className="text-xs text-gray-400">
                         {pinnedCount} pinned
@@ -936,7 +956,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                                 return next;
                             });
                         }}
-                        className="h-full w-full border border-gray-100 shadow-sm"
+                        className="h-full w-full border border-gray-100 shadow-sm max-md:rounded-none max-md:border-0 max-md:shadow-none"
                     />
                 )}
 
@@ -948,28 +968,27 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                     One column, so nothing up here ever overlaps: the buttons, then
                     whichever tool is armed, then the selected place. */}
                 <div className="absolute top-3 right-3 z-[500] flex flex-col items-end gap-2
-                    max-w-[calc(100%-1.5rem)] max-h-[calc(100%-1.5rem)]">
-                    <div className="bg-white/95 backdrop-blur rounded-2xl shadow-lg
-                        border border-gray-200 px-2 py-1.5
-                        flex flex-wrap items-center justify-end gap-1.5">
-                        <button
-                            onClick={() => { setFitPoints(null); setFitSignal((n) => n + 1); }}
-                            title="Frame everything currently shown"
-                            className="shrink-0 min-h-11 md:min-h-0 rounded-full px-2.5 py-1 text-xs font-medium
-                                border border-gray-200 bg-gray-50 text-gray-600
-                                hover:bg-gray-100 transition"
-                        >
-                            ⤢ Fit
-                        </button>
+                    max-w-[calc(100%-1.5rem)] max-h-[calc(100%-1.5rem)] max-md:top-[4.5rem]">
+                    <div className={phone
+                        ? 'flex flex-col items-center gap-2'
+                        : `bg-white/95 backdrop-blur rounded-2xl shadow-lg border border-gray-200 px-2 py-1.5
+                            flex flex-wrap items-center justify-end gap-1.5`}>
                         <button
                             onClick={toggleMe}
                             title={locating ? 'Stop showing where you are' : 'Show where you are on the map'}
-                            className={`shrink-0 min-h-11 md:min-h-0 rounded-full px-2.5 py-1 text-xs font-medium
-                                border transition ${locating
-                                ? 'bg-blue-600 border-blue-600 text-white'
-                                : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'}`}
+                            aria-label={locating ? 'Stop showing where you are' : 'Show where you are'}
+                            aria-pressed={locating}
+                            className={toolClass(locating, 'bg-blue-600 border-blue-600 text-white')}
                         >
-                            {locating ? '📍 Me on' : '📍 Me'}
+                            {phone ? <Icon name="locate" className="size-5" /> : (locating ? '📍 Me on' : '📍 Me')}
+                        </button>
+                        <button
+                            onClick={() => { setFitPoints(null); setFitSignal((n) => n + 1); }}
+                            title="Frame everything currently shown"
+                            aria-label="Frame everything shown"
+                            className={toolClass(false)}
+                        >
+                            {phone ? <Icon name="fit" className="size-5" /> : '⤢ Fit'}
                         </button>
                         {/* Desktop only: three columns in 900px would leave nothing
                             worth calling a map. */}
@@ -977,23 +996,23 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                             <button
                                 onClick={toggleSplit}
                                 title="Itinerary on the left, places on the right, map in the middle — drag the dividers to resize"
-                                className={`shrink-0 min-h-11 md:min-h-0 rounded-full px-2.5 py-1 text-xs font-medium
-                                    border transition ${split
-                                    ? 'bg-slate-900 border-slate-900 text-white'
-                                    : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'}`}
+                                className={toolClass(split)}
                             >
                                 {split ? '⊞ Split on' : '⊞ Split'}
                             </button>
                         )}
-                        <button
-                            onClick={() => sheet.newPlace()}
-                            title="Add a place"
-                            className="shrink-0 min-h-11 md:min-h-0 rounded-full px-2.5 py-1 text-xs font-medium
-                                border border-transparent bg-accent text-white
-                                hover:opacity-90 transition"
-                        >
-                            + Add
-                        </button>
+                        {/* On a phone, adding is the floating button above the tab bar. */}
+                        {!phone && (
+                            <button
+                                onClick={() => sheet.newPlace()}
+                                title="Add a place"
+                                className="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium
+                                    border border-transparent bg-accent text-white
+                                    hover:opacity-90 transition"
+                            >
+                                + Add
+                            </button>
+                        )}
                         {/* Measuring and lassoing both own the map's pointer, so
                             arming either disarms the other rather than leaving two
                             tools fighting over the same click. */}
@@ -1003,12 +1022,11 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                                 setSelectMode(false);
                             }}
                             title="Click two points for the distance and bearing between them"
-                            className={`shrink-0 min-h-11 md:min-h-0 rounded-full px-2.5 py-1 text-xs font-medium
-                                border transition ${tool === 'measure'
-                                ? 'bg-slate-900 border-slate-900 text-white'
-                                : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'}`}
+                            aria-label="Measure a distance"
+                            aria-pressed={tool === 'measure'}
+                            className={toolClass(tool === 'measure')}
                         >
-                            📏 Measure
+                            {phone ? <Icon name="ruler" className="size-5" /> : '📏 Measure'}
                         </button>
                         <button
                             onClick={() => {
@@ -1018,12 +1036,11 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                                 setBoundaryNote('');
                             }}
                             title="Drag a loop round the pins you want — then act on them, or save the loop as an area"
-                            className={`shrink-0 min-h-11 md:min-h-0 rounded-full px-2.5 py-1 text-xs font-medium
-                                border transition ${selectMode
-                                ? 'bg-slate-900 border-slate-900 text-white'
-                                : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'}`}
+                            aria-label="Lasso pins"
+                            aria-pressed={selectMode}
+                            className={toolClass(selectMode)}
                         >
-                            {selectMode ? '◯ Lasso on' : '◯ Lasso'}
+                            {phone ? <Icon name="lasso" className="size-5" /> : (selectMode ? '◯ Lasso on' : '◯ Lasso')}
                         </button>
                     </div>
 
@@ -1047,8 +1064,9 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                     {tool === 'measure' && (
                         <p className="w-[min(16rem,100%)] rounded-2xl bg-slate-900/95 backdrop-blur
                             px-3 py-2 text-[11px] text-white shadow-lg">
-                            Click two points on the map for the distance and bearing. A third
-                            click starts again.
+                            {phone
+                                ? 'Tap two points on the map for the distance and bearing. A third tap starts again.'
+                                : 'Click two points on the map for the distance and bearing. A third click starts again.'}
                         </p>
                     )}
 
@@ -1182,7 +1200,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                     <button
                         onClick={() => setRouteListOpen(true)}
                         title="Show the stops of each day, in order"
-                        className="absolute top-3 left-14 z-[500] inline-flex items-center gap-1.5
+                        className="absolute top-3 left-14 max-md:top-[4.5rem] max-md:left-3 z-[500] inline-flex items-center gap-1.5
                             bg-white/95 backdrop-blur rounded-2xl shadow-lg border border-gray-200
                             px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900
                             hover:bg-white transition"
@@ -1196,7 +1214,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                     </button>
                 )}
                 {showItinerary && routes.length > 0 && routeListOpen && (
-                    <div className="absolute top-3 left-14 z-[500] w-[min(20rem,45%)]
+                    <div className="absolute top-3 left-14 max-md:top-[4.5rem] max-md:left-3 max-md:w-[min(20rem,70%)] z-[500] w-[min(20rem,45%)]
                         max-h-[70%] overflow-auto bg-white/95 backdrop-blur rounded-2xl
                         shadow-lg border border-gray-200 p-3">
                         <div className="flex items-center justify-between gap-2 mb-2">
@@ -1246,14 +1264,14 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                     <button
                         type="button"
                         onClick={() => setLegendOpen(true)}
-                        className="absolute bottom-3 left-3 z-[500] min-h-11 md:min-h-0 rounded-full border border-gray-200
-                            bg-white/95 px-3 py-1.5 text-xs font-medium text-gray-600 shadow backdrop-blur hover:text-gray-900"
+                        className="absolute bottom-3 left-3 max-md:bottom-[calc(var(--hm-nav-clearance)+0.75rem)] z-[500] min-h-11 md:min-h-0 rounded-full border border-gray-200
+                            bg-white/90 px-3.5 py-1.5 text-xs font-medium text-gray-600 shadow-md backdrop-blur hover:text-gray-900"
                     >
                         ● Legend
                     </button>
                 )}
                 {pinnedCount > 0 && legendOpen && (
-                    <div className="absolute bottom-3 left-3 z-[500] max-w-[min(28rem,80%)] rounded-2xl border
+                    <div className="absolute bottom-3 left-3 max-md:bottom-[calc(var(--hm-nav-clearance)+0.75rem)] max-md:max-w-[calc(100%-6rem)] z-[500] max-w-[min(28rem,80%)] rounded-2xl border
                         border-gray-200 bg-white/95 px-3 py-2 shadow backdrop-blur">
                         <button
                             type="button"
@@ -1284,6 +1302,18 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                     </div>
                 )}
 
+                {phone && !selectMode && tool !== 'measure' && (
+                    <button
+                        type="button"
+                        onClick={() => sheet.newPlace()}
+                        aria-label="Add a place"
+                        className="absolute right-3 bottom-[calc(var(--hm-nav-clearance)+0.75rem)] z-[500] flex size-14
+                            items-center justify-center rounded-full bg-accent text-white shadow-lg shadow-black/20
+                            transition active:scale-95 motion-reduce:active:scale-100"
+                    >
+                        <Icon name="plus" className="size-6" strokeWidth={2.4} />
+                    </button>
+                )}
                 </div>
 
                 {showPanels && (

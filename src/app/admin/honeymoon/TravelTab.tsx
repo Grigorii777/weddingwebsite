@@ -283,6 +283,7 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
     return (
         <div className="max-w-4xl space-y-3">
             <TabToolbar
+                fab={busy ? undefined : { label: 'New journey', onClick: newJourney }}
                 left={summary.journeys > 0 ? (
                     <p className="text-xs text-gray-500">
                         {summary.journeys} journey{summary.journeys === 1 ? '' : 's'}
@@ -305,7 +306,7 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
                                 <option key={entry.key} value={entry.key}>{entry.icon} {entry.label}</option>
                             ))}
                         </MiniSelect>
-                        <Button tone="primary" onClick={newJourney} disabled={busy}>
+                        <Button tone="primary" onClick={newJourney} disabled={busy} className={busy ? '' : 'max-md:hidden'}>
                             {busy ? 'Working…' : '+ New journey'}
                         </Button>
                         <Button onClick={() => setPasteOpen(true)}>Paste flights…</Button>

@@ -22,13 +22,19 @@ import type { DayStop, TodayPlan } from '@/lib/honeymoonToday';
  * used standing up, holding a coffee, in the sun.
  */
 export default function TodaySheet({
-    plan, trip, now, onSelectDay, night, onNightChange, footer, weather, sun,
+    plan, trip, now, onSelectDay, night, onNightChange, footer, weather, sun, swipeDays = false,
 }: {
     plan: TodayPlan;
     trip: Pick<Trip, 'title' | 'start_date' | 'time_format' | 'info' | 'partner_names'>;
     /** Minutes past midnight, for "next up". Omitted on the server. */
     now?: number | null;
     onSelectDay?: (dayNumber: number) => void;
+    /**
+     * The page swipes between days (the portal does; the shared link does not).
+     * On a phone the ‹ › buttons then give way to a row of dots: the position
+     * in the trip at a glance, and the sign that the page moves sideways.
+     */
+    swipeDays?: boolean;
     night: boolean;
     onNightChange?: (night: boolean) => void;
     footer?: React.ReactNode;
@@ -67,6 +73,7 @@ export default function TodaySheet({
                         night={night}
                         onNightChange={onNightChange}
                         onSelectDay={onSelectDay}
+                        swipeDays={swipeDays}
                     />
 
                     {(weather || sun?.sunrise) && (
@@ -284,12 +291,13 @@ function Banner({ children }: { children: React.ReactNode }) {
     );
 }
 
-function Header({ plan, trip, night, onNightChange, onSelectDay }: {
+function Header({ plan, trip, night, onNightChange, onSelectDay, swipeDays = false }: {
     plan: TodayPlan;
     trip: Pick<Trip, 'title' | 'partner_names'>;
     night: boolean;
     onNightChange?: (night: boolean) => void;
     onSelectDay?: (dayNumber: number) => void;
+    swipeDays?: boolean;
 }) {
     const isToday = plan.standing === 'during';
     return (
@@ -329,8 +337,11 @@ function Header({ plan, trip, night, onNightChange, onSelectDay }: {
                 )}
             </div>
 
+            {swipeDays && onSelectDay && plan.dayNumber != null && plan.totalDays != null && plan.totalDays > 1 && (
+                <DayDots current={plan.dayNumber} total={plan.totalDays} />
+            )}
             {onSelectDay && plan.dayNumber != null && (
-                <div className="mt-3 flex items-center gap-2">
+                <div className={`mt-3 items-center gap-2 ${swipeDays ? 'hidden md:flex' : 'flex'}`}>
                     <DayArrow
                         label="Previous day"
                         glyph="‹"
@@ -347,6 +358,30 @@ function Header({ plan, trip, night, onNightChange, onSelectDay }: {
                     />
                 </div>
             )}
+        </div>
+    );
+}
+
+/**
+ * A page indicator: one dot per day, the current one drawn long. It shows
+ * where you are in the trip and that the page moves sideways; it is not a
+ * control. Sixteen 44px targets do not fit across a phone, and a 6px dot is
+ * not something a finger can hit — swiping is the way to move.
+ */
+function DayDots({ current, total }: { current: number; total: number }) {
+    return (
+        <div
+            className="mt-3 flex h-6 items-center justify-center gap-1.5 md:hidden"
+            role="img"
+            aria-label={`Day ${current} of ${total}. Swipe for another day.`}
+        >
+            {Array.from({ length: total }, (_, index) => (
+                <span
+                    key={index}
+                    className={`block h-1.5 rounded-full transition-all duration-300
+                        ${index + 1 === current ? 'w-5 bg-gray-900 night:bg-gray-100' : 'w-1.5 bg-gray-300 night:bg-gray-600'}`}
+                />
+            ))}
         </div>
     );
 }

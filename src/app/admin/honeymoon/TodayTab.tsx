@@ -7,6 +7,7 @@ import { planForDay, planForToday } from '@/lib/honeymoonToday';
 import { useTripIntel } from './useTripIntel';
 import { useOfflineFiles } from './FilesTab';
 import type { HoneymoonApi } from './useHoneymoon';
+import { useSwipePager } from './kit/useSwipePager';
 
 const NIGHT_KEY = 'honeymoon-today-night';
 
@@ -64,9 +65,23 @@ export default function TodayTab({ api }: { api: HoneymoonApi }) {
         return () => window.removeEventListener('honeymoon:step-day', onStep);
     }, [data]);
 
-    if (!data) return null;
+    const plan = !data ? null : dayNumber == null ? planForToday(data) : planForDay(data, dayNumber);
+    const shown = plan?.dayNumber ?? null;
+    const lastDay = data?.days.reduce((max, day) => Math.max(max, day.day_number), 0) ?? 0;
+    const hasDay = (n: number) => data?.days.some((day) => day.day_number === n) ?? false;
+    /* Swipe the page to look at the day before or after. */
+    const swipeRef = useSwipePager<HTMLDivElement>({
+        pageKey: shown,
+        order: shown ?? 0,
+        canPrev: shown != null && shown > 1,
+        canNext: shown != null && shown < lastDay,
+        onPrev: () => { if (shown != null && hasDay(shown - 1)) setDayNumber(shown - 1); },
+        onNext: () => { if (shown != null && hasDay(shown + 1)) setDayNumber(shown + 1); },
+    });
 
-    const plan = dayNumber == null ? planForToday(data) : planForDay(data, dayNumber);
+    if (!data || !plan) return null;
+    const awayFromToday = dayNumber != null && dayNumber !== planForToday(data).dayNumber;
+
     const dayIntel = plan.dayNumber != null ? intel.intelFor(plan.dayNumber) : null;
 
     const chooseDay = (next: number) => {
@@ -75,8 +90,11 @@ export default function TodayTab({ api }: { api: HoneymoonApi }) {
     };
 
     return (
-        <div className="mx-auto w-full max-w-xl">
+        <>
+        {/* Edge to edge on a phone: the day is the whole screen, not a card on one. */}
+        <div ref={swipeRef} className="mx-auto w-full max-w-xl max-md:-mx-4 max-md:-mt-2 max-md:w-[calc(100%+2rem)]">
             <TodaySheet
+                swipeDays
                 plan={plan}
                 trip={data.trip}
                 now={now}
@@ -87,11 +105,11 @@ export default function TodayTab({ api }: { api: HoneymoonApi }) {
                 onSelectDay={chooseDay}
                 footer={(
                     <div className="mt-6 space-y-2 text-center text-xs text-gray-400">
-                        {dayNumber != null && (
+                        {awayFromToday && (
                             <button
                                 type="button"
                                 onClick={() => setDayNumber(null)}
-                                className="min-h-11 rounded-full border border-gray-200 px-4
+                                className="max-md:hidden min-h-11 rounded-full border border-gray-200 px-4
                                     text-sm text-gray-600"
                             >
                                 Back to today
@@ -115,5 +133,19 @@ export default function TodayTab({ api }: { api: HoneymoonApi }) {
                 )}
             />
         </div>
+        {/* Swiped away from today: the way back floats above the tab bar
+            rather than waiting at the foot of a long page. */}
+        {awayFromToday && (
+            <button
+                type="button"
+                onClick={() => setDayNumber(null)}
+                className="md:hidden fixed left-1/2 bottom-[calc(var(--hm-nav-clearance)+0.75rem)] z-30 -translate-x-1/2
+                    rounded-full bg-gray-900 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-black/20
+                    transition active:scale-95 motion-reduce:active:scale-100"
+            >
+                Back to today
+            </button>
+        )}
+        </>
     );
 }

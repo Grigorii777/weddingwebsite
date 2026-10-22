@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { daysBeyondRange, daysBetween, hasCoords } from '@/lib/honeymoon';
 import { HoneymoonProvider } from './HoneymoonContext';
@@ -61,6 +61,25 @@ export default function HoneymoonShell({ children }: { children: React.ReactNode
      * <html>, because what it hides is in ancestor trees; see globals.css.
      */
     const [fullScreen, setFullScreen] = useState(false);
+
+    /*
+     * A tab arriving on a phone fades up a few pixels, so a tab change reads
+     * as a move rather than a flash. Played from here rather than by keying the
+     * page on its path: a key would remount it, and Places, Stays and
+     * Excursions share one page whose search and filters must survive the
+     * switch. Short, because it must never feel like waiting.
+     */
+    const pageRef = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+        const node = pageRef.current;
+        if (!node || typeof node.animate !== 'function') return;
+        if (!window.matchMedia('(max-width: 767px)').matches) return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        node.animate(
+            [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }],
+            { duration: 220, easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)' },
+        );
+    }, [pathname]);
 
     /*
      * Portal-wide keys, bound on the shell because they must work on every tab
@@ -239,8 +258,8 @@ export default function HoneymoonShell({ children }: { children: React.ReactNode
             <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
                 <div className="w-full px-4 md:px-6 pt-4 md:pt-6 shrink-0">
                     {/* ---- Phone: one slim bar ---- */}
-                    <div className="md:hidden -mx-4 -mt-4 mb-2 flex items-center gap-1 border-b border-gray-200
-                        bg-white px-2" style={{ height: '3.25rem' }}>
+                    <div className={`md:hidden -mx-4 -mt-4 ${isMap ? '' : 'mb-2'} flex items-center gap-1 border-b border-gray-200
+                        bg-white px-2`} style={{ height: '3.25rem' }}>
                         <Link
                             href="/admin"
                             aria-label="Back to the admin panel"
@@ -361,12 +380,20 @@ export default function HoneymoonShell({ children }: { children: React.ReactNode
                     </div>
                 </div>
 
-                {/* Bottom padding on a phone clears the tab bar. */}
+                {/* On a phone the map runs edge to edge and under the floating tab
+                    bar, the way a maps app does; its own overlays keep clear of
+                    the bar with --hm-nav-clearance. Every other tab pads its
+                    bottom by the same value so the last row can scroll clear. */}
                 {isMap ? (
-                    <div className="flex-1 min-h-0 px-2 md:px-6 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">{children}</div>
+                    <div ref={pageRef} className="flex-1 min-h-0 md:px-6 md:pb-6">{children}</div>
                 ) : (
-                    <div className="flex-1 min-h-0 overflow-auto" data-hm-scroll>
-                        <div className="w-full px-4 md:px-6 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-6">{children}</div>
+                    <div className="flex-1 min-h-0 overflow-auto overscroll-contain" data-hm-scroll>
+                        <div
+                            ref={pageRef}
+                            className="w-full px-4 md:px-6 pb-[calc(var(--hm-nav-clearance)+1.25rem)] md:pb-6"
+                        >
+                            {children}
+                        </div>
                     </div>
                 )}
                 <MobileTabBar />

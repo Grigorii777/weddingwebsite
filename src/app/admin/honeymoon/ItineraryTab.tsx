@@ -38,6 +38,8 @@ import { Hint } from './kit/Hint';
 import { Segmented } from './kit/Segmented';
 import { TabToolbar } from './kit/TabToolbar';
 import { useIsPhone } from './kit/Sheet';
+import { useSwipePager } from './kit/useSwipePager';
+import { Icon } from './kit/icons';
 import PrintSheet, { DEFAULT_PRINT_OPTIONS, type PrintOptions } from './PrintSheet';
 import TravelLegCard from './TravelLeg';
 import {
@@ -217,12 +219,22 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
     const phone = useIsPhone();
     const oneDay = phone && !panel && shownView !== 'calendar';
     const [phoneDayId, setPhoneDayId] = useState<number | null>(null);
-    const swipe = useRef<{ x: number; y: number } | null>(null);
     const todayNumber = data?.trip ? dayNumberFor(data.trip, todayIso(), days.length) : null;
     const phoneDay = days.find((d) => d.id === (phoneDayId ?? reveal?.id))
         ?? days.find((d) => d.day_number === todayNumber)
         ?? days[0];
     const listedDays = oneDay && phoneDay ? [phoneDay] : days;
+    const phoneAt = phoneDay ? days.findIndex((d) => d.id === phoneDay.id) : -1;
+    /* Swipe the day itself to turn to the next one; the strip is for jumping. */
+    const swipeRef = useSwipePager<HTMLDivElement>({
+        pageKey: oneDay ? phoneDay?.id ?? null : null,
+        order: phoneAt,
+        canPrev: phoneAt > 0,
+        canNext: phoneAt >= 0 && phoneAt < days.length - 1,
+        onPrev: () => { const day = days[phoneAt - 1]; if (day) setPhoneDayId(day.id); },
+        onNext: () => { const day = days[phoneAt + 1]; if (day) setPhoneDayId(day.id); },
+        enabled: oneDay,
+    });
 
     if (!days.length) {
         return (
@@ -246,6 +258,7 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
             {!panel && (
                 <TabToolbar
                     stickyOnPhone
+                    phoneOneRow
                     left={(
                         <>
                             {/* Left of the view switch, and only where it applies: a
@@ -287,6 +300,7 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                             days={days}
                             current={phoneDay}
                             startDate={data?.trip.start_date ?? null}
+                            todayNumber={todayNumber}
                             onPick={(day) => setPhoneDayId(day.id)}
                         />
                     ) : undefined}
@@ -334,12 +348,25 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                     className="flex min-h-11 md:min-h-0 w-full items-center gap-2 rounded-2xl border border-gray-200 bg-white
                         px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
                 >
+                    {/* One line on a phone: the shorter wording there, and a chevron
+                        rather than "Show ▾", which wrapped the strip to three lines. */}
                     {warnCount > 0
-                        ? <span className="text-amber-700">⚠ {warnCount} thing{warnCount === 1 ? '' : 's'} to check</span>
-                        : <span className="text-emerald-700">✓ Nothing to fix</span>}
+                        ? (
+                            <span className="shrink-0 whitespace-nowrap text-amber-700">
+                                ⚠ {warnCount}<span className="max-md:hidden"> thing{warnCount === 1 ? '' : 's'}</span> to check
+                            </span>
+                        )
+                        : <span className="shrink-0 whitespace-nowrap text-emerald-700">✓ Nothing to fix</span>}
                     <span className="text-gray-300">·</span>
-                    <span>{stretches.filter((st) => st.place).length} stay{stretches.length === 1 ? '' : 's'} across the trip</span>
-                    <span className="ml-auto text-xs text-gray-400">{checksOpen ? 'Hide ▴' : 'Show ▾'}</span>
+                    <span className="min-w-0 truncate">
+                        {stretches.filter((st) => st.place).length} stay{stretches.length === 1 ? '' : 's'}
+                        <span className="max-md:hidden"> across the trip</span>
+                    </span>
+                    <span className="ml-auto shrink-0 text-xs text-gray-400 max-md:hidden">{checksOpen ? 'Hide ▴' : 'Show ▾'}</span>
+                    <Icon
+                        name="chevron"
+                        className={`md:hidden ml-auto size-4 shrink-0 text-gray-400 transition-transform ${checksOpen ? '-rotate-90' : 'rotate-90'}`}
+                    />
                 </button>
             )}
             {!panel && checksOpen && (conflicts.length > 0 || stretches.length > 0) && (
@@ -526,21 +553,9 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                         {/* One column, full width, in the timeline view: the
                             whole point is that a day gets the page's width to
                             lay its hours out across. */}
+                        <div ref={swipeRef}>
                         <div
                             ref={listRef}
-                            onPointerDown={oneDay ? (event) => { swipe.current = { x: event.clientX, y: event.clientY }; } : undefined}
-                            onPointerUp={oneDay ? (event) => {
-                                const start = swipe.current;
-                                swipe.current = null;
-                                if (!start || !phoneDay) return;
-                                const dx = event.clientX - start.x;
-                                const dy = event.clientY - start.y;
-                                // A clear sideways flick, not a scroll that wandered.
-                                if (Math.abs(dx) < 70 || Math.abs(dy) > 45) return;
-                                const at = days.findIndex((d) => d.id === phoneDay.id);
-                                const next = days[at + (dx < 0 ? 1 : -1)];
-                                if (next) setPhoneDayId(next.id);
-                            } : undefined}
                             className={`grid gap-3 items-start ${panel || shownView === 'timeline'
                                 ? 'grid-cols-1'
                                 : 'grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3'}`}
@@ -561,6 +576,7 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                                     arrivals={arrivalsOn(days, day.day_number)}
                                 />
                             ))}
+                        </div>
                         </div>
                     </SortableContext>
                 </DndContext>
@@ -1192,7 +1208,7 @@ function DayCard({
                     <InlineText
                         value={day.title ?? ''}
                         placeholder="What's this day about?"
-                        className="font-medium text-gray-800 -ml-2 mt-0.5"
+                        className="font-medium text-gray-800 -ml-2 mt-0.5 max-md:text-lg max-md:font-semibold max-md:text-gray-900"
                         onCommit={(title) => api.update('days', { id: day.id, title })}
                     />
                 </div>
@@ -1255,7 +1271,7 @@ function DayCard({
                         multiline
                         value={day.notes ?? ''}
                         placeholder="Anything about this day — pack the good camera, book ahead…"
-                        className="text-sm text-gray-700"
+                        className="text-sm text-gray-700 max-md:resize-none"
                         onCommit={(notes) => api.update('days', { id: day.id, notes })}
                     />
                 </div>
@@ -1295,7 +1311,7 @@ function DayCard({
                         data-sleep-place
                         onClick={() => onViewPlace(base)}
                         title={`${base.name} — open the booking and everything else about it`}
-                        className="min-w-0 min-h-11 md:min-h-0 flex items-baseline gap-1.5 text-left rounded-xl px-1.5 py-0.5
+                        className="min-w-0 min-h-11 md:min-h-0 flex items-center md:items-baseline gap-1.5 text-left rounded-xl px-1.5 py-0.5
                             hover:bg-gray-50 group/base"
                     >
                         <span className="truncate text-sm text-gray-800
@@ -1741,9 +1757,11 @@ function StopRow({
                 // 6.75rem, not 5.5: "09:30 AM" plus the picker icon does not
                 // fit in 5.5 and Chromium silently clipped the M, so every
                 // afternoon stop read "03:30 PI".
-                className={`text-gray-500 bg-transparent w-[6.75rem] shrink-0 rounded-lg px-1
+                // A phone's 16px type (smaller zooms the page on focus) needs 8rem
+                // for the same reason, and the time is the line's headline there.
+                className={`bg-transparent shrink-0 rounded-lg px-1
                     hover:bg-gray-50 focus:bg-white focus:outline-none focus:ring-2
-                    focus:ring-accent/30 ${phone ? 'min-h-11 text-base py-1' : compact ? 'text-[11px] py-0' : 'text-xs py-1'}`}
+                    focus:ring-accent/30 ${phone ? 'w-[8rem] min-h-11 text-base py-1 font-medium text-gray-800 tabular-nums' : compact ? 'w-[6.75rem] text-gray-500 text-[11px] py-0' : 'w-[6.75rem] text-gray-500 text-xs py-1'}`}
                 aria-label="Start time"
             />
             {showPresets && (
@@ -2075,60 +2093,81 @@ function StopRow({
     );
 }
 
-/** The phone's day picker: ‹ a strip of days you can scroll › */
-function PhoneDayStrip({ days, current, startDate, onPick }: {
+/**
+ * The phone's day picker: a strip of days, edge to edge, that scrolls.
+ *
+ * No ‹ › buttons: the strip scrolls and the day below swipes, so arrows were a
+ * third way to do the same thing that cost two fingertips of width. Each chip
+ * is the weekday over the date, the way a calendar app's week strip reads; the
+ * day number is on the card below. The chosen day stays centred.
+ */
+function PhoneDayStrip({ days, current, startDate, todayNumber, onPick }: {
     days: Day[];
     current: Day;
     startDate: string | null;
+    todayNumber: number | null;
     onPick: (day: Day) => void;
 }) {
     const strip = useRef<HTMLDivElement>(null);
-    const at = days.findIndex((d) => d.id === current.id);
+    const first = useRef(true);
     useEffect(() => {
-        strip.current?.querySelector<HTMLElement>(`[data-strip-day="${current.id}"]`)
-            ?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+        const chip = strip.current?.querySelector<HTMLElement>(`[data-strip-day="${current.id}"]`);
+        const row = strip.current;
+        if (!chip || !row) return;
+        // Centre the chip in the strip without scrolling the page itself.
+        const left = chip.offsetLeft - (row.clientWidth - chip.offsetWidth) / 2;
+        row.scrollTo({ left, behavior: first.current ? 'auto' : 'smooth' });
+        first.current = false;
     }, [current.id]);
-    const step = (delta: number) => { const next = days[at + delta]; if (next) onPick(next); };
     return (
-        <div className="-mx-2 flex items-center gap-1">
-            <button
-                type="button"
-                onClick={() => step(-1)}
-                disabled={at <= 0}
-                aria-label="Previous day"
-                className="flex size-11 shrink-0 items-center justify-center rounded-full text-xl text-gray-600 disabled:opacity-30"
-            >
-                ‹
-            </button>
-            <div ref={strip} className="flex min-w-0 flex-1 snap-x gap-1.5 overflow-x-auto [scrollbar-width:none]">
-                {days.map((day) => {
-                    const on = day.id === current.id;
-                    const date = formatDayDate(startDate, day.day_number);
-                    return (
-                        <button
-                            key={day.id}
-                            type="button"
-                            data-strip-day={day.id}
-                            onClick={() => onPick(day)}
-                            aria-pressed={on}
-                            className={`flex min-h-11 shrink-0 snap-center flex-col items-center justify-center rounded-2xl px-3
-                                text-xs leading-tight ${on ? 'bg-accent text-white' : 'bg-white text-gray-600 border border-gray-200'}`}
-                        >
-                            <span className="font-semibold">Day {day.day_number}</span>
-                            {date && <span className={on ? 'text-white/80' : 'text-gray-400'}>{date}</span>}
-                        </button>
-                    );
-                })}
-            </div>
-            <button
-                type="button"
-                onClick={() => step(1)}
-                disabled={at >= days.length - 1}
-                aria-label="Next day"
-                className="flex size-11 shrink-0 items-center justify-center rounded-full text-xl text-gray-600 disabled:opacity-30"
-            >
-                ›
-            </button>
+        <div
+            ref={strip}
+            className="hm-scroll-row -mx-4 flex snap-x gap-1.5 overflow-x-auto scroll-px-4 px-4 pb-0.5"
+        >
+            {days.map((day) => {
+                const on = day.id === current.id;
+                const parts = dayChipParts(startDate, day.day_number);
+                const isToday = todayNumber === day.day_number;
+                return (
+                    <button
+                        key={day.id}
+                        type="button"
+                        data-strip-day={day.id}
+                        onClick={() => onPick(day)}
+                        aria-pressed={on}
+                        aria-label={`Day ${day.day_number}${parts ? `, ${parts.label}` : ''}`}
+                        className={`relative flex h-14 w-12 shrink-0 snap-center flex-col items-center justify-center rounded-2xl
+                            leading-tight transition active:scale-95 motion-reduce:active:scale-100
+                            ${on ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600'}`}
+                    >
+                        <span className={`text-[10px] font-semibold uppercase tracking-wide ${on ? 'text-white/70' : 'text-gray-400'}`}>
+                            {parts ? parts.weekday : 'Day'}
+                        </span>
+                        <span className="text-[17px] font-semibold tabular-nums">
+                            {parts ? parts.date : day.day_number}
+                        </span>
+                        {isToday && (
+                            <span
+                                aria-hidden
+                                className={`absolute bottom-1 size-1 rounded-full ${on ? 'bg-white' : 'bg-accent'}`}
+                            />
+                        )}
+                    </button>
+                );
+            })}
         </div>
     );
+}
+
+/** "MON" and "14" for a day chip, or null before the trip has dates. */
+function dayChipParts(startDate: string | null, dayNumber: number): { weekday: string; date: string; label: string } | null {
+    if (!startDate) return null;
+    const date = new Date(`${startDate}T12:00:00`);
+    if (Number.isNaN(date.getTime())) return null;
+    date.setDate(date.getDate() + dayNumber - 1);
+    return {
+        weekday: date.toLocaleDateString(undefined, { weekday: 'short' }).replace('.', ''),
+        date: String(date.getDate()),
+        label: date.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }),
+    };
 }

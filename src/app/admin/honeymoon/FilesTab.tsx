@@ -125,6 +125,8 @@ export default function FilesTab() {
             }}
         >
             <TabToolbar
+                fab={busy > 0 ? undefined : { label: 'Add files', onClick: () => input.current?.click() }}
+                phoneOneRow
                 left={(
                     <>
                         <input
@@ -133,7 +135,7 @@ export default function FilesTab() {
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder="Search files…"
                             aria-label="Search files"
-                            className="min-h-11 md:min-h-0 w-full sm:w-56 rounded-full border border-gray-200 bg-white px-4
+                            className="min-h-11 md:min-h-0 w-full sm:w-56 max-md:w-auto max-md:min-w-0 max-md:flex-1 rounded-full border border-gray-200 bg-white px-4
                                 py-1.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
                         />
                         <Segmented<'grid' | 'list'>
@@ -150,7 +152,7 @@ export default function FilesTab() {
                         {documents.length > 0 && (
                             <span
                                 data-offline-status
-                                className={`text-xs ${offline.saved === documents.length ? 'text-emerald-700' : 'text-gray-500'}`}
+                                className={`max-md:hidden text-xs ${offline.saved === documents.length ? 'text-emerald-700' : 'text-gray-500'}`}
                                 title="Kept on this device by the portal's offline cache, so they open with no signal"
                             >
                                 {offline.supported
@@ -166,7 +168,7 @@ export default function FilesTab() {
                             className="hidden"
                             onChange={(e) => upload(e.target.files)}
                         />
-                        <Button tone="primary" onClick={() => input.current?.click()} disabled={busy > 0}>
+                        <Button tone="primary" onClick={() => input.current?.click()} disabled={busy > 0} className={busy > 0 ? '' : 'max-md:hidden'}>
                             {busy > 0 ? `Uploading… ${busy} left` : '+ Add files'}
                         </Button>
                         <Hint label="About these files">
@@ -178,11 +180,23 @@ export default function FilesTab() {
                         </Hint>
                     </>
                 )}
-                below={query || activeFolder !== 'all' ? (
-                    <FilterChips active={[
-                        ...(activeFolder !== 'all' ? [{ key: 'folder', label: folderLabel, clear: () => setFolder('all') }] : []),
-                        ...(query ? [{ key: 'q', label: `“${query}”`, clear: () => setQuery('') }] : []),
-                    ]} />
+                below={query || activeFolder !== 'all' || documents.length > 0 ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                        {/* On a phone the offline status moves down here, off the one row. */}
+                        {documents.length > 0 && (
+                            <p className={`md:hidden text-xs ${offline.saved === documents.length ? 'text-emerald-700' : 'text-gray-500'}`}>
+                                {offline.supported
+                                    ? `Saved for offline: ${offline.saved} of ${documents.length}`
+                                    : 'Offline copies need a secure (https) connection'}
+                            </p>
+                        )}
+                        {(query || activeFolder !== 'all') && (
+                            <FilterChips active={[
+                                ...(activeFolder !== 'all' ? [{ key: 'folder', label: folderLabel, clear: () => setFolder('all') }] : []),
+                                ...(query ? [{ key: 'q', label: `“${query}”`, clear: () => setQuery('') }] : []),
+                            ]} />
+                        )}
+                    </div>
                 ) : undefined}
             />
 

@@ -589,6 +589,7 @@ export default function StaysTab({ api, segmentSwitch }: {
             down the page, runs off the bottom, and a pin down there eats the
             click that should have selected it. */}
         <TabToolbar
+            fab={{ label: 'Add stays', onClick: () => setPasting(true) }}
             left={(
                 <>
                     {segmentSwitch}
@@ -648,7 +649,7 @@ export default function StaysTab({ api, segmentSwitch }: {
                             {SORTS.map((option) => <option key={option.key} value={option.key}>{option.label}</option>)}
                         </MiniSelect>
                     )}
-                    <Button tone="primary" onClick={() => setPasting(true)}>+ Add stays</Button>
+                    <Button tone="primary" onClick={() => setPasting(true)} className="max-md:hidden">+ Add stays</Button>
                     <OverflowMenu items={[
                         ...(stays.length > 0 ? [{ label: 'Watch the prices…', onClick: () => setWatching(true) }] : []),
                         ...(counts.unrated > 0 ? [{ label: `⚡ Rate ${counts.unrated} unrated`, onClick: () => setTriaging(true) }] : []),

@@ -31,14 +31,14 @@ export function FilterButton({ active, onReset, children, title = 'Filters' }: {
             sheetOnPhone
             buttonData="filters"
             buttonClassName={`inline-flex min-h-11 md:min-h-0 shrink-0 items-center gap-1.5 rounded-full border
-                px-4 py-1.5 text-sm font-medium transition active:scale-[0.98] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40
+                px-4 max-md:px-3 max-md:min-w-11 max-md:justify-center py-1.5 text-sm font-medium transition active:scale-[0.98] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40
                 ${count ? 'border-accent/40 bg-accent/10 text-gray-900' : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'}`}
             buttonContent={() => (
                 <>
                     <svg viewBox="0 0 20 20" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
                         <path d="M3 5h14M6 10h8M8.5 15h3" strokeLinecap="round" />
                     </svg>
-                    {title}
+                    <span className="max-md:sr-only">{title}</span>
                     {count > 0 && (
                         <span className="rounded-full bg-accent px-1.5 text-[11px] font-semibold text-white tabular-nums">
                             {count}

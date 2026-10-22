@@ -15,6 +15,7 @@ import type { HoneymoonApi } from './useHoneymoon';
 import { Button, Card, EmptyState, InlineText, Modal, OverflowMenu, TextArea, TextField } from './ui';
 import { Segmented } from './kit/Segmented';
 import { TabToolbar } from './kit/TabToolbar';
+import { Icon } from './kit/icons';
 
 /**
  * Everything that has to happen before you go, that isn't a place.
@@ -150,6 +151,7 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
     return (
         <div className="space-y-3">
             <TabToolbar
+                phoneOneRow
                 left={(
                     <Segmented<'task' | 'packing'>
                         ariaLabel="Which list"
@@ -207,15 +209,20 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
             )}
 
             {/* ---- Add ---- */}
+            {/* One field and a round button on a phone; the group field joins
+                in once there is something to file, rather than standing there as a
+                second empty box over a disabled Add. */}
             <Card className="p-3">
-                <div className="grid grid-cols-1 md:grid-cols-[1fr_12rem_auto] gap-2">
+                <div className="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_12rem_auto] gap-2">
                     <TextField
                         value={text}
                         onChange={(e) => setText(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') add(); }}
-                        placeholder="Renew passports, book airport transfer, tell the bank…"
+                        placeholder={kind === 'packing' ? 'Add something to pack…' : 'Add a to-do…'}
+                        enterKeyHint="done"
                     />
                     <TextField
+                        className={`max-md:col-span-2 max-md:row-start-2 ${text.trim() ? '' : 'max-md:hidden'}`}
                         list="honeymoon-todo-groups"
                         value={group}
                         onChange={(e) => setGroup(e.target.value)}
@@ -225,7 +232,16 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
                     <datalist id="honeymoon-todo-groups">
                         {groups.map((g) => <option key={g} value={g} />)}
                     </datalist>
-                    <Button tone="primary" onClick={add} disabled={!text.trim()}>Add</Button>
+                    <Button
+                        tone="primary"
+                        onClick={add}
+                        disabled={!text.trim()}
+                        aria-label="Add"
+                        className="max-md:flex max-md:size-11 max-md:items-center max-md:justify-center max-md:p-0"
+                    >
+                        <span className="max-md:hidden">Add</span>
+                        <Icon name="plus" className="size-5 md:hidden" strokeWidth={2.4} />
+                    </Button>
                 </div>
             </Card>
 
@@ -398,11 +414,13 @@ function TodoRow({ todo, api, onTicked, due, partners }: {
             style={{ transform: CSS.Transform.toString(transform), transition }}
             className={isDragging ? 'opacity-50' : ''}
         >
-            <div className="flex flex-wrap items-center gap-2 py-1.5 group">
+            <div className="flex flex-wrap max-md:flex-nowrap items-center gap-2 py-1.5 group">
+                {/* A mouse affordance: hidden on a touch screen, where it was an
+                    invisible 20px gutter in front of every checkbox. */}
                 <button
                     {...attributes}
                     {...listeners}
-                    className="cursor-grab active:cursor-grabbing text-gray-200 hover:text-gray-400
+                    className="[@media(pointer:coarse)]:hidden cursor-grab active:cursor-grabbing text-gray-200 hover:text-gray-400
                         touch-none px-1 opacity-0 group-hover:opacity-100 transition"
                     aria-label="Drag to reorder"
                 >
@@ -423,7 +441,7 @@ function TodoRow({ todo, api, onTicked, due, partners }: {
                         className="w-5 h-5 rounded accent-emerald-600 shrink-0 cursor-pointer"
                     />
                 </label>
-                <div className="flex-1 min-w-[12rem]">
+                <div className="flex-1 min-w-0 md:min-w-[12rem]">
                     <InlineText
                         value={todo.text}
                         className={`text-sm -ml-2 ${todo.done ? 'line-through text-gray-400' : 'text-gray-800'}`}
@@ -447,7 +465,7 @@ function TodoRow({ todo, api, onTicked, due, partners }: {
                     every to-do's text down to a few letters on a phone. The real
                     input sits invisibly on top, so the native picker still opens. */}
                 <label
-                    className={`relative inline-flex min-h-11 md:min-h-0 shrink-0 cursor-pointer items-center rounded-full border
+                    className={`${todo.done && !todo.due_on ? 'max-md:hidden' : ''} relative inline-flex min-h-11 md:min-h-0 shrink-0 cursor-pointer items-center rounded-full border
                         px-2.5 py-1 text-xs hover:bg-gray-50 ${
                         !todo.done && due?.bucket === 'overdue' ? 'border-rose-200 text-rose-700 font-medium'
                             : !todo.done && due?.bucket === 'today' ? 'border-amber-200 text-amber-700 font-medium'

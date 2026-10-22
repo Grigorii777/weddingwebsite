@@ -415,7 +415,7 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
             placeholder="Search places…"
             aria-label="Search places"
             className={`min-h-11 md:min-h-0 rounded-full border border-gray-200 bg-white px-4 py-1.5 text-base md:text-sm
-                focus:outline-none focus:ring-2 focus:ring-accent/30 ${panel ? 'min-w-0 flex-1' : 'w-full sm:w-56'}`}
+                focus:outline-none focus:ring-2 focus:ring-accent/30 ${panel ? 'min-w-0 flex-1' : 'w-full sm:w-56 max-md:w-auto max-md:min-w-[7.5rem] max-md:flex-1'}`}
         />
     );
 
@@ -447,7 +447,9 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
     ];
 
     const summary = (
-        <p className="text-xs text-gray-500">
+        // One line on a phone, scrolling if it must: wrapped, the 44px review
+        // link made it two very tall lines.
+        <p className="text-xs text-gray-500 hm-scroll-row max-md:-mx-4 max-md:overflow-x-auto max-md:whitespace-nowrap max-md:px-4">
             {counts.total} places · {counts.pinned} pinned
             {counts.review > 0 && (
                 <>
@@ -469,6 +471,7 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
             ) : (
                 <TabToolbar
                     left={segmentSwitch}
+                    fab={{ label: 'Add a place', onClick: () => newPlace() }}
                     right={(
                         <>
                             {search}
@@ -477,7 +480,7 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
                                 value={sort}
                                 onChange={(e) => setSort(e.target.value as SortKey)}
                                 aria-label="Sort by"
-                                className="max-w-[7.5rem] md:max-w-[10rem]"
+                                className="max-w-[6.5rem] md:max-w-[10rem]"
                             >
                                 {SORTS.map((option) => (
                                     <option key={option.key} value={option.key}>
@@ -487,7 +490,7 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
                                     </option>
                                 ))}
                             </MiniSelect>
-                            <Button tone="primary" onClick={() => newPlace()} aria-label="Add a place">
+                            <Button tone="primary" onClick={() => newPlace()} aria-label="Add a place" className="max-md:hidden">
                                 +<span className="hidden sm:inline"> Add</span>
                             </Button>
                             <OverflowMenu items={menu} />

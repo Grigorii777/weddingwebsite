@@ -11,6 +11,15 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.19 — [Released] The honeymoon portal, made for a phone (`main`, 2026-10-22 11:18)
+
+### Changed
+- **A new bottom navigation, in the same style as Jarvis.** A frosted pill floats above the bottom edge with line icons, and one highlight slides to the tab you pick. It replaces a flat bar of emoji. The More sheet is now a grid of labelled tiles.
+- **Swipe between days instead of tapping arrows.** On the itinerary the day follows your finger and the next one slides in from the side it came from. The ‹ › buttons are gone. The day strip is now a week-style row of weekday and date that scrolls and keeps the chosen day centred, with a dot under today. Today swipes the same way, shows a row of dots for where you are in the trip, and a Back to today button floats above the tab bar once you have moved away.
+- **The map is a full-screen map on a phone.** It runs edge to edge under the tab bar. The filters float over the top as a row of chips that scrolls sideways. The tools are a column of round buttons down the right, and adding a place is a round button above the tab bar. The + and − zoom buttons are hidden on touch screens, where pinch does that.
+- **Toolbars take one or two rows, never five.** On a phone each side of a tab's toolbar becomes a single row that scrolls sideways instead of wrapping. Stays went from five rows of controls before the first stay to two. Places, Stays, Excursions, Files and Travel move their Add button to a round floating button above the tab bar, and Filters shrinks to its icon.
+- **Smaller fixes across the tabs.** The itinerary's check strip fits on one line, the day's title is larger, the note box loses its resize grip, and the Sleep line lines up. A stop's time no longer clips to "12:00 PI". The checklist adds with one field and a round button, and its rows no longer wrap the date and menu onto lines of their own. Today runs edge to edge. Each tab fades in when you switch to it, and taps answer without the grey flash or the double-tap delay.
+
 ## v0.10.18 — [Released] The phone app stays signed in, remembers where you were, and opens fast offline (`main`, 2026-10-22 09:27)
 
 ### Changed

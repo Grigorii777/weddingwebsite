@@ -127,6 +127,13 @@ idempotent — matches on place name, never reverts an edit) and
    `Segmented`, `FilterButton`, `RatingPills`, `PlaceCard`/`PlaceRow`, `Sheet`,
    `Hint`, `useTimeFormat`) rather than drawing their own — and every printed time
    goes through `useTimeFormat()`, which follows the trip's 12h/24h setting.
+   On a phone (v0.10.19): a tab's primary action is `TabToolbar`'s `fab`, never a
+   button in the bar (hide the bar's own with `max-md:hidden`); paging between
+   days is `useSwipePager`, never ‹ › buttons; chrome icons are `Icon` (Jarvis's
+   line style), not emoji; and anything anchored to the bottom of the screen sits
+   above the floating tab bar with `--hm-nav-clearance`. Nothing `fixed` goes
+   inside a swipe wrapper or the toolbar: a transform or a backdrop filter makes
+   that box, not the screen, what `fixed` is measured against.
    `npm run check:honeymoon:ui` covers the entry points and the phone layout.
 9. **Every new page goes in `src/lib/offline.ts`.** The whole site works offline
    (v0.10.3): `public/sw.js` keeps a copy of every page, its data, its photos and
@@ -515,8 +522,11 @@ order, before the commit:
   until *Change dates*, and only a press on a day captures the pointer — capturing
   every press is what broke its month arrows. **Below 768px** the shell sets `html.hm-compact`, which
   hides the site nav and the admin bar (see `globals.css`); the portal draws one
-  slim bar and `MobileTabBar` along the bottom, the itinerary shows one day at a
-  time, and its timeline is `DayAgenda` (vertical) instead of the bar or clock.
+  slim bar and `MobileTabBar` along the bottom — a floating frosted pill in
+  Jarvis's style, with a highlight that slides between tabs — the itinerary shows
+  one day at a time (swipe it, or pick from the week strip), Today swipes between
+  days, the map runs edge to edge with no zoom buttons (pinch), and the itinerary's
+  timeline is `DayAgenda` (vertical) instead of the bar or clock.
   Admin-only, with two deliberate exceptions that are *not* under `/admin`:
   `/honeymoon/<token>` (a read-only share link) and
   `/api/honeymoon/feed?token=…` (a subscribe-able calendar). Both authenticate

@@ -160,6 +160,7 @@ export default function ExcursionsTab({ api, segmentSwitch }: {
     return (
         <div className="space-y-3">
             <TabToolbar
+                fab={{ label: 'Add excursions', onClick: () => setPasting(true) }}
                 left={(
                     <>
                         {segmentSwitch}
@@ -196,7 +197,7 @@ export default function ExcursionsTab({ api, segmentSwitch }: {
                                 </FilterField>
                             </FilterButton>
                         )}
-                        <Button tone="primary" onClick={() => setPasting(true)}>+ Add excursions</Button>
+                        <Button tone="primary" onClick={() => setPasting(true)} className="max-md:hidden">+ Add excursions</Button>
                         <OverflowMenu items={[
                             ...(counts.unrated > 0 ? [{ label: `⚡ Rate ${counts.unrated} unrated`, onClick: () => setTriaging(true) }] : []),
                             ...(missingImages.length > 0 && fetching === 0 ? [{
