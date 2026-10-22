@@ -11,6 +11,22 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.20 — [Released] The admin app opens at once, like Mail (`main`, 2026-10-22 12:02)
+
+### Changed
+- **Every page and its data now come from the copy on the phone first, instantly, and the server is asked behind it.** Until now each page and each piece of its data waited up to two and a half seconds for the server before the saved copy answered, which on a phone was every open and every tap. When the server's answer differs from what is on screen, the dashboard and the honeymoon portal update in place; any other page shows a small *Updated on the server · Refresh* pill rather than replacing a form someone may be typing in. Anything just saved is still read back from the server first, so a change you made never disappears behind an older copy — even after iOS has stopped and restarted the app's background worker.
+- **Moving between pages never hangs on a bad signal.** A tap between pages used to wait on the network with no limit. Now it gets three seconds (none at all once the connection is known to be down), after which the page opens from the saved copy.
+- **Photos open from the saved copy whenever there is one.** Uploads have timestamped names, so an address never changes what it shows. The photo library itself is still never saved — only the photos the site uses.
+- **The background save resumes where it stopped.** iOS pauses it whenever the app is left, and it used to start again from the top each time, so the later pages were never saved. It now carries on, and saves the page you were last on and the dashboard first.
+
+### Added
+- **Pull down at the top of any admin page to refresh** in the installed app. With a connection the page reloads from the server; without one it says *Couldn't connect* and leaves everything on screen.
+
+### Fixed
+- **The background save could not save any page's data.** Since v0.10.9 the site told browsers never to show it inside a frame — including its own hidden frame that the save opens every page in — so pages were saved without their data, and a page you had not opened yourself opened offline with nothing in it. Other sites still cannot frame it.
+- **A page could open blank offline after an update.** The previous version's code was deleted before every page had been saved again; it now goes only once they all have.
+- **Opening the app's front door when only the dashboard was saved** now opens the dashboard instead of the "not saved yet" page.
+
 ## v0.10.19 — [Released] The honeymoon portal, made for a phone (`main`, 2026-10-22 11:18)
 
 ### Changed

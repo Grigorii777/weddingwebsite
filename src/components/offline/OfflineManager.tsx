@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { describeWrite } from './outbox';
-import { checkForUpdates, dismissFailed, getServerState, getState, inFrame, subscribe } from './offlineStore';
+import { REFRESHED_EVENT, checkForUpdates, dismissFailed, getServerState, getState, hasLive, inFrame, subscribe } from './offlineStore';
 
 /** "today 14:02", "yesterday 09:15", "Mon 5 Oct". */
 export function savedLabel(at: number, now = Date.now()): string {
@@ -87,6 +88,52 @@ function useOnline(): boolean {
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 /**
+ * Newer data arrived for this page after its saved copy answered (v0.10.20).
+ *
+ * The honeymoon portal (whose `useHoneymoon` reloads on `REFRESHED_EVENT`) and
+ * pages using `useLiveRefresh` update in place; any other page gets `true`, the
+ * cue for the "Updated · Refresh" pill. Cleared when the page changes.
+ */
+function useFreshData(): { updated: boolean; signedOut: boolean } {
+    const pathname = usePathname();
+    const [updated, setUpdated] = useState(false);
+    const [signedOut, setSignedOut] = useState(false);
+    const path = useRef(pathname);
+    useEffect(() => {
+        path.current = pathname;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setUpdated(false);
+    }, [pathname]);
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (pathname === '/admin/login') setSignedOut(false);
+    }, [pathname]);
+    useEffect(() => {
+        if (inFrame() || !('serviceWorker' in navigator)) return;
+        let timer: ReturnType<typeof setTimeout> | null = null;
+        const onMessage = (event: MessageEvent) => {
+            if (event.data?.type === 'site-sw:signed-out') { setSignedOut(true); return; }
+            if (event.data?.type !== 'site-sw:fresh') return;
+            // A page loading several things hears about several; act once.
+            if (timer) clearTimeout(timer);
+            timer = setTimeout(() => {
+                if (hasLive() || (path.current ?? '').startsWith('/admin/honeymoon')) {
+                    window.dispatchEvent(new CustomEvent(REFRESHED_EVENT));
+                } else {
+                    setUpdated(true);
+                }
+            }, 400);
+        };
+        navigator.serviceWorker.addEventListener('message', onMessage);
+        return () => {
+            if (timer) clearTimeout(timer);
+            navigator.serviceWorker.removeEventListener('message', onMessage);
+        };
+    }, []);
+    return { updated, signedOut };
+}
+
+/**
  * The site, offline: registered on every page from the app shell.
  *
  * Registers the site-wide worker and says so when there is no connection.
@@ -98,6 +145,7 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 export default function OfflineManager() {
     const online = useOnline();
     const offline = useOfflineState();
+    const { updated, signedOut } = useFreshData();
     const [showFailed, setShowFailed] = useState(false);
     const wasOnline = useRef(online);
 
@@ -128,7 +176,7 @@ export default function OfflineManager() {
     if (inFrame()) return null;
     const waiting = offline.pending > 0;
     const failed = offline.failed.length > 0;
-    if (online && !waiting && !failed) return null;
+    if (online && !waiting && !failed && !updated && !signedOut) return null;
 
     let message: React.ReactNode;
     if (!online) {
@@ -148,6 +196,27 @@ export default function OfflineManager() {
         );
     } else if (waiting) {
         message = <>Sending {plural(offline.pending, 'change', 'changes')} made offline…</>;
+    } else if (signedOut) {
+        message = (
+            <>
+                Signed out · showing the saved copy ·{' '}
+                <Link
+                    href={`/admin/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`}
+                    className="underline underline-offset-2"
+                >
+                    Sign in
+                </Link>
+            </>
+        );
+    } else if (updated) {
+        message = (
+            <>
+                Updated on the server ·{' '}
+                <button type="button" onClick={() => window.location.reload()} className="underline underline-offset-2">
+                    Refresh
+                </button>
+            </>
+        );
     }
 
     return (

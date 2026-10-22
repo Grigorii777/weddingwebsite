@@ -110,3 +110,20 @@ export function isWarmStale(record: WarmRecord | null, buildId: string, now: num
     if (record.buildId !== buildId) return true;
     return now - record.at > STALE_AFTER_MS;
 }
+
+/**
+ * The order the save pass opens pages in, leaving out those already done
+ * (v0.10.20). The not-saved fallback first, then the page this phone was last
+ * on and the dashboard — what opening the app shows — then the rest as listed.
+ * A pass iOS cut short resumes with what is left instead of starting again.
+ */
+export function passOrder(pages: readonly string[], lastPage: string | null, done: readonly string[]): string[] {
+    const skip = new Set(done);
+    const last = lastPage ? lastPage.split(/[?#]/)[0] : null;
+    const first = ['/offline', last, '/admin/dashboard'].filter((page): page is string => !!page && pages.includes(page));
+    const ordered = [...new Set([...first, ...pages])];
+    return ordered.filter((page) => !skip.has(page));
+}
+
+/** A pass in progress is resumed only within this long; after it, start again. */
+export const PASS_RESUME_MS = 24 * 60 * 60 * 1000;

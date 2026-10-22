@@ -291,6 +291,15 @@ at — so it opens on a plane or at a border with no signal. Every time you open
 the app it asks the server whether anything changed and brings its copy up to
 date on its own.
 
+It works like Mail: every page and its data come from the copy on the phone
+first, at once, and the server is asked behind it. When the server has
+something newer, the dashboard and the honeymoon portal update in place and any
+other page shows *Updated on the server · Refresh* (it never swaps a form out
+from under you). Anything you have just saved is always read back from the
+server, never from an older copy. Pull down at the top of any admin page to
+refresh — with no signal it says *Couldn't connect* and leaves everything as it
+was.
+
 With no signal you can keep editing. Changes are kept on the phone, shown
 straight away (the honeymoon portal and the site settings show them exactly as
 they will land), and sent by themselves, in order, the next time the app opens

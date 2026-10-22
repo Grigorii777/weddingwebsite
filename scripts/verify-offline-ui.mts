@@ -316,10 +316,16 @@ console.log('\nThe installed app picks up changes on the server by itself');
 console.log('\nSigning out');
 await goOffline(context, false);
 await p.goto(`${BASE}/admin`, { waitUntil: 'networkidle' });
-const left = await p.evaluate(async () => {
+// The login may arrive as a client navigation or, just after a spell offline, as
+// a full page load (the worker gives up on navigations at once while it still
+// believes the connection is down) — so click, wait for the login, then look.
+await p.evaluate(() => {
     const button = [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Logout');
     button?.click();
-    await new Promise((r) => setTimeout(r, 2500));
+});
+await p.waitForURL((url) => url.pathname.startsWith('/admin/login'), { timeout: 15000 }).catch(() => undefined);
+await p.waitForTimeout(1000);
+const left = await p.evaluate(async () => {
     const out: string[] = [];
     for (const name of await caches.keys()) {
         for (const key of await (await caches.open(name)).keys()) {

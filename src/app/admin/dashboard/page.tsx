@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { SiteConfig } from '@/lib/config';
+import { useLiveRefresh } from '@/components/offline/useLiveRefresh';
 
 interface DashboardData {
   siteConfig: Partial<SiteConfig>;
@@ -520,12 +521,16 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     fetch('/api/admin/dashboard')
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
+
+  useEffect(load, [load]);
+  // Nothing to type into here, so newer numbers simply replace the saved ones.
+  useLiveRefresh(load);
 
   if (loading) {
     return (

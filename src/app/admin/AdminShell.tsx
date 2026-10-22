@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Changelog from '@/components/admin/Changelog';
 import OfflineStatus from '@/components/offline/OfflineStatus';
+import PullToRefresh from '@/components/offline/PullToRefresh';
 import { clearOffline, inFrame, isStandalone } from '@/components/offline/offlineStore';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -156,6 +157,7 @@ export default function AdminShell({
                     }
                 `
             }} />
+            <PullToRefresh />
             {/* flex-1 + min-h-0: fills the fixed AppShell container, won't overflow it */}
             <div className="flex-1 min-h-0 bg-gray-100 flex flex-col overflow-hidden">
 

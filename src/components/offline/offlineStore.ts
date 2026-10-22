@@ -1,6 +1,7 @@
 'use client';
 
-import { updateNeeded, type WarmRecord } from '@/lib/offline';
+import { PASS_RESUME_MS, passOrder, updateNeeded, type WarmRecord } from '@/lib/offline';
+import { LAST_ADMIN_PAGE_KEY } from '@/lib/loginReturn';
 
 /**
  * The offline warm-up, as a tiny store any component can read.
@@ -45,6 +46,39 @@ export interface OfflineState {
 }
 
 const KEY = 'site-offline-saved';
+/** A save pass in progress, so one iOS cut short resumes rather than restarts. */
+const PASS_KEY = 'site-offline-pass';
+
+interface PassProgress {
+    /** The build and sign-in state it is saving for. */
+    key: string;
+    at: number;
+    /** The code and pages (or the quick refresh) are saved; only the visits remain. */
+    prepared: boolean;
+    done: string[];
+}
+
+function readPass(key: string): PassProgress | null {
+    try {
+        const raw = localStorage.getItem(PASS_KEY);
+        const pass = raw ? JSON.parse(raw) as PassProgress : null;
+        if (!pass || pass.key !== key || Date.now() - pass.at > PASS_RESUME_MS) return null;
+        return pass;
+    } catch {
+        return null;
+    }
+}
+
+function writePass(pass: PassProgress | null) {
+    try {
+        if (pass) localStorage.setItem(PASS_KEY, JSON.stringify(pass));
+        else localStorage.removeItem(PASS_KEY);
+    } catch { /* the pass still runs; it just cannot resume */ }
+}
+
+function lastAdminPage(): string | null {
+    try { return localStorage.getItem(LAST_ADMIN_PAGE_KEY); } catch { return null; }
+}
 /** How long one page gets in the hidden frame to load its data and photos. */
 const PAGE_SETTLE_MS = 2500;
 const PAGE_MAX_MS = 15000;
@@ -68,6 +102,18 @@ function set(next: Partial<OfflineState>) {
     state = { ...state, ...next };
     for (const listener of listeners) listener();
 }
+
+/**
+ * Pages that update themselves when newer data arrives (`useLiveRefresh`). Any
+ * other page is offered a refresh instead, so a form is never replaced while
+ * someone is typing in it.
+ */
+let live = 0;
+export function registerLive(): () => void {
+    live += 1;
+    return () => { live -= 1; };
+}
+export function hasLive(): boolean { return live > 0; }
 
 /** Window events the honeymoon portal (and anything else) can refresh on. */
 export const SYNCED_EVENT = 'site-offline:synced';
@@ -251,14 +297,23 @@ export function saveForOffline({ onlyIfStale = false } = {}): Promise<void> {
             const res = await fetch('/api/offline/manifest', { cache: 'no-store' });
             if (!res.ok) throw new Error('manifest');
             const manifest: Manifest = await res.json();
-            const need = onlyIfStale ? updateNeeded(readRecord(), manifest, Date.now()) : 'full';
+            const passKey = `${manifest.buildId}|${manifest.admin ? 'admin' : 'public'}`;
+            const resume = readPass(passKey);
+            const need = resume ? (resume.prepared ? 'resume' : 'full')
+                : onlyIfStale ? updateNeeded(readRecord(), manifest, Date.now()) : 'full';
             if (!need) return;
 
             worker = await controller();
             if (!worker) throw new Error('no worker');
+            const progress: PassProgress = resume ?? { key: passKey, at: Date.now(), prepared: false, done: [] };
+            const pages = passOrder(manifest.pages, lastAdminPage(), progress.done);
             let done: number;
             let total: number;
-            if (need === 'full') {
+            if (need === 'resume') {
+                total = manifest.pages.length;
+                done = progress.done.length;
+                set({ phase: 'saving', done, total });
+            } else if (need === 'full') {
                 total = manifest.assets.length + manifest.pages.length * 2;
                 set({ phase: 'saving', done: 0, total });
                 await precacheThroughWorker(worker, manifest);
@@ -272,17 +327,24 @@ export function saveForOffline({ onlyIfStale = false } = {}): Promise<void> {
                 window.dispatchEvent(new CustomEvent(REFRESHED_EVENT));
             }
             set({ done });
+            progress.prepared = true;
+            writePass(progress);
 
             worker.postMessage({ type: 'site-sw:pass-start' });
             passStarted = true;
-            for (const page of manifest.pages) {
+            for (const page of pages) {
                 if (!navigator.onLine) throw new Error('went offline');
                 await visit(page);
                 done += 1;
+                progress.done.push(page);
+                writePass(progress);
                 set({ done });
             }
-            worker.postMessage({ type: 'site-sw:pass-end', complete: true });
+            // Only a pass that saw every page in one go may decide which photos
+            // are unused: a resumed one has forgotten what the first half saw.
+            worker.postMessage({ type: 'site-sw:pass-end', complete: !resume });
             passStarted = false;
+            writePass(null);
 
             const saved = { at: Date.now(), buildId: manifest.buildId, data: manifest.data, admin: manifest.admin };
             try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch { /* the save still happened */ }
@@ -351,6 +413,7 @@ export async function checkForUpdates({ force = false } = {}): Promise<void> {
 /** Forget everything saved on this device — on logout. */
 export async function clearOffline(): Promise<void> {
     try { localStorage.removeItem(KEY); } catch { /* nothing to forget */ }
+    writePass(null);
     set({ phase: 'idle', record: null, admin: false, done: 0, total: 0 });
     // The outbox is not cleared: edits not yet sent are sent after the next sign-in.
     try {

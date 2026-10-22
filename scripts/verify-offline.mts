@@ -15,7 +15,7 @@
 import fs from 'fs';
 import path from 'path';
 import vm from 'vm';
-import { ADMIN_PAGES, EXCLUDED_PAGES, PUBLIC_PAGES, isWarmStale, updateNeeded } from '../src/lib/offline';
+import { ADMIN_PAGES, EXCLUDED_PAGES, PUBLIC_PAGES, isWarmStale, passOrder, updateNeeded } from '../src/lib/offline';
 import { applyQueuedWrites, type QueuedWrite } from '../src/lib/honeymoonOffline';
 import type { HoneymoonPayload } from '../src/lib/honeymoon';
 import { once } from '../src/lib/outboxReplay';
@@ -50,13 +50,17 @@ const sw = sandbox.module.exports as unknown as {
     NETWORK_TIMEOUT_MS: number;
     FALLBACK_AFTER_MS: number;
     OFFLINE_HOLD_MS: number;
+    REVALIDATE_AFTER_MS: number;
+    RSC_TIMEOUT_MS: number;
+    readPlan: (state: { hasSaved: boolean; savedAt: number; freshAfter: number | null; offlineAt: number | null; now: number }) => string;
+    rscBudget: (offlineAt: number | null, now: number) => number;
 };
 
 const O = 'https://example.com';
 console.log('\nWhich strategy a request gets');
 check('a page load is a page', sw.routeFor({ url: `${O}/admin/rsvps`, mode: 'navigate' }, O) === 'page');
 check('the app code is static', sw.routeFor({ url: `${O}/_next/static/chunks/abc.js` }, O) === 'static');
-check('a client navigation (RSC) is network-only', sw.routeFor({ url: `${O}/about?_rsc=1x2`, rsc: true }, O) === 'rsc');
+check('a client navigation (RSC) has its own rule', sw.routeFor({ url: `${O}/about?_rsc=1x2`, rsc: true }, O) === 'rsc');
 check('page data is data', sw.routeFor({ url: `${O}/api/admin/finances` }, O) === 'data');
 check('a photo is a photo', sw.routeFor({ url: `${O}/api/photos/a.jpg/thumb` }, O) === 'photo');
 check('signing in is never saved', sw.routeFor({ url: `${O}/api/auth/check` }, O) === 'network');
@@ -84,6 +88,8 @@ check('a page that redirected (to the login) is not',
     !sw.isCacheablePage(`${O}/admin`, { status: 200, redirected: true, url: `${O}/admin/login`, contentType: html }));
 check('a page that came back as another path is not',
     !sw.isCacheablePage(`${O}/rsvp`, { status: 200, redirected: false, url: `${O}/work-in-progress`, contentType: html }));
+check('the login page is never saved, however it was reached',
+    !sw.isCacheablePage(`${O}/admin/login?next=%2Fadmin%2Frsvps`, { status: 200, redirected: false, url: `${O}/admin/login?next=%2Fadmin%2Frsvps`, contentType: html }));
 check('an error page is not', !sw.isCacheablePage(`${O}/x`, { status: 500, redirected: false, url: `${O}/x`, contentType: html }));
 check('a JSON body is not saved as a page',
     !sw.isCacheablePage(`${O}/x`, { status: 200, redirected: false, url: `${O}/x`, contentType: 'application/json' }));
@@ -370,6 +376,47 @@ console.log('\nHow long a read waits before the saved copy answers');
     check('the short wait is well under the full timeout', sw.FALLBACK_AFTER_MS * 2 <= sw.NETWORK_TIMEOUT_MS);
     check('with a copy, just after a failure, no wait at all', sw.fallbackWait(true, now - 1000, now) === 0);
     check('the hold ends, and the network is asked again', sw.fallbackWait(true, now - sw.OFFLINE_HOLD_MS, now) === sw.FALLBACK_AFTER_MS);
+}
+
+console.log('\nThe saved copy answers first (v0.10.20)');
+{
+    const now = 10_000_000;
+    const plan = (over: Partial<{ hasSaved: boolean; savedAt: number; freshAfter: number | null; offlineAt: number | null }>) =>
+        sw.readPlan({ hasSaved: true, savedAt: now - 60_000, freshAfter: 0, offlineAt: null, now, ...over });
+    check('nothing saved: the network', plan({ hasSaved: false }) === 'network');
+    check('a copy: answered at once, refreshed behind it', plan({}) === 'copy+refresh');
+    check('a copy saved before a save landed: the server first', plan({ freshAfter: now - 1000 }) === 'network-first');
+    check('…even while offline, so a saved change is never hidden by an older copy',
+        plan({ freshAfter: now - 1000, offlineAt: now - 500 }) === 'network-first');
+    check('a copy saved after the last save is trusted again', plan({ savedAt: now - 500, freshAfter: now - 1000 }) === 'copy');
+    check('offline: the copy, with no refresh behind it', plan({ offlineAt: now - 1000 }) === 'copy');
+    check('the offline hold ends, and refreshing resumes', plan({ offlineAt: now - sw.OFFLINE_HOLD_MS }) === 'copy+refresh');
+    check('a copy kept moments ago is not asked for again', plan({ savedAt: now - 1000 }) === 'copy');
+    check('…but after the debounce it is', plan({ savedAt: now - sw.REVALIDATE_AFTER_MS }) === 'copy+refresh');
+    check('an old copy with no saved time is refreshed, not trusted', plan({ savedAt: 0 }) === 'copy+refresh');
+    check('a freshness mark not yet read counts as none', plan({ freshAfter: null }) === 'copy+refresh');
+}
+
+console.log('\nA client navigation never hangs');
+{
+    const now = 10_000_000;
+    check('online: a short budget', sw.rscBudget(null, now) === sw.RSC_TIMEOUT_MS && sw.RSC_TIMEOUT_MS <= 3000);
+    check('offline: none, so the saved page answers at once', sw.rscBudget(now - 1000, now) === 0);
+    check('the hold ends, and navigation asks the network again', sw.rscBudget(now - sw.OFFLINE_HOLD_MS, now) === sw.RSC_TIMEOUT_MS);
+}
+
+console.log('\nThe save pass: what goes first, and resuming');
+{
+    const pages = ['/', '/about', '/offline', '/admin', '/admin/dashboard', '/admin/rsvps', '/admin/honeymoon/map'];
+    const order = passOrder(pages, '/admin/honeymoon/map?day=3', []);
+    check('the not-saved fallback first', order[0] === '/offline');
+    check('then the page this phone was last on (its query ignored)', order[1] === '/admin/honeymoon/map');
+    check('then the dashboard', order[2] === '/admin/dashboard');
+    check('every page exactly once', order.length === pages.length && new Set(order).size === pages.length);
+    const resumed = passOrder(pages, '/admin/honeymoon/map', ['/offline', '/admin/honeymoon/map', '/admin/dashboard', '/']);
+    check('a resumed pass leaves out what is done', JSON.stringify(resumed) === JSON.stringify(['/about', '/admin', '/admin/rsvps']));
+    check('a last page that is not in the list is ignored', passOrder(pages, '/admin/nowhere', [])[1] === '/admin/dashboard');
+    check('a signed-out list (no dashboard) still works', passOrder(['/', '/offline'], null, []).join() === '/offline,/');
 }
 
 console.log('\nWhere signing in returns you to');

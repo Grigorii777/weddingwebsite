@@ -142,7 +142,15 @@ idempotent — matches on place name, never reverts an edit) and
    write from that frame). A page missing from `PUBLIC_PAGES` / `ADMIN_PAGES` /
    `EXCLUDED_PAGES` fails `check:offline` in CI. The worker's decisions are pure
    functions at the top of `sw.js`, tested under Node — keep them free of worker
-   globals. Never let it save a redirected page (the login must never be stored
+   globals. **Reads are copy-first (v0.10.20)**: `readPlan()` answers from the
+   saved copy and refreshes behind it, except a copy older than `freshAfter`
+   (bumped by every write that reaches the server, and by pull-to-refresh),
+   which goes to the server first — so a page that saves and reloads sees its own
+   change. A refresh that changed the data posts `site-sw:fresh` to the page;
+   a page with nothing to type into opts into updating in place with
+   `useLiveRefresh(reload)`, every other page gets a Refresh pill. **Keep
+   `X-Frame-Options` at `SAMEORIGIN`** — `DENY` blocks the save pass's own hidden
+   frame, and from v0.10.9 to v0.10.20 pages were saved without their data. Never let it save a redirected page (the login must never be stored
    as `/admin`), an auth route, or a non-200; never trust `navigator.onLine` for
    "am I offline" — ask `/api/offline/ping`, which the worker never answers from
    the cache. Test offline with the server truly unreachable

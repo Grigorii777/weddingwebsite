@@ -53,6 +53,21 @@ const FALLBACK_AFTER_MS = 2500;
  * of `/api/offline/ping` ends it early as soon as the server answers.
  */
 const OFFLINE_HOLD_MS = 30000;
+/**
+ * A copy saved this recently answers without a refresh behind it (v0.10.20): a
+ * page that asks for the same data twice in a row costs one request, not two.
+ */
+const REVALIDATE_AFTER_MS = 15000;
+/**
+ * How long a client navigation (Next's RSC request) may take before the worker
+ * gives up on it. Next then loads the page in full, which the saved copy answers
+ * at once — so a tap between pages never hangs on a bad signal.
+ */
+const RSC_TIMEOUT_MS = 3000;
+/** Where the worker keeps `freshAfter`, so a worker iOS restarted still knows it. */
+const FRESH_AFTER_KEY = '/__sw/fresh-after';
+/** The header a stored data copy carries: when it was saved. */
+const SAVED_AT_HEADER = 'X-Saved-At';
 /** Photos are saved as they are viewed; past this, the oldest go first. */
 const MAX_PHOTOS = 1500;
 /** The same for other sites' pictures and map tiles. */
@@ -135,6 +150,8 @@ function routeFor(req, origin) {
 function isCacheablePage(requestUrl, res) {
     if (res.status !== 200 || res.redirected) return false;
     if (!(res.contentType || '').includes('text/html')) return false;
+    // The login is never saved: offline it would only be a form that cannot work.
+    try { if (new URL(requestUrl).pathname.startsWith('/admin/login')) return false; } catch { return false; }
     // A redirect the browser followed silently still shows up as a different
     // final URL: the login page must never be saved under /admin.
     try {
@@ -175,6 +192,31 @@ function fallbackWait(hasSaved, offlineAt, now) {
     if (!hasSaved) return NETWORK_TIMEOUT_MS;
     if (typeof offlineAt === 'number' && now - offlineAt < OFFLINE_HOLD_MS) return 0;
     return FALLBACK_AFTER_MS;
+}
+
+/**
+ * How a read with this saved copy is answered (v0.10.20) — the copy first, like
+ * Mail, with the server asked behind it:
+ *
+ * - `network`: no copy, so the network or nothing.
+ * - `network-first`: the copy predates `freshAfter` — something was saved, or a
+ *   pull-to-refresh asked for the server, since it was kept — so it cannot be
+ *   trusted to show that change. The old wait-then-copy rule.
+ * - `copy`: answer from the copy and ask nothing (offline, or kept moments ago).
+ * - `copy+refresh`: answer from the copy now, fetch behind it, keep the answer.
+ */
+function readPlan({ hasSaved, savedAt, freshAfter, offlineAt, now }) {
+    if (!hasSaved) return 'network';
+    const at = typeof savedAt === 'number' ? savedAt : 0;
+    if (typeof freshAfter === 'number' && at < freshAfter) return 'network-first';
+    if (typeof offlineAt === 'number' && now - offlineAt < OFFLINE_HOLD_MS) return 'copy';
+    if (now - at < REVALIDATE_AFTER_MS) return 'copy';
+    return 'copy+refresh';
+}
+
+/** How long a client navigation may wait: not at all while offline. */
+function rscBudget(offlineAt, now) {
+    return typeof offlineAt === 'number' && now - offlineAt < OFFLINE_HOLD_MS ? 0 : RSC_TIMEOUT_MS;
 }
 
 function isCacheableData(res) {
@@ -297,7 +339,7 @@ function mergeSiteConfig(config, bodies) {
 if (typeof module === 'object' && module.exports) {
     module.exports = {
         routeFor, isCacheablePage, isCacheableData, isStale, redirectTarget, OFFLINE_WRITE_MESSAGE, fallbackWait,
-        NETWORK_TIMEOUT_MS, FALLBACK_AFTER_MS, OFFLINE_HOLD_MS,
+        NETWORK_TIMEOUT_MS, FALLBACK_AFTER_MS, OFFLINE_HOLD_MS, REVALIDATE_AFTER_MS, RSC_TIMEOUT_MS, readPlan, rscBudget,
         isQueueable, tempIdCount, queuedResponseBody, remapIds, remapUrl, createdIds, outcomeFor, mergeSiteConfig,
     };
 }
@@ -350,6 +392,86 @@ if (typeof self !== 'undefined' && typeof self.addEventListener === 'function' &
     function markOffline() {
         if (offlineAt === null) offlineAt = Date.now();
         probe();
+    }
+
+    const holding = () => offlineAt !== null && Date.now() - offlineAt < OFFLINE_HOLD_MS;
+
+    /* ───────────── copy first: freshness and the refresh behind it ───────────── */
+
+    /**
+     * Copies saved before this may not show a change made since: a write that
+     * reached the server, or a pull-to-refresh. Kept in the cache as well as in
+     * memory, because iOS stops an idle worker and the next one must still know.
+     */
+    let freshAfter = null;
+
+    async function getFreshAfter() {
+        if (freshAfter === null) {
+            try {
+                const saved = await (await caches.open(DATA)).match(FRESH_AFTER_KEY);
+                freshAfter = saved ? Number(await saved.text()) || 0 : 0;
+            } catch {
+                freshAfter = 0;
+            }
+        }
+        return freshAfter;
+    }
+
+    async function bumpFreshAfter(at = Date.now()) {
+        freshAfter = at;
+        try { await (await caches.open(DATA)).put(FRESH_AFTER_KEY, new Response(String(at))); } catch { /* memory still has it */ }
+    }
+
+    /**
+     * The response with the time its request *started*: an answer that was on
+     * its way while a save landed is then older than that save, and is not
+     * trusted to show it.
+     */
+    async function stamp(response, at) {
+        const headers = new Headers(response.headers);
+        headers.set(SAVED_AT_HEADER, String(at));
+        return new Response(await response.blob(), { status: response.status, statusText: response.statusText, headers });
+    }
+
+    const savedAtOf = (saved) => (saved ? Number(saved.headers.get(SAVED_AT_HEADER)) || 0 : 0);
+
+    /** A saved redirect (/admin → the dashboard), stamped like any other copy. */
+    const redirectCopy = (target, at) => new Response(null, {
+        status: 302,
+        headers: { Location: new URL(target, self.location.origin).href, [SAVED_AT_HEADER]: String(at) },
+    });
+
+    /**
+     * Ask the server behind a copy that has already answered, keep what it says
+     * and, when it differs from what the page was shown, tell that page — it
+     * updates in place or offers a refresh (`OfflineManager`).
+     */
+    async function refreshBehind(go, served, store, clientId, url) {
+        const startedAt = Date.now();
+        let response;
+        try {
+            response = await withTimeout(go(), NETWORK_TIMEOUT_MS);
+        } catch {
+            markOffline();
+            return;
+        }
+        offlineAt = null;
+        if (response.status === 401 && clientId) {
+            // Signed out on the server while the copy kept the page looking
+            // signed in: say so, rather than leave it to the next save to find out.
+            const client = await self.clients.get(clientId);
+            if (client) client.postMessage({ type: 'site-sw:signed-out' });
+            return;
+        }
+        if (!isCacheableData(response)) return;
+        const [next, before] = await Promise.all([
+            response.clone().text().catch(() => null),
+            served ? served.text().catch(() => null) : Promise.resolve(null),
+        ]);
+        try { await store(response, startedAt); } catch { return; }
+        if (!served || next === before || !clientId) return;
+        const client = await self.clients.get(clientId);
+        if (client) client.postMessage({ type: 'site-sw:fresh', url });
     }
 
     /**
@@ -634,6 +756,7 @@ if (typeof self !== 'undefined' && typeof self.addEventListener === 'function' &
                                 });
                             }
                             sent += 1;
+                            await bumpFreshAfter();
                         } else {
                             const answer = await response.clone().json().catch(() => ({}));
                             await inStore('failed', 'readwrite', (store) => asPromise(store.put({
@@ -666,13 +789,15 @@ if (typeof self !== 'undefined' && typeof self.addEventListener === 'function' &
         if (pending === 0) {
             const map = await idMap();
             try {
-                return await send({
+                const response = await send({
                     method: request.method,
                     url: new URL(request.url).pathname + new URL(request.url).search,
                     contentType: request.headers.get('Content-Type') || '',
                     body: text || null,
                     key,
                 }, map, DIRECT_TIMEOUT_MS);
+                if (response.ok) await bumpFreshAfter();
+                return response;
             } catch {
                 tell(event, true);
             }
@@ -761,15 +886,36 @@ if (typeof self !== 'undefined' && typeof self.addEventListener === 'function' &
         const cache = await caches.open(PAGES);
         const url = new URL(request.url);
         const key = url.pathname + url.search;
-        const saved = await cache.match(key, { ignoreVary: true })
+        let saved = await cache.match(key, { ignoreVary: true })
             || await cache.match(url.pathname, { ignoreVary: true, ignoreSearch: true });
-        const store = async (response) => {
+        // The app's front door never saved (it only redirects): open the saved
+        // dashboard rather than "not saved yet".
+        if (!saved && url.pathname.replace(/\/$/, '') === '/admin' && await cache.match('/admin/dashboard', { ignoreVary: true })) {
+            saved = redirectCopy('/admin/dashboard', 0);
+        }
+        const store = async (response, startedAt = Date.now()) => {
             const target = redirectTarget(request.url, describe(response));
-            if (isCacheablePage(request.url, describe(response))) await cache.put(key, response);
-            else if (target) await cache.put(key, Response.redirect(new URL(target, self.location.origin).href, 302));
+            if (isCacheablePage(request.url, describe(response))) await cache.put(key, await stamp(response, startedAt));
+            else if (target) await cache.put(key, redirectCopy(target, startedAt));
         };
+        const plan = readPlan({
+            hasSaved: Boolean(saved), savedAt: savedAtOf(saved), freshAfter: await getFreshAfter(), offlineAt, now: Date.now(),
+        });
+        if (plan === 'copy' || plan === 'copy+refresh') {
+            // The page as saved, at once; a newer one is kept for next time.
+            // A navigation request cannot be re-sent with options, so ask afresh
+            // the way the save pass does (redirects followed, then kept as such).
+            if (plan === 'copy+refresh') {
+                event.waitUntil(refreshBehind(() => fetch(request.url, {
+                    credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'text/html' },
+                }), null, store, null, request.url));
+            }
+            else if (holding()) { probe(); tell(event, true); }
+            return saved;
+        }
+        const startedAt = Date.now();
         try {
-            const { response, fromCopy } = await readThrough(request, saved, store, event);
+            const { response, fromCopy } = await readThrough(request, saved, (response) => store(response, startedAt), event);
             if (fromCopy) tell(event, true);
             return response;
         } catch {
@@ -794,32 +940,83 @@ if (typeof self !== 'undefined' && typeof self.addEventListener === 'function' &
         }
     }
 
-    async function networkThenCache(request, cacheName, event) {
-        const cache = await caches.open(cacheName);
-        const isConfig = cacheName === DATA && new URL(request.url).pathname === SITE_CONFIG;
-        const keep = cacheName !== PHOTOS || !(await fromPhotoLibrary(event));
-        if (cacheName === PHOTOS && pass && keep) pass.seen.add(request.url);
+    /** Page data: the copy first, the server behind it (`readPlan`). */
+    async function data(request, event) {
+        const cache = await caches.open(DATA);
+        const isConfig = new URL(request.url).pathname === SITE_CONFIG;
         const saved = await cache.match(request, { ignoreVary: true });
-        const store = async (response) => {
-            if (!keep || !isCacheableData(response)) return;
-            await cache.put(request, response);
-            if (cacheName === PHOTOS) void trimPhotos();
+        const store = async (response, startedAt) => {
+            if (isCacheableData(response)) await cache.put(request, await stamp(response, startedAt));
         };
+        const plan = readPlan({
+            hasSaved: Boolean(saved), savedAt: savedAtOf(saved), freshAfter: await getFreshAfter(), offlineAt, now: Date.now(),
+        });
+        if (plan === 'copy' || plan === 'copy+refresh') {
+            if (plan === 'copy+refresh') {
+                event.waitUntil(refreshBehind(() => fetch(request, { cache: 'no-store' }), saved.clone(), store, event.clientId || null, request.url));
+            } else if (holding()) {
+                probe();
+                tell(event, true);
+            }
+            return isConfig ? withQueuedConfig(saved) : saved;
+        }
+        const startedAt = Date.now();
         try {
-            const { response, fromCopy } = await readThrough(request, saved, store, event);
+            const { response, fromCopy } = await readThrough(request, saved, (response) => store(response, startedAt), event);
             if (fromCopy) tell(event, true);
             return isConfig ? withQueuedConfig(response) : response;
         } catch (error) {
             tell(event, true);
-            if (cacheName === PHOTOS) {
-                // The same photo at another size (the lightbox's full size when
-                // only the gallery's thumbnail was saved) beats a broken image.
-                const other = await cache.match(request, { ignoreVary: true, ignoreSearch: true });
-                if (other) return other;
-                const doc = await (await caches.open(FILES)).match(request.url, { ignoreVary: true });
-                if (doc) return doc;
-            }
             throw error;
+        }
+    }
+
+    /**
+     * A photo: the copy whenever there is one. Uploads are saved under a
+     * timestamped name, so an address never starts showing a different picture.
+     */
+    async function photo(request, event) {
+        const cache = await caches.open(PHOTOS);
+        const keep = !(await fromPhotoLibrary(event));
+        if (pass && keep) pass.seen.add(request.url);
+        const saved = await cache.match(request, { ignoreVary: true });
+        if (saved) return saved;
+        const store = async (response) => {
+            if (!keep || !isCacheableData(response)) return;
+            await cache.put(request, response);
+            void trimPhotos();
+        };
+        try {
+            const { response } = await readThrough(request, null, store, event);
+            return response;
+        } catch (error) {
+            tell(event, true);
+            // The same photo at another size (the lightbox's full size when
+            // only the gallery's thumbnail was saved) beats a broken image.
+            const other = await cache.match(request, { ignoreVary: true, ignoreSearch: true });
+            if (other) return other;
+            const doc = await (await caches.open(FILES)).match(request.url, { ignoreVary: true });
+            if (doc) return doc;
+            throw error;
+        }
+    }
+
+    /**
+     * A client navigation, with a time limit. Past it — or at once while offline
+     * — a network error makes Next load the page in full, and the saved copy
+     * answers that. A prefetch that fails says nothing about the connection.
+     */
+    async function rsc(request) {
+        const prefetch = request.headers.get('Next-Router-Prefetch') === '1';
+        const budget = rscBudget(offlineAt, Date.now());
+        if (budget === 0) { probe(); return Response.error(); }
+        try {
+            const response = await withTimeout(fetch(request), budget);
+            offlineAt = null;
+            return response;
+        } catch {
+            if (!prefetch) markOffline();
+            return Response.error();
         }
     }
 
@@ -866,18 +1063,24 @@ if (typeof self !== 'undefined' && typeof self.addEventListener === 'function' &
                 if (queueable) {
                     try { return await adminWrite(request, event); } catch { /* no IndexedDB: as before */ }
                 }
-                try { return await fetch(request); } catch { return offlineWrite(); }
+                try {
+                    const response = await fetch(request);
+                    if (response.ok) await bumpFreshAfter();
+                    return response;
+                } catch {
+                    return offlineWrite();
+                }
             })());
             return;
         }
-        // Offline, a failed client navigation makes Next fall back to a full
-        // page load — which the saved page then answers. Nothing to save here.
-        if (first === 'rsc') return;
+        // A failed client navigation makes Next fall back to a full page load —
+        // which the saved page then answers. Nothing to save here.
+        if (first === 'rsc') { event.respondWith(rsc(request)); return; }
 
         if (first === 'static') { event.respondWith(cacheFirst(request)); return; }
         if (first === 'page') { event.respondWith(page(request, event)); return; }
-        if (first === 'photo') { event.respondWith(networkThenCache(request, PHOTOS, event)); return; }
-        event.respondWith(networkThenCache(request, DATA, event));
+        if (first === 'photo') { event.respondWith(photo(request, event)); return; }
+        event.respondWith(data(request, event));
     });
 
     /* ───────────── messages: precache, documents, clear ───────────── */
@@ -902,28 +1105,32 @@ if (typeof self !== 'undefined' && typeof self.addEventListener === 'function' &
             if (saved % 10 === 0) report();
         }
 
-        // Code from older builds goes only once this build's code is in.
-        const wantedStatic = new Set(assets.filter((url) => url.startsWith('/_next/static/'))
-            .map((url) => new URL(url, self.location.origin).href));
-        if (wantedStatic.size && saved >= assets.length) {
-            for (const key of await staticCache.keys()) if (!wantedStatic.has(key.url)) await staticCache.delete(key);
-        }
-
+        const assetsSaved = saved;
         const pageCache = await caches.open(PAGES);
         for (const url of pages) {
             try {
+                const startedAt = Date.now();
                 const response = await fetch(url, { credentials: 'same-origin', headers: { Accept: 'text/html' } });
                 const full = new URL(url, self.location.origin).href;
                 const target = redirectTarget(full, describe(response));
                 if (isCacheablePage(full, describe(response))) {
-                    await pageCache.put(url, response);
+                    await pageCache.put(url, await stamp(response, startedAt));
                     saved += 1;
                 } else if (target) {
-                    await pageCache.put(url, Response.redirect(new URL(target, self.location.origin).href, 302));
+                    await pageCache.put(url, redirectCopy(target, startedAt));
                     saved += 1;
                 }
             } catch { /* as above */ }
             report();
+        }
+
+        // Code from older builds goes only once this build's code *and every
+        // page* are in: a page still saved from the older build needs its code,
+        // or it opens blank offline (until v0.10.20 the code went first).
+        const wantedStatic = new Set(assets.filter((url) => url.startsWith('/_next/static/'))
+            .map((url) => new URL(url, self.location.origin).href));
+        if (wantedStatic.size && assetsSaved >= assets.length && saved >= total) {
+            for (const key of await staticCache.keys()) if (!wantedStatic.has(key.url)) await staticCache.delete(key);
         }
         if (client) client.postMessage({ type: 'site-sw:precache-done', saved, total });
     }
@@ -955,20 +1162,23 @@ if (typeof self !== 'undefined' && typeof self.addEventListener === 'function' &
         const jobs = [];
         const dataCache = await caches.open(DATA);
         for (const request of await dataCache.keys()) {
+            if (new URL(request.url).pathname === FRESH_AFTER_KEY) continue;
             jobs.push(async () => {
+                const startedAt = Date.now();
                 const response = await withTimeout(fetch(request.url, { credentials: 'same-origin', cache: 'no-store' }), 20000);
-                if (isCacheableData(response)) await dataCache.put(request, response);
+                if (isCacheableData(response)) await dataCache.put(request, await stamp(response, startedAt));
             });
         }
         const pageCache = await caches.open(PAGES);
         for (const request of await pageCache.keys()) {
             jobs.push(async () => {
+                const startedAt = Date.now();
                 const response = await withTimeout(fetch(request.url, {
                     credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'text/html' },
                 }), 20000);
                 const target = redirectTarget(request.url, describe(response));
-                if (isCacheablePage(request.url, describe(response))) await pageCache.put(request, response);
-                else if (target) await pageCache.put(request, Response.redirect(new URL(target, self.location.origin).href, 302));
+                if (isCacheablePage(request.url, describe(response))) await pageCache.put(request, await stamp(response, startedAt));
+                else if (target) await pageCache.put(request, redirectCopy(target, startedAt));
             });
         }
         let done = 0;
@@ -996,6 +1206,11 @@ if (typeof self !== 'undefined' && typeof self.addEventListener === 'function' &
         }
         if (type === 'site-sw:dismiss-failed') {
             event.waitUntil(inStore('failed', 'readwrite', (store) => asPromise(store.clear())).then(() => broadcast()));
+            return;
+        }
+        if (type === 'site-sw:fresh-after') {
+            // Pull-to-refresh: every copy saved before now asks the server first.
+            event.waitUntil(bumpFreshAfter().then(() => event.source && event.source.postMessage({ type: 'site-sw:fresh-after-done' })));
             return;
         }
         if (type === 'site-sw:refresh') {

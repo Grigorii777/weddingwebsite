@@ -27,8 +27,9 @@ const nextConfig: NextConfig = {
    * including subdomains; no `preload` — the domain is not submitted to the
    * preload list, and the directive promises what would be checked if it were).
    * `nosniff` stops a browser from re-interpreting a response as a different
-   * type. `X-Frame-Options: DENY` says the site is not a frame target, which
-   * it is not — the clickjacking vector closes with one token.
+   * type. `X-Frame-Options: SAMEORIGIN` says no other site may frame this
+   * one — the clickjacking vector closes with one token — while the site's own
+   * offline save pass still can.
    *
    * The content policy ships in *report-only* mode on purpose: it lists
    * exactly what the site loads (itself, plus the three tile servers the
@@ -47,7 +48,10 @@ const nextConfig: NextConfig = {
         headers: [
           { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
           { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "DENY" },
+          // SAMEORIGIN, not DENY: the offline save pass opens every page in a
+          // hidden frame of the site itself, and DENY blocked that too — from
+          // v0.10.9 to v0.10.20 pages were saved without their data.
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {
             key: "Content-Security-Policy-Report-Only",
@@ -58,7 +62,7 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: blob: https://tile.openstreetmap.org https://tile.opentopomap.org https://server.arcgisonline.com",
               "font-src 'self'",
               "connect-src 'self'",
-              "frame-src 'none'",
+              "frame-src 'self'",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
