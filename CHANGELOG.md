@@ -11,6 +11,15 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.23 — [Released] Today only says "Today" on today (`main`, 2026-10-24 02:19)
+
+### Fixed
+- **The Today tab labelled every day "Today" while the trip was under way.** The badge
+  followed whether the trip had started, not the date of the day on screen. It now reads
+  the day's date against the phone's: today's day says **Today**, the day before says
+  **Yesterday** and the day after says **Tomorrow** (in grey, so today still stands out);
+  any other day carries no badge. The read-only share link shows the same.
+
 ## v0.10.22 — [Released] Honeymoon tabs switch instantly (`main`, 2026-10-22 12:42)
 
 ### Changed

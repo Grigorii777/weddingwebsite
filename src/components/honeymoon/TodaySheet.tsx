@@ -6,7 +6,7 @@ import {
 } from '@/lib/honeymoon';
 import type { Trip } from '@/lib/honeymoon';
 import {
-    emergencyFor, INFO_SECTIONS, minutesOf, navUrl, nextStop, stopWindow,
+    emergencyFor, INFO_SECTIONS, minutesOf, navUrl, nextStop, relativeDayLabel, stopWindow,
 } from '@/lib/honeymoonToday';
 import type { DayStop, TodayPlan } from '@/lib/honeymoonToday';
 
@@ -304,7 +304,9 @@ function Header({ plan, trip, night, onNightChange, onSelectDay, swipeDays = fal
     onSelectDay?: (dayNumber: number) => void;
     swipeDays?: boolean;
 }) {
-    const isToday = plan.standing === 'during';
+    // By the shown day's date, not the trip's standing: every day of a trip
+    // under way used to say "Today".
+    const relative = plan.dayNumber != null ? relativeDayLabel(plan.date) : null;
     return (
         <div className="mb-4">
             <div className="flex items-start justify-between gap-3">
@@ -321,10 +323,12 @@ function Header({ plan, trip, night, onNightChange, onSelectDay, swipeDays = fal
                     <p className="text-gray-600 night:text-gray-300">
                         {plan.date ? formatDate(plan.date) : 'No dates set'}
                         {plan.day?.title ? ` · ${plan.day.title}` : ''}
-                        {isToday && plan.dayNumber != null && (
-                            <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs
-                                font-semibold text-white">
-                                Today
+                        {relative && (
+                            <span className={`ml-2 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                                relative === 'Today'
+                                    ? 'bg-accent text-white'
+                                    : 'bg-gray-100 text-gray-600 night:bg-gray-800 night:text-gray-300'}`}>
+                                {relative}
                             </span>
                         )}
                     </p>

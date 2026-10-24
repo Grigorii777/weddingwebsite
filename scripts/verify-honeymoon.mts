@@ -23,7 +23,7 @@ import {
 } from '../src/lib/honeymoon';
 import {
     baseRun, dayNumberFor, emergencyFor, formatClock, minutesOf, navUrl, neighbourDays, nextStop,
-    planForDay, planForToday, standingOf, stopWindow, timeOf,
+    planForDay, planForToday, relativeDayLabel, standingOf, stopWindow, timeOf,
 } from '../src/lib/honeymoonToday';
 import {
     isAfterDark, localTimeIn, nominalZone, sunTimes, sunTimesLocal,
@@ -938,6 +938,12 @@ console.log('\nTrip mode — today');
     check('during it', standingOf(trip, 10, '2026-09-15') === 'during');
     check('on the last day it is still during', standingOf(trip, 10, '2026-09-21') === 'during');
     check('after it', standingOf(trip, 10, '2026-09-30') === 'after');
+    check('the shown day is today only on its own date',
+        relativeDayLabel('2026-09-15', '2026-09-15') === 'Today'
+        && relativeDayLabel('2026-09-14', '2026-09-15') === 'Yesterday'
+        && relativeDayLabel('2026-09-16', '2026-09-15') === 'Tomorrow'
+        && relativeDayLabel('2026-09-18', '2026-09-15') === null
+        && relativeDayLabel(null, '2026-09-15') === null);
     check('an undated trip stands nowhere',
         standingOf({ start_date: null, end_date: null }, 10, '2026-09-15') === 'undated');
     check('dates longer than the plan still count as during',

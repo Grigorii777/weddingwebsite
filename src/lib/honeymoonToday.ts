@@ -366,6 +366,20 @@ export function stopWindow(stop: DayStop, format: '12h' | '24h'): string | null 
     return `${start} – ${end}`;
 }
 
+/**
+ * What a shown day is to the reader — "Today", "Yesterday", "Tomorrow" — by
+ * its date against the device's, or null for any other day (and an undated one).
+ */
+export function relativeDayLabel(
+    date: string | null, today = todayIso(),
+): 'Today' | 'Yesterday' | 'Tomorrow' | null {
+    const diff = daysBetween(today, date);
+    if (diff === 0) return 'Today';
+    if (diff === -1) return 'Yesterday';
+    if (diff === 1) return 'Tomorrow';
+    return null;
+}
+
 /** Tomorrow's date, for "you move tomorrow" notes. */
 export function tomorrowOf(date: string | null): string | null {
     return date ? addDays(date, 1) : null;
