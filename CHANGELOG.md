@@ -11,6 +11,13 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.24 — [Released] Today counts the days to and from each day (`main`, 2026-10-24 02:30)
+
+### Changed
+- **Every day on the Today tab now says how far it is from today.** Beyond Yesterday and
+  Tomorrow, a day further out reads **In 3 days** or **3 days ago**, in the same grey
+  badge. Today is still the only gold one.
+
 ## v0.10.23 — [Released] Today only says "Today" on today (`main`, 2026-10-24 02:19)
 
 ### Fixed

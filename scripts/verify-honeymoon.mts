@@ -938,11 +938,12 @@ console.log('\nTrip mode — today');
     check('during it', standingOf(trip, 10, '2026-09-15') === 'during');
     check('on the last day it is still during', standingOf(trip, 10, '2026-09-21') === 'during');
     check('after it', standingOf(trip, 10, '2026-09-30') === 'after');
-    check('the shown day is today only on its own date',
+    check('the shown day is labelled by its distance from today',
         relativeDayLabel('2026-09-15', '2026-09-15') === 'Today'
         && relativeDayLabel('2026-09-14', '2026-09-15') === 'Yesterday'
         && relativeDayLabel('2026-09-16', '2026-09-15') === 'Tomorrow'
-        && relativeDayLabel('2026-09-18', '2026-09-15') === null
+        && relativeDayLabel('2026-09-18', '2026-09-15') === 'In 3 days'
+        && relativeDayLabel('2026-09-10', '2026-09-15') === '5 days ago'
         && relativeDayLabel(null, '2026-09-15') === null);
     check('an undated trip stands nowhere',
         standingOf({ start_date: null, end_date: null }, 10, '2026-09-15') === 'undated');

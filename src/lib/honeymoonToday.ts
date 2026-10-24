@@ -367,17 +367,17 @@ export function stopWindow(stop: DayStop, format: '12h' | '24h'): string | null 
 }
 
 /**
- * What a shown day is to the reader — "Today", "Yesterday", "Tomorrow" — by
- * its date against the device's, or null for any other day (and an undated one).
+ * What a shown day is to the reader — "Today", "Yesterday", "Tomorrow",
+ * "In 3 days", "3 days ago" — by its date against the device's, or null for an
+ * undated one.
  */
-export function relativeDayLabel(
-    date: string | null, today = todayIso(),
-): 'Today' | 'Yesterday' | 'Tomorrow' | null {
+export function relativeDayLabel(date: string | null, today = todayIso()): string | null {
     const diff = daysBetween(today, date);
+    if (diff == null) return null;
     if (diff === 0) return 'Today';
     if (diff === -1) return 'Yesterday';
     if (diff === 1) return 'Tomorrow';
-    return null;
+    return diff > 0 ? `In ${diff} days` : `${-diff} days ago`;
 }
 
 /** Tomorrow's date, for "you move tomorrow" notes. */
