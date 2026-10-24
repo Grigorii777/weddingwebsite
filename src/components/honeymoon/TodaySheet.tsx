@@ -6,7 +6,7 @@ import {
 } from '@/lib/honeymoon';
 import type { Trip } from '@/lib/honeymoon';
 import {
-    emergencyFor, INFO_SECTIONS, minutesOf, navUrl, nextStop, relativeDayLabel, stopWindow,
+    dayText, emergencyFor, INFO_SECTIONS, minutesOf, navUrl, nextStop, relativeDayLabel, stopWindow,
 } from '@/lib/honeymoonToday';
 import type { DayStop, TodayPlan } from '@/lib/honeymoonToday';
 
@@ -74,6 +74,7 @@ export default function TodaySheet({
                         onNightChange={onNightChange}
                         onSelectDay={onSelectDay}
                         swipeDays={swipeDays}
+                        copyText={plan.day ? () => dayText(plan, trip, { weather, sun }) : undefined}
                     />
 
                     {(weather || sun?.sunrise) && (
@@ -296,13 +297,15 @@ function Banner({ children }: { children: React.ReactNode }) {
     );
 }
 
-function Header({ plan, trip, night, onNightChange, onSelectDay, swipeDays = false }: {
+function Header({ plan, trip, night, onNightChange, onSelectDay, swipeDays = false, copyText }: {
     plan: TodayPlan;
     trip: Pick<Trip, 'title' | 'partner_names'>;
     night: boolean;
     onNightChange?: (night: boolean) => void;
     onSelectDay?: (dayNumber: number) => void;
     swipeDays?: boolean;
+    /** The day as text for a message; no button when there is no day to send. */
+    copyText?: () => string;
 }) {
     // By the shown day's date, not the trip's standing: every day of a trip
     // under way used to say "Today".
@@ -333,6 +336,8 @@ function Header({ plan, trip, night, onNightChange, onSelectDay, swipeDays = fal
                         )}
                     </p>
                 </div>
+                <div className="flex shrink-0 items-center gap-2">
+                {copyText && <CopyDayButton text={copyText} />}
                 {onNightChange && (
                     <button
                         type="button"
@@ -344,6 +349,7 @@ function Header({ plan, trip, night, onNightChange, onSelectDay, swipeDays = fal
                         {night ? '☀️' : '🌙'}
                     </button>
                 )}
+                </div>
             </div>
 
             {swipeDays && onSelectDay && plan.dayNumber != null && plan.totalDays != null && plan.totalDays > 1 && (
@@ -368,6 +374,68 @@ function Header({ plan, trip, night, onNightChange, onSelectDay, swipeDays = fal
                 </div>
             )}
         </div>
+    );
+}
+
+/**
+ * Copies the day as text, ready to paste into a message.
+ *
+ * The clipboard API needs a secure page; the textarea fallback covers the
+ * site opened over the LAN by IP, where `navigator.clipboard` is missing.
+ */
+function CopyDayButton({ text }: { text: () => string }) {
+    const [state, setState] = useState<'idle' | 'copied' | 'failed'>('idle');
+    useEffect(() => {
+        if (state === 'idle') return;
+        const timer = window.setTimeout(() => setState('idle'), 2000);
+        return () => window.clearTimeout(timer);
+    }, [state]);
+
+    const copy = async () => {
+        const value = text();
+        try {
+            await navigator.clipboard.writeText(value);
+            setState('copied');
+            return;
+        } catch { /* fall through to the old way */ }
+        const area = document.createElement('textarea');
+        area.value = value;
+        area.setAttribute('readonly', '');
+        area.style.position = 'fixed';
+        area.style.opacity = '0';
+        document.body.appendChild(area);
+        area.select();
+        const done = document.execCommand('copy');
+        area.remove();
+        setState(done ? 'copied' : 'failed');
+    };
+
+    return (
+        <button
+            type="button"
+            onClick={copy}
+            aria-live="polite"
+            className={`flex min-h-11 items-center justify-center gap-1.5 rounded-full border px-4 text-sm
+                font-medium max-md:size-11 max-md:px-0
+                transition active:scale-[0.97] ${state === 'copied'
+                    ? 'border-emerald-300 bg-emerald-50 text-emerald-800 night:border-emerald-800 night:bg-emerald-950/40 night:text-emerald-200'
+                    : state === 'failed'
+                        ? 'border-rose-300 text-rose-700 night:border-rose-800 night:text-rose-300'
+                        : 'border-gray-200 text-gray-700 night:border-gray-700 night:text-gray-200'}`}
+        >
+            <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor"
+                strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                {state === 'copied'
+                    ? <path d="M5 12.5l4.5 4.5L19 7.5" />
+                    : state === 'failed'
+                        ? <path d="M6 6l12 12M18 6L6 18" />
+                        : <><rect x="9" y="9" width="11" height="11" rx="2.5" /><path d="M5 15V6.5A2.5 2.5 0 0 1 7.5 4H15" /></>}
+            </svg>
+            {/* An icon on a phone, beside the night switch, so the day's title keeps its room. */}
+            <span className="max-md:sr-only">
+                {state === 'copied' ? 'Copied' : state === 'failed' ? 'Couldn’t copy' : 'Copy day'}
+            </span>
+        </button>
     );
 }
 

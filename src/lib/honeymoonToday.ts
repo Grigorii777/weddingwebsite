@@ -11,7 +11,8 @@
  * and the read-only link a partner opens.
  */
 import {
-    addDays, dateForDay, daysBetween, formatTime, isoOf, legArrivalDay, todayIso,
+    addDays, categoryMeta, dateForDay, daysBetween, formatDate, formatTime, isoOf, legArrivalDay,
+    legIsOvernight, todayIso, travelModeMeta,
 } from './honeymoon';
 import type {
     Booking, Day, HoneymoonPayload, Place, Stop, TravelLeg, Trip, TripInfo,
@@ -378,6 +379,116 @@ export function relativeDayLabel(date: string | null, today = todayIso()): strin
     if (diff === -1) return 'Yesterday';
     if (diff === 1) return 'Tomorrow';
     return diff > 0 ? `In ${diff} days` : `${-diff} days ago`;
+}
+
+/**
+ * A day as plain text, to paste into a message: what the Today view shows,
+ * in the same order, with a map link wherever it shows a Navigate button.
+ * No markdown — a text message would print the asterisks.
+ */
+export function dayText(plan: TodayPlan, trip: Pick<Trip, 'time_format'>, extra: {
+    weather?: { kind: 'forecast' | 'climate'; high: number | null; low: number | null;
+        rain_chance: number | null; label: string | null } | null;
+    sun?: { sunrise: string | null; sunset: string | null } | null;
+} = {}): string {
+    const format = trip.time_format === '12h' ? '12h' : '24h';
+    const at = (time: string | null) => (time ? (format === '12h' ? formatTime(time) : time) : null);
+    const join = (parts: (string | null | undefined | false)[], by = ' · ') =>
+        parts.filter(Boolean).join(by);
+    const mapLink = (target: Parameters<typeof navUrl>[0]) =>
+        (target.lat != null && target.lng != null) || (target.name ?? '').trim()
+            || (target.address ?? '').trim()
+            ? navUrl(target) : null;
+    const legLines = (leg: TravelLeg, note?: string) => {
+        const terminals = join([
+            leg.from_terminal && `T${leg.from_terminal}`, leg.to_terminal && `T${leg.to_terminal}`,
+        ], ' → ');
+        return [
+            `${travelModeMeta(leg.mode).icon} ${leg.from_text || '—'} → ${leg.to_text || '—'}`
+                + (leg.flight_no ? ` (${leg.flight_no})` : ''),
+            join([
+                join([at(leg.depart_time), at(leg.arrive_time)], ' → ')
+                    + (legIsOvernight(leg) ? ' (+1 day)' : ''),
+                terminals, leg.confirmation_ref, note,
+            ]),
+        ].filter(Boolean);
+    };
+
+    const sections: string[][] = [];
+    const { weather, sun } = extra;
+    sections.push([
+        join([
+            plan.dayNumber == null ? null
+                : `Day ${plan.dayNumber}${plan.totalDays ? ` of ${plan.totalDays}` : ''}`,
+            formatDate(plan.date),
+        ]),
+        plan.day?.title ?? '',
+        weather ? join([
+            `${weather.kind === 'climate' ? '≈ ' : ''}${weather.high != null ? `${Math.round(weather.high)}°` : ''}`
+                + (weather.low != null ? ` / ${Math.round(weather.low)}°` : ''),
+            weather.label,
+            weather.rain_chance != null && `${Math.round(weather.rain_chance)}% rain`,
+        ]) : '',
+        sun?.sunrise && sun.sunset ? `Sunrise ${sun.sunrise} · sunset ${sun.sunset}` : '',
+    ].filter(Boolean));
+
+    if (plan.arrivals.length) {
+        sections.push(['🛬 LANDING TODAY', ...plan.arrivals.flatMap(({ leg, fromDayNumber }) =>
+            legLines(leg, `left on day ${fromDayNumber}`))]);
+    }
+
+    if (plan.base) {
+        const base = plan.base;
+        const booking = plan.stops.find((stop) => stop.booking)?.booking ?? null;
+        const own = booking && booking.place_id === base.id ? booking : null;
+        sections.push([
+            '🏨 TONIGHT',
+            join([base.name, plan.baseNights && plan.baseNight
+                ? `night ${plan.baseNight} of ${plan.baseNights}` : null], ' — '),
+            base.address ?? '',
+            own ? join([
+                own.confirmation && `Ref ${own.confirmation}`,
+                at(own.check_in_time) && `check in ${at(own.check_in_time)}`,
+                at(own.check_out_time) && `out by ${at(own.check_out_time)}`,
+                own.contact,
+            ]) : '',
+            mapLink(base) ?? '',
+        ].filter(Boolean));
+    } else if (plan.day) {
+        sections.push(['🏨 TONIGHT', 'No stay set for this day.']);
+    }
+
+    if (plan.departures.length) {
+        sections.push(['🚗 TRAVEL TODAY', ...plan.departures.flatMap((leg) => legLines(leg))]);
+    }
+
+    if (plan.day) {
+        if (!plan.stops.length) {
+            sections.push(['📍 THE DAY', 'A free day.']);
+        } else {
+            const stops = plan.stops.map((stop) => {
+                const category = stop.place ? categoryMeta(stop.place.category) : null;
+                const booking = stop.booking?.confirmation ? join([
+                    `Ref ${stop.booking.confirmation}`,
+                    stop.booking.party_size && stop.booking.kind !== 'stay'
+                        ? `table for ${stop.booking.party_size}` : null,
+                    stop.booking.dress_code,
+                ]) : '';
+                return [
+                    join([stopWindow(stop, format), `${category ? `${category.icon} ` : ''}${stop.label}`]),
+                    stop.address ?? '',
+                    stop.place?.best_time ? `Best: ${stop.place.best_time}` : '',
+                    stop.stop.notes?.trim() ?? '',
+                    booking,
+                    mapLink({ lat: stop.lat, lng: stop.lng, name: stop.label, address: stop.address }) ?? '',
+                ].filter(Boolean).join('\n');
+            });
+            sections.push(['📍 THE DAY', stops.join('\n\n')]);
+        }
+        if (plan.day.notes?.trim()) sections.push(['📝 NOTES', plan.day.notes.trim()]);
+    }
+
+    return sections.map((lines) => lines.join('\n')).join('\n\n');
 }
 
 /** Tomorrow's date, for "you move tomorrow" notes. */

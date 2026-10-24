@@ -11,6 +11,16 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.25 — [Released] Copy a day to send by text (`main`, 2026-10-24 17:11)
+
+### Added
+- **A Copy day button on the Today tab.** It copies the day on screen as plain text, ready to
+  paste into a message. The text holds the day and date, the weather and sun times, where
+  you sleep (with the booking reference and check-in times), travel, each stop with its time
+  and notes, the day's notes, and a map link wherever the page has a Navigate button. On a
+  phone it is a round icon beside the night switch and turns into a tick once copied; on a
+  wider screen it is labelled. The share link has it too.
+
 ## v0.10.24 — [Released] Today counts the days to and from each day (`main`, 2026-10-24 02:30)
 
 ### Changed

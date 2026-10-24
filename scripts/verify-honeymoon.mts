@@ -23,7 +23,7 @@ import {
 } from '../src/lib/honeymoon';
 import {
     baseRun, dayNumberFor, emergencyFor, formatClock, minutesOf, navUrl, neighbourDays, nextStop,
-    planForDay, planForToday, relativeDayLabel, standingOf, stopWindow, timeOf,
+    dayText, planForDay, planForToday, relativeDayLabel, standingOf, stopWindow, timeOf,
 } from '../src/lib/honeymoonToday';
 import {
     isAfterDark, localTimeIn, nominalZone, sunTimes, sunTimesLocal,
@@ -1014,6 +1014,19 @@ console.log('\nTrip mode — today');
         stopWindow(dayTwo.stops[0], '12h') ?? '');
     check('an untimed stop has no window', stopWindow(dayTwo.stops[2], '24h') === null);
 
+    const dayTwoText = dayText(dayTwo, { time_format: '24h' });
+    check('a copied day starts with which day it is',
+        dayTwoText.startsWith('Day 2 of '), dayTwoText.split('\n')[0]);
+    check('and lists the stay, then the stops in order, with their windows',
+        dayTwoText.indexOf('Amankila') < dayTwoText.indexOf('11:00 – 12:30')
+        && dayTwoText.indexOf('Warung Ibu Oka') < dayTwoText.indexOf('Sunset walk')
+        && dayTwoText.indexOf('Sunset walk') < dayTwoText.indexOf('Somewhere, sometime'));
+    check('a pinned stop carries a map link',
+        dayTwoText.includes('destination=-8.5069,115.2625'));
+    check('it is plain text — no markdown for a message to print',
+        !/[*_`#]/.test(dayTwoText.replace(/https:\S+/g, '')));
+    check('a 12-hour trip copies 12-hour times',
+        dayText(dayTwo, { time_format: '12h' }).includes('11:00 AM – 12:30 PM'));
     const dayOne = planForDay(payload, 1);
     check('a leg leaving today is a departure',
         dayOne.departures.length === 1 && dayOne.departures[0].to_text === 'Ubud');
