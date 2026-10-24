@@ -11,13 +11,13 @@ import { Modal } from './ui';
 const BASE = '/admin/honeymoon';
 
 const KIND_LABEL: Record<SearchHit['kind'], string> = {
-    place: 'Place',
-    region: 'Region',
-    note: 'Guide',
-    todo: 'To do',
-    day: 'Day',
-    travel: 'Travel',
-    booking: 'Booking',
+    place: 'Место',
+    region: 'Регион',
+    note: 'Путеводитель',
+    todo: 'Дела',
+    day: 'День',
+    travel: 'Переезды',
+    booking: 'Бронирование',
 };
 
 const KIND_HREF: Record<SearchHit['kind'], string> = {
@@ -63,7 +63,7 @@ export default function SearchPalette({ api, open, onClose }: {
     };
 
     return (
-        <Modal open={open} onClose={onClose} title="Find anything">
+        <Modal open={open} onClose={onClose} title="Найти что угодно">
             {/* The query lives in here, which only exists while the dialog is
                 open — so re-opening starts blank with no reset logic. */}
             <SearchBody api={api} onPick={go} />
@@ -125,7 +125,7 @@ function SearchBody({ api, onPick }: { api: HoneymoonApi; onPick: (hit: SearchHi
                 autoFocus
                 value={term}
                 onChange={(e) => { setTerm(e.target.value); setCursor(0); }}
-                placeholder="Places, notes, to-dos, days, flights, confirmations…"
+                placeholder="Места, заметки, дела, дни, рейсы, подтверждения…"
                 className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-2.5
                     text-base focus:outline-none focus:ring-2 focus:ring-accent/30
                     focus:border-accent/40"
@@ -135,7 +135,7 @@ function SearchBody({ api, onPick }: { api: HoneymoonApi; onPick: (hit: SearchHi
                 <div className="mt-3 px-1">
                     {recent.length > 0 && (
                         <div className="mb-3 flex flex-wrap items-center gap-1.5">
-                            <span className="text-[11px] text-gray-400">Recent:</span>
+                            <span className="text-[11px] text-gray-400">Недавние:</span>
                             {recent.map((item) => (
                                 <button
                                     key={item}
@@ -150,18 +150,17 @@ function SearchBody({ api, onPick }: { api: HoneymoonApi; onPick: (hit: SearchHi
                                 onClick={() => setRecent([])}
                                 className="text-[11px] text-gray-400 underline decoration-dotted"
                             >
-                                clear
+                                сбросить
                             </button>
                         </div>
                     )}
                     <p className="text-xs text-gray-400">
-                        Type at least two letters — a typo is forgiven. ↑↓ to move, Enter to open,
-                        Esc to close.
+                        Введите хотя бы две буквы — опечатки допустимы. ↑↓ — выбор, Enter — открыть, Esc — закрыть.
                     </p>
                 </div>
             ) : hits.length === 0 ? (
                 <p className="text-sm text-gray-500 mt-3 px-1">
-                    Nothing matches &ldquo;{term.trim()}&rdquo;.
+                    Ничего не найдено по запросу «{term.trim()}».
                 </p>
             ) : (
                 <ul ref={listRef} className="mt-3 max-h-[50vh] overflow-auto -mx-1">

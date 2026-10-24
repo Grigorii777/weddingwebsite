@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
@@ -9,11 +10,11 @@ import { REFRESHED_EVENT, checkForUpdates, dismissFailed, getServerState, getSta
 /** "today 14:02", "yesterday 09:15", "Mon 5 Oct". */
 export function savedLabel(at: number, now = Date.now()): string {
     const date = new Date(at);
-    const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const time = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
     const startOfToday = new Date(now); startOfToday.setHours(0, 0, 0, 0);
-    if (at >= startOfToday.getTime()) return `today ${time}`;
-    if (at >= startOfToday.getTime() - 86_400_000) return `yesterday ${time}`;
-    return date.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
+    if (at >= startOfToday.getTime()) return `сегодня ${time}`;
+    if (at >= startOfToday.getTime() - 86_400_000) return `вчера ${time}`;
+    return date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
 export function useOfflineState() {
@@ -85,7 +86,6 @@ function useOnline(): boolean {
     return browserOnline && !workerOffline;
 }
 
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 /**
  * Newer data arrived for this page after its saved copy answered (v0.10.20).
@@ -182,38 +182,38 @@ export default function OfflineManager() {
     if (!online) {
         message = (
             <>
-                Offline
-                {offline.record ? ` · showing the copy saved ${savedLabel(offline.record.at)}` : ' · showing what this device has saved'}
-                {waiting && ` · ${plural(offline.pending, 'change', 'changes')} saved on this phone, sent when you're back online`}
+                Без интернета
+                {offline.record ? ` · показана копия от ${savedLabel(offline.record.at)}` : ' · показана сохранённая копия'}
+                {waiting && ` · ${counted(offline.pending, 'изменение', 'изменения', 'изменений')} сохранено на телефоне; отправим при подключении к интернету`}
             </>
         );
     } else if (waiting && offline.needsLogin) {
         message = (
             <>
-                {plural(offline.pending, 'change is', 'changes are')} waiting to be sent ·{' '}
-                <Link href="/admin/login" className="underline underline-offset-2">Sign in to send</Link>
+                {counted(offline.pending, 'изменение', 'изменения', 'изменений')} ожидают отправки ·{' '}
+                <Link href="/admin/login" className="underline underline-offset-2">Войти для отправки</Link>
             </>
         );
     } else if (waiting) {
-        message = <>Sending {plural(offline.pending, 'change', 'changes')} made offline…</>;
+        message = <>Отправляем {counted(offline.pending, 'изменение', 'изменения', 'изменений')} без интернета…</>;
     } else if (signedOut) {
         message = (
             <>
-                Signed out · showing the saved copy ·{' '}
+                Вы вышли · показана сохранённая копия ·{' '}
                 <Link
                     href={`/admin/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`}
                     className="underline underline-offset-2"
                 >
-                    Sign in
+                    Войти
                 </Link>
             </>
         );
     } else if (updated) {
         message = (
             <>
-                Updated on the server ·{' '}
+                На сервере есть обновления ·{' '}
                 <button type="button" onClick={() => window.location.reload()} className="underline underline-offset-2">
-                    Refresh
+                    Обновить
                 </button>
             </>
         );
@@ -236,17 +236,17 @@ export default function OfflineManager() {
                 <div data-offline-failed className="pointer-events-auto max-w-md rounded-2xl bg-red-700/95 px-4 py-2 text-xs text-white shadow-lg backdrop-blur">
                     <div className="flex items-center gap-3">
                         <span className="font-medium">
-                            {plural(offline.failed.length, 'change made offline', 'changes made offline')} couldn&apos;t be saved
+                            {counted(offline.failed.length, 'изменение без интернета', 'изменения без интернета', 'изменений без интернета')} не удалось сохранить
                         </span>
                         <button type="button" onClick={() => setShowFailed((v) => !v)} className="min-h-[44px] underline underline-offset-2">
-                            {showFailed ? 'Hide' : 'Details'}
+                            {showFailed ? 'Скрыть' : 'Подробности'}
                         </button>
                         <button
                             type="button"
                             onClick={() => { setShowFailed(false); void dismissFailed(); }}
                             className="min-h-[44px] rounded-full bg-white/15 px-3"
                         >
-                            Dismiss
+                            Закрыть
                         </button>
                     </div>
                     {showFailed && (

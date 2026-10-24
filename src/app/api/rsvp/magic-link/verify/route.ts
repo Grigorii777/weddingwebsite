@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
         const link = await verifyRsvpLink(token);
         const invalid = NextResponse.json(
-            { error: 'That link is not valid, or it has expired. You can ask for a new one from the RSVP page.' },
+            { error: 'Ссылка недействительна или срок истёк. Запросите новую на странице ответа.' },
             { status: 400 }
         );
         if (!link) return invalid;
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
     } catch (error) {
         console.error('Error verifying RSVP link:', error);
         return NextResponse.json(
-            { error: 'That link is not valid, or it has expired. You can ask for a new one from the RSVP page.' },
+            { error: 'Ссылка недействительна или срок истёк. Запросите новую на странице ответа.' },
             { status: 500 }
         );
     }

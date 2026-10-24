@@ -82,13 +82,13 @@ function dateLabel(value: unknown): string | null {
     const text = value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
     const [y, m, d] = text.split('-').map(Number);
     if (!y || !m || !d) return null;
-    return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return new Date(y, m - 1, d).toLocaleDateString('ru-RU', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function money(value: unknown): string {
     const n = Number(value);
     if (!Number.isFinite(n)) return '$0';
-    return `$${n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+    return `$${n.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 
 export async function buildActivityFeed(
@@ -113,13 +113,13 @@ export async function buildActivityFeed(
         const guests = r.number_of_guests || 0;
         const detail = r.attending
             ? `${guests} ${guests === 1 ? 'guest' : 'guests'}`
-            : 'Not attending';
+            : 'Не придёт';
         const created = iso(r.created_at);
         if (created) {
             push({
                 id: `rsvp-${r.id}`,
                 kind: r.attending ? 'rsvp-yes' : 'rsvp-no',
-                title: `${r.guest_name} RSVP'd ${r.attending ? 'yes' : 'no'}`,
+                title: `${r.guest_name} ответил: ${r.attending ? 'yes' : 'no'}`,
                 detail,
                 at: created,
                 href: '/admin/rsvps',
@@ -130,8 +130,8 @@ export async function buildActivityFeed(
             push({
                 id: `rsvp-edit-${r.id}`,
                 kind: 'rsvp-update',
-                title: `${r.guest_name} updated their RSVP`,
-                detail: r.attending ? `Now attending · ${detail}` : 'Now not attending',
+                title: `${r.guest_name} изменил ответ`,
+                detail: r.attending ? `Теперь придёт · ${detail}` : 'Теперь не придёт',
                 at: updated,
                 href: '/admin/rsvps',
             });
@@ -151,12 +151,12 @@ export async function buildActivityFeed(
         const at = iso(g.created_at);
         if (!at) continue;
         const size = g.party_size || 1;
-        const side = g.side ? `${g.side.charAt(0).toUpperCase()}${g.side.slice(1)}'s side` : null;
+        const side = g.side ? `${g.side.charAt(0).toUpperCase()}${g.side.slice(1)} — сторона` : null;
         push({
             id: `guest-${g.id}`,
             kind: 'guest',
-            title: `${g.guest_name} added to the guest list`,
-            detail: [side, `party of ${size}`].filter(Boolean).join(' · '),
+            title: `${g.guest_name} добавлен в список гостей`,
+            detail: [side, `компания из ${size}`].filter(Boolean).join(' · '),
             at,
             href: '/admin/rsvps',
         });
@@ -180,8 +180,8 @@ export async function buildActivityFeed(
             id: `donation-${d.id}`,
             kind: 'gift',
             title: hasCash
-                ? `${money(d.amount)} gift from ${d.guest_name}`
-                : `Gift from ${d.guest_name}`,
+                ? `${money(d.amount)} подарок от ${d.guest_name}`
+                : `Подарок от ${d.guest_name}`,
             detail: [d.gift, d.fund_item_title].filter(Boolean).join(' · ') || undefined,
             at,
             href: '/admin/registry',
@@ -206,8 +206,8 @@ export async function buildActivityFeed(
         push({
             id: `purchase-${p.id}`,
             kind: 'payment',
-            title: `${money(p.amount)} paid — ${p.description}`,
-            detail: p.payer ? `by ${p.payer}` : undefined,
+            title: `${money(p.amount)} оплачено — ${p.description}`,
+            detail: p.payer ? `плательщик: ${p.payer}` : undefined,
             at,
             href: '/admin/finances',
         });
@@ -229,8 +229,8 @@ export async function buildActivityFeed(
         push({
             id: `receipt-${r.id}`,
             kind: 'receipt',
-            title: `${money(r.amount)} received${r.contributor ? ` from ${r.contributor}` : ''}`,
-            detail: 'gift money',
+            title: `${money(r.amount)} получено${r.contributor ? ` от ${r.contributor}` : ''}`,
+            detail: 'денежные подарки',
             at,
             href: '/admin/finances',
         });
@@ -252,8 +252,8 @@ export async function buildActivityFeed(
         push({
             id: `schedule-${s.id}`,
             kind: 'schedule',
-            title: `${money(s.amount)} scheduled — ${s.label}`,
-            detail: due ? `due ${due}` : undefined,
+            title: `${money(s.amount)} запланировано — ${s.label}`,
+            detail: due ? `срок: ${due}` : undefined,
             at,
             href: '/admin/finances',
         });
@@ -263,11 +263,11 @@ export async function buildActivityFeed(
     for (const p of photos.slice(-SOURCE_LIMIT)) {
         const at = isoFromEpochId(p.id);
         if (!at) continue;
-        const name = String(p.title || p.alt || p.filename || 'Untitled');
+        const name = String(p.title || p.alt || p.filename || 'Без названия');
         push({
             id: `photo-${p.id}`,
             kind: 'photo',
-            title: 'Photo uploaded',
+            title: 'Фотография загружена',
             detail: name.length > 48 ? `${name.slice(0, 47)}…` : name,
             at,
             href: '/admin/photos',
@@ -280,8 +280,8 @@ export async function buildActivityFeed(
         push({
             id: `milestone-${m.id}`,
             kind: 'milestone',
-            title: 'Timeline milestone added',
-            detail: String(m.title || 'Untitled'),
+            title: 'Добавлено событие истории',
+            detail: String(m.title || 'Без названия'),
             at,
             href: '/admin/timeline',
         });

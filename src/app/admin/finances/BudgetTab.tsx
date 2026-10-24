@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import { useMemo, useState } from 'react';
 import {
@@ -20,13 +21,13 @@ import {
 } from './ui';
 
 const QTY_LABELS: Record<string, string> = {
-    manual: 'Fixed',
-    adults: 'Adults',
-    minors: 'Minors',
+    manual: 'Вручную',
+    adults: 'Взрослые',
+    minors: 'Несовершеннолетние',
     // The bar's own count. Adults and drinkers are different questions: an
     // under-21 guest eats the adult dinner and costs the bar nothing.
-    drinkers: 'Drinkers (21+)',
-    total: 'All guests',
+    drinkers: 'С алкоголем (21+)',
+    total: 'Все гости',
 };
 
 /**
@@ -84,26 +85,26 @@ export default function BudgetTab({ data, api }: { data: FinancePayload; api: Fi
     const announcements = {
         onDragStart: ({ active }: { active: { id: string | number } }) => {
             const found = linesById.get(Number(active.id));
-            return found ? `Picked up ${found.item.name}, in ${found.section}.` : undefined;
+            return found ? `Выбрано: ${found.item.name}, раздел: ${found.section}.` : undefined;
         },
         onDragOver: ({ over }: { over: { id: string | number } | null }) => {
             if (!over) return undefined;
             const overId = String(over.id);
             if (overId.startsWith(SECTION_DROP)) {
                 const section = categories.find((c) => c.id === Number(overId.slice(SECTION_DROP.length)));
-                return section ? `Over the end of ${section.name}.` : undefined;
+                return section ? `В конце раздела ${section.name}.` : undefined;
             }
             const found = linesById.get(Number(over.id));
-            return found ? `Over ${found.item.name}, in ${found.section}.` : undefined;
+            return found ? `Над ${found.item.name}, раздел: ${found.section}.` : undefined;
         },
         onDragEnd: ({ active, over }: { active: { id: string | number }; over: { id: string | number } | null }) => {
             const found = linesById.get(Number(active.id));
             if (!found) return undefined;
-            return over ? `Dropped ${found.item.name}.` : `${found.item.name} returned to where it was.`;
+            return over ? `Перемещено: ${found.item.name}.` : `${found.item.name} возвращено на прежнее место.`;
         },
         onDragCancel: ({ active }: { active: { id: string | number } }) => {
             const found = linesById.get(Number(active.id));
-            return found ? `Cancelled. ${found.item.name} stayed put.` : undefined;
+            return found ? `Отменено. ${found.item.name} осталось на месте.` : undefined;
         },
     };
 
@@ -128,24 +129,24 @@ export default function BudgetTab({ data, api }: { data: FinancePayload; api: Fi
                 <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                     <div className="flex items-baseline gap-2">
                         <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                            Total budget
+                            Общий бюджет
                         </span>
                         <span className="text-2xl font-semibold tabular-nums text-gray-900">
                             {formatMoney(summary.budgetTotal)}
                         </span>
                     </div>
                     <div className="text-right text-xs text-gray-400">
-                        {summary.itemCount} line{summary.itemCount === 1 ? '' : 's'} ·{' '}
-                        {summary.items.filter((i) => i.state === 'paid').length} fully paid
+                        {counted(summary.itemCount, 'статья', 'статьи', 'статей')} ·{' '}
+                        {summary.items.filter((i) => i.state === 'paid').length} полностью оплачено
                         <div className="mt-0.5">
-                            Headcount: {settings.adult_count} adults + {settings.minor_count} minors
-                            {settings.drinking_count > 0 && ` · ${settings.drinking_count} drinking`}
+                            Гостей: {settings.adult_count} взрослых и {settings.minor_count} несовершеннолетних
+                            {settings.drinking_count > 0 && ` · ${settings.drinking_count}с алкоголем`}
                         </div>
                         {summary.items.some((i) => i.stateConflict) && (
                             <div className="mt-1 text-amber-600">
-                                {summary.items.filter((i) => i.stateConflict).length} line
-                                {summary.items.filter((i) => i.stateConflict).length === 1 ? '' : 's'}
-                                {' '}where the paid tick and the payments disagree
+                                {summary.items.filter((i) => i.stateConflict).length} статья
+                                {summary.items.filter((i) => i.stateConflict).length === 1 ? '' : ''}
+                                {' '}отметка об оплате не совпадает с платежами
                             </div>
                         )}
                     </div>
@@ -196,7 +197,7 @@ export default function BudgetTab({ data, api }: { data: FinancePayload; api: Fi
 
             {!categories.length && (
                 <Card className="p-6">
-                    <EmptyState>No budget sections yet. Add one below to get started.</EmptyState>
+                    <EmptyState>Разделов бюджета пока нет. Добавьте первый ниже.</EmptyState>
                 </Card>
             )}
 
@@ -206,22 +207,22 @@ export default function BudgetTab({ data, api }: { data: FinancePayload; api: Fi
                         value={newCategory}
                         onChange={(e) => setNewCategory(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') addCategory(); }}
-                        placeholder="New section name (e.g. Honeymoon)"
+                        placeholder="Название раздела (например, Путешествие)"
                         className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-3 py-2 text-base md:text-sm
                             focus:outline-none focus:ring-2 focus:ring-accent/30"
                     />
                     <PillButton tone="accent" onClick={addCategory} disabled={!newCategory.trim()}>
-                        Add section
+                        Добавить раздел
                     </PillButton>
                 </div>
                 {categories.length > 0 && (
                     <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-gray-50 pt-3">
                         <PillButton onClick={() => setTemplating(true)}>
-                            ✨ Add common line items
+                            ✨ Добавить типовые расходы
                         </PillButton>
                         {data.archived.items + data.archived.categories > 0 && (
                             <span className="text-[11px] text-gray-400">
-                                {data.archived.items + data.archived.categories} archived — see Settings
+                                {data.archived.items + data.archived.categories} в архиве — см. настройки
                             </span>
                         )}
                     </div>
@@ -252,7 +253,7 @@ function CategoryBlock({ category, data, api, expanded, onToggleExpanded, draggi
     const addItem = () =>
         api.create('items', {
             category_id: category.id,
-            name: 'New line item',
+            name: 'Новая статья расходов',
             unit_cost: 0,
             quantity: 1,
             qty_source: 'manual',
@@ -262,8 +263,8 @@ function CategoryBlock({ category, data, api, expanded, onToggleExpanded, draggi
     const deleteCategory = () => {
         const count = category.items.length;
         const message = count
-            ? `Archive "${category.name}" and its ${count} line item${count === 1 ? '' : 's'}? Nothing is lost — it stops counting toward your totals and you can bring it back from Settings.`
-            : `Archive "${category.name}"?`;
+            ? `Отправить в архив «${category.name}» и связанные записи: ${counted(count, 'статья расходов', 'статьи расходов', 'статей расходов')}? Данные сохранятся, но перестанут учитываться в итогах. Восстановить можно в настройках.`
+            : `Отправить в архив «${category.name}"?`;
         if (confirm(message)) api.update('categories', { id: category.id, archived: true });
     };
 
@@ -291,18 +292,18 @@ function CategoryBlock({ category, data, api, expanded, onToggleExpanded, draggi
                 </div>
                 <div className="text-right shrink-0">
                     <div className="font-semibold tabular-nums text-sm">{formatMoney(stats?.total ?? 0)}</div>
-                    <div className="text-[11px] text-gray-400">{(stats?.pct ?? 0).toFixed(1)}% of budget</div>
+                    <div className="text-[11px] text-gray-400">{(stats?.pct ?? 0).toFixed(1)}% бюджета</div>
                 </div>
                 <div className="flex shrink-0 items-center">
-                    <GlyphButton onClick={() => move(-1)} label={`Move ${category.name} up`}
+                    <GlyphButton onClick={() => move(-1)} label={`Переместить ${category.name} вверх`}
                         className={index === 0 ? 'pointer-events-none opacity-25' : ''}>
                         ⌃
                     </GlyphButton>
-                    <GlyphButton onClick={() => move(1)} label={`Move ${category.name} down`}
+                    <GlyphButton onClick={() => move(1)} label={`Переместить ${category.name} вниз`}
                         className={index === data.categories.length - 1 ? 'pointer-events-none opacity-25' : ''}>
                         ⌄
                     </GlyphButton>
-                    <GlyphButton onClick={deleteCategory} label={`Archive ${category.name}`}
+                    <GlyphButton onClick={deleteCategory} label={`В архив: ${category.name}`}
                         className="text-lg leading-none hover:text-rose-500">
                         &times;
                     </GlyphButton>
@@ -311,12 +312,12 @@ function CategoryBlock({ category, data, api, expanded, onToggleExpanded, draggi
 
             <div className="hidden md:grid grid-cols-[minmax(0,1.7fr)_6rem_4.5rem_7rem_7rem_5rem_1.75rem] gap-2 px-4 py-2
                 text-[10px] uppercase tracking-wide text-gray-400 font-semibold border-b border-gray-50">
-                <div>Item</div>
-                <div className="text-right">Unit cost</div>
-                <div className="text-right">Qty</div>
-                <div>Qty from</div>
-                <div className="text-right">Total</div>
-                <div className="text-center">Paid</div>
+                <div>Статья</div>
+                <div className="text-right">Цена за единицу</div>
+                <div className="text-right">Количество</div>
+                <div>Источник количества</div>
+                <div className="text-right">Итого</div>
+                <div className="text-center">Оплачено</div>
                 <div />
             </div>
 
@@ -345,8 +346,8 @@ function CategoryBlock({ category, data, api, expanded, onToggleExpanded, draggi
                 {!category.items.length && (
                     <EmptyState>
                         {dragging
-                            ? 'Drop a line here to move it into this section.'
-                            : 'No line items in this section yet.'}
+                            ? 'Перетащите сюда статью, чтобы переместить её в этот раздел.'
+                            : 'В этом разделе пока нет статей расходов.'}
                     </EmptyState>
                 )}
             </div>
@@ -357,7 +358,7 @@ function CategoryBlock({ category, data, api, expanded, onToggleExpanded, draggi
                     className="w-full border-2 border-dashed border-gray-200 rounded-2xl py-2 text-sm
                         text-gray-400 hover:text-gray-600 hover:border-gray-300 transition-colors font-medium"
                 >
-                    + Add line item
+                    + Добавить статью
                 </button>
             </div>
 
@@ -407,7 +408,7 @@ function SectionPayments({ category, data, api }: {
     const addInstallment = () =>
         api.create('purchases', {
             category_id: category.id,
-            description: `${category.name} payment`,
+            description: `${category.name} платёж`,
             amount: 0,
             payer_id: data.payers[0]?.id ?? null,
             purchased_on: todayLocal(),
@@ -416,20 +417,20 @@ function SectionPayments({ category, data, api }: {
     return (
         <div className="border-t border-gray-100 bg-gray-50/60 px-4 py-4">
             <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
-                <h4 className="text-sm font-semibold text-gray-800">Paid toward this section</h4>
+                <h4 className="text-sm font-semibold text-gray-800">Оплачено по разделу</h4>
                 <span className="text-xs text-gray-400">
                     {installments.length
-                        ? `${installments.length} payment${installments.length === 1 ? '' : 's'}`
-                        : 'no payments yet'}
-                    {stats.itemSpent > 0 && ` · ${formatMoney(stats.itemSpent)} tagged to single lines`}
+                        ? `${counted(installments.length, 'платёж', 'платежа', 'платежей')}`
+                        : 'платежей пока нет'}
+                    {stats.itemSpent > 0 && ` · ${formatMoney(stats.itemSpent)} по отдельным статьям`}
                 </span>
             </div>
 
             <div className="grid grid-cols-3 gap-2 mb-3">
-                <Figure label="budgeted" value={stats.total} />
-                <Figure label="paid so far" value={stats.paid} tone="good" />
+                <Figure label="в бюджете" value={stats.total} />
+                <Figure label="уже оплачено" value={stats.paid} tone="good" />
                 <Figure
-                    label={overpaid ? 'overpaid by' : 'still owed'}
+                    label={overpaid ? 'переплата' : 'осталось оплатить'}
                     value={Math.abs(stats.remaining)}
                     tone={overpaid ? 'bad' : 'warn'}
                 />
@@ -437,10 +438,10 @@ function SectionPayments({ category, data, api }: {
 
             <Bar pct={stats.paidPct} tone={overpaid ? 'rose' : 'accent'} />
             <div className="flex justify-between text-[11px] text-gray-400 mt-1 mb-3">
-                <span>{stats.paidPct.toFixed(1)}% paid</span>
+                <span>{stats.paidPct.toFixed(1)}% оплачено</span>
                 {stats.giftApplied > 0 && (
                     <span>
-                        {formatMoney(stats.ownSpent)} yours + {formatMoney(stats.giftApplied)} gift money
+                        {formatMoney(stats.ownSpent)} ваши средства и {formatMoney(stats.giftApplied)} денежные подарки
                     </span>
                 )}
             </div>
@@ -461,21 +462,21 @@ function SectionPayments({ category, data, api }: {
                                         : 'bg-white border-gray-100'}`}>
                                 <InlineText
                                     value={row.label}
-                                    placeholder="e.g. Venue 3/4"
+                                    placeholder="Например: Аренда зала 3/4"
                                     onCommit={(v) => api.update(resource, { id: row.id, [labelField]: v })}
                                     className="md:text-xs"
                                 />
-                                <RowField label="Date">
+                                <RowField label="Дата">
                                     <RowDate
                                         value={(row.date ?? '').slice(0, 10)}
-                                        aria-label={`Date for ${row.label}`}
+                                        aria-label={`Дата: ${row.label}`}
                                         onChange={(e) => api.update(resource, {
                                             id: row.id, [dateField]: e.target.value,
                                         })}
                                         className="md:text-[11px]"
                                     />
                                 </RowField>
-                                <RowField label={row.kind === 'gift' ? 'Gift from' : 'Paid by'}>
+                                <RowField label={row.kind === 'gift' ? 'Подарок от' : 'Кто оплатил'}>
                                     {row.kind === 'gift' ? (
                                         <span className="block truncate px-1 text-right text-xs
                                             font-medium text-emerald-700 md:text-left md:text-[11px]">
@@ -484,39 +485,39 @@ function SectionPayments({ category, data, api }: {
                                     ) : (
                                         <RowSelect
                                             value={row.payerId ?? ''}
-                                            aria-label={`Who paid ${row.label}`}
+                                            aria-label={`Кто оплатил: ${row.label}`}
                                             onChange={(e) => api.update('purchases', {
                                                 id: row.id, payer_id: e.target.value || null,
                                             })}
                                             className="md:text-[11px]"
                                         >
-                                            <option value="">Unassigned</option>
+                                            <option value="">Без места</option>
                                             {data.payers.map((payer) => (
                                                 <option key={payer.id} value={payer.id}>{payer.name}</option>
                                             ))}
                                         </RowSelect>
                                     )}
                                 </RowField>
-                                <RowField label="Amount">
+                                <RowField label="Сумма">
                                     <InlineNumber
                                         value={row.amount} prefix="$"
                                         onCommit={(amount) => api.update(resource, { id: row.id, amount })}
                                     />
                                 </RowField>
                                 <DeleteButton
-                                    label={`Delete ${row.label}`}
+                                    label={`Удалить ${row.label}`}
                                     onClick={() => {
                                         const what = row.kind === 'gift'
-                                            ? `${row.who}'s gift payment "${row.label}"`
+                                            ? `${row.who} — платёж из подарка «${row.label}"`
                                             : `"${row.label}"`;
-                                        if (confirm(`Delete ${what}?`)) api.remove(resource, row.id);
+                                        if (confirm(`Удалить ${what}?`)) api.remove(resource, row.id);
                                     }}
                                 />
                             </div>
                         );
                     })}
                     <div className="flex justify-between px-2 pt-1 text-[11px] text-gray-500">
-                        <span>Payments subtotal</span>
+                        <span>Итого платежей</span>
                         <span className="font-semibold tabular-nums">
                             {formatMoney(installmentSubtotal)}
                         </span>
@@ -524,11 +525,10 @@ function SectionPayments({ category, data, api }: {
                 </div>
             )}
 
-            <AddButton onClick={addInstallment}>+ Log an installment</AddButton>
+            <AddButton onClick={addInstallment}>+ Добавить частичный платёж</AddButton>
             {installments.length === 0 && (
                 <p className="text-[11px] text-gray-400 mt-1">
-                    Use this for payments covering the whole section, like a venue deposit — not tied to
-                    any single line.
+                    Для платежей по всему разделу, например аванса за зал, без привязки к отдельной статье.
                 </p>
             )}
         </div>
@@ -596,8 +596,8 @@ function ItemRow({ item, data, api, expanded, onToggleExpanded }: {
                         ref={setActivatorNodeRef}
                         {...attributes}
                         {...listeners}
-                        aria-label={`Reorder ${item.name}`}
-                        title="Drag to reorder, or move to another section"
+                        aria-label={`Изменить порядок: ${item.name}`}
+                        title="Перетащите для изменения порядка или переноса в другой раздел"
                         // 32px square on touch, where a 20px glyph is a miss more
                         // often than a hit; trimmed on desktop, where the pointer
                         // is exact and the row wants to stay compact.
@@ -612,7 +612,7 @@ function ItemRow({ item, data, api, expanded, onToggleExpanded }: {
                     </button>
                     <GlyphButton
                         onClick={onToggleExpanded}
-                        label={`${expanded ? 'Collapse' : 'Expand'} ${item.name}`}
+                        label={`${expanded ? 'Свернуть' : 'Развернуть'} ${item.name}`}
                         className={`text-xs text-gray-400 transition-transform md:text-gray-300
                             ${expanded ? 'rotate-90' : ''}`}
                     >
@@ -638,20 +638,20 @@ function ItemRow({ item, data, api, expanded, onToggleExpanded }: {
                   `md:contents` puts them straight back into the desktop grid.
                 */}
                 <div className={`${expanded ? 'grid grid-cols-1 gap-2 pb-1 pl-7' : 'hidden'} md:contents`}>
-                <RowField label="Unit cost">
+                <RowField label="Цена за единицу">
                     {item.use_subitems ? (
-                        <div className="text-right text-xs text-gray-400 pr-2 italic">from parts</div>
+                        <div className="text-right text-xs text-gray-400 pr-2 italic">из составляющих</div>
                     ) : (
                         <InlineNumber value={item.unit_cost} prefix="$" onCommit={(unit_cost) => patch({ unit_cost })} />
                     )}
                 </RowField>
 
-                <RowField label="Qty">
+                <RowField label="Количество">
                     {item.use_subitems ? (
                         <div className="text-right text-xs text-gray-300 pr-2">—</div>
                     ) : derivedQty ? (
                         <div className="text-right text-sm tabular-nums text-gray-500 pr-2"
-                            title="Driven by the headcount in Settings">
+                            title="Рассчитывается по числу гостей в настройках">
                             {effectiveQuantity(item, settings)}
                         </div>
                     ) : (
@@ -659,14 +659,14 @@ function ItemRow({ item, data, api, expanded, onToggleExpanded }: {
                     )}
                 </RowField>
 
-                <RowField label="Qty from">
+                <RowField label="Источник количества">
                     {item.use_subitems ? (
                         <div className="text-xs text-gray-300 px-2 text-right md:text-left">—</div>
                     ) : (
                         <RowSelect
                             value={item.qty_source}
                             onChange={(e) => patch({ qty_source: e.target.value })}
-                            aria-label={`Quantity source for ${item.name}`}
+                            aria-label={`Источник количества: ${item.name}`}
                         >
                             {Object.entries(QTY_LABELS).map(([value, label]) => (
                                 <option key={value} value={value}>{label}</option>
@@ -675,13 +675,13 @@ function ItemRow({ item, data, api, expanded, onToggleExpanded }: {
                     )}
                 </RowField>
 
-                <RowField label="Line total" className="hidden md:flex">
+                <RowField label="Итого по статье" className="hidden md:flex">
                     <div className="text-right font-medium text-sm">
                         <Money value={total} />
                     </div>
                 </RowField>
 
-                <RowField label="Paid">
+                <RowField label="Оплачено">
                     <div className="flex items-center justify-end gap-2 md:justify-center">
                         {/*
                           Only the states the toggle cannot express. "PAID" next
@@ -695,13 +695,13 @@ function ItemRow({ item, data, api, expanded, onToggleExpanded }: {
                         <Toggle
                             checked={item.is_paid}
                             onChange={(is_paid) => patch({ is_paid })}
-                            label={`Mark ${item.name} paid`}
+                            label={`Отметить ${item.name} оплаченным`}
                         />
                     </div>
                 </RowField>
 
                 <DeleteButton
-                    label={`Delete ${item.name}`}
+                    label={`Удалить ${item.name}`}
                     onClick={() => api.removeWithUndo('items', item.id, `"${item.name}"`, {
                         category_id: item.category_id, name: item.name, unit_cost: item.unit_cost,
                         quantity: item.quantity, qty_source: item.qty_source,
@@ -715,29 +715,29 @@ function ItemRow({ item, data, api, expanded, onToggleExpanded }: {
             {paid > 0 && (
                 <div className="px-4 pb-2 -mt-1 md:pl-9 flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
                     <span className="text-gray-400">
-                        Paid so far <Money value={paid} className="font-medium" />
+                        Уже оплачено <Money value={paid} className="font-medium" />
                     </span>
                     {giftApplied > 0 && (
                         <span className="text-gray-400">
-                            {ownSpent > 0 ? `${formatMoney(ownSpent)} yours + ` : ''}
-                            <span className="font-medium">{formatMoney(giftApplied)} gift money</span>
+                            {ownSpent > 0 ? `${formatMoney(ownSpent)} ваши средства и ` : ''}
+                            <span className="font-medium">{formatMoney(giftApplied)} денежные подарки</span>
                         </span>
                     )}
                     {variance > 0 && (
                         <span className="text-rose-600 font-medium">
-                            Over budget by {formatMoney(variance)}
+                            Превышение бюджета {formatMoney(variance)}
                         </span>
                     )}
                     {variance < 0 && (
                         <span className="text-gray-400">
-                            {formatMoney(-variance)} left on this line
+                            {formatMoney(-variance)} осталось по статье
                         </span>
                     )}
                     {stats?.stateConflict && (
                         <span className="font-medium text-amber-600">
                             {item.is_paid
-                                ? 'Ticked paid, but the payments don\u2019t cover it'
-                                : 'Fully covered by payments \u2014 tick it paid?'}
+                                ? 'Отмечено как оплаченное, но сумма платежей недостаточна'
+                                : 'Полностью оплачено — поставить отметку?'}
                         </span>
                     )}
                 </div>
@@ -752,12 +752,12 @@ function ItemDetail({ item, data, api }: { item: BudgetItem; data: FinancePayloa
     const { settings } = data;
     const linkedPurchases = data.purchases.filter((p) => p.item_id === item.id);
     const payerName = (id: number | null) =>
-        data.payers.find((p) => p.id === id)?.name ?? 'Unassigned';
+        data.payers.find((p) => p.id === id)?.name ?? 'Без места';
 
     const addSubItem = () =>
         api.create('subitems', {
             item_id: item.id,
-            name: 'New part',
+            name: 'Новая составляющая',
             unit_cost: 0,
             quantity: 1,
             sort_order: item.subitems.length,
@@ -771,11 +771,11 @@ function ItemDetail({ item, data, api }: { item: BudgetItem; data: FinancePayloa
     return (
         <div className="bg-gray-50/60 px-4 py-4 md:pl-9 space-y-4 border-t border-gray-100">
             <div className="flex items-center gap-3">
-                <Toggle checked={item.use_subitems} onChange={enableSubitems} label="Break into parts" />
+                <Toggle checked={item.use_subitems} onChange={enableSubitems} label="Разбить на составляющие" />
                 <div>
-                    <div className="text-sm font-medium text-gray-700">Break into parts</div>
+                    <div className="text-sm font-medium text-gray-700">Разбить на составляющие</div>
                     <div className="text-xs text-gray-400">
-                        Build this line from components — the parts add up to the line total.
+                        Добавьте составляющие — их стоимость сложится в сумму статьи.
                     </div>
                 </div>
             </div>
@@ -784,10 +784,10 @@ function ItemDetail({ item, data, api }: { item: BudgetItem; data: FinancePayloa
                 <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                     <div className="hidden md:grid grid-cols-[minmax(0,1fr)_6rem_4.5rem_7rem_1.75rem] gap-2 px-3 py-2
                         text-[10px] uppercase tracking-wide text-gray-400 font-semibold border-b border-gray-50">
-                        <div>Part</div>
-                        <div className="text-right">Unit cost</div>
-                        <div className="text-right">Qty</div>
-                        <div className="text-right">Total</div>
+                        <div>Составляющая</div>
+                        <div className="text-right">Цена за единицу</div>
+                        <div className="text-right">Количество</div>
+                        <div className="text-right">Итого</div>
                         <div />
                     </div>
                     {item.subitems.map((sub) => (
@@ -796,32 +796,32 @@ function ItemDetail({ item, data, api }: { item: BudgetItem; data: FinancePayloa
                                 md:grid-cols-[minmax(0,1fr)_6rem_4.5rem_7rem_1.75rem] md:items-center md:py-1.5">
                             <InlineText
                                 value={sub.name}
-                                placeholder="Part name"
+                                placeholder="Название составляющей"
                                 onCommit={(name) => api.update('subitems', { id: sub.id, name })}
                             />
-                            <RowField label="Unit cost">
+                            <RowField label="Цена за единицу">
                                 <InlineNumber
                                     value={sub.unit_cost} prefix="$"
                                     onCommit={(unit_cost) => api.update('subitems', { id: sub.id, unit_cost })}
                                 />
                             </RowField>
-                            <RowField label="Qty">
+                            <RowField label="Количество">
                                 <InlineNumber
                                     value={sub.quantity}
                                     onCommit={(quantity) => api.update('subitems', { id: sub.id, quantity })}
                                 />
                             </RowField>
-                            <RowField label="Total">
+                            <RowField label="Итого">
                                 <div className="text-right text-sm"><Money value={subItemTotal(sub)} /></div>
                             </RowField>
                             <DeleteButton
-                                label={`Delete ${sub.name}`}
+                                label={`Удалить ${sub.name}`}
                                 onClick={() => api.remove('subitems', sub.id)}
                             />
                         </div>
                     ))}
                     <div className="flex items-center justify-between px-3 py-2 bg-gray-50/60">
-                        <AddButton onClick={addSubItem}>+ Add part</AddButton>
+                        <AddButton onClick={addSubItem}>+ Добавить составляющую</AddButton>
                         <div className="text-sm font-semibold tabular-nums">
                             {formatMoney(itemTotal(item, settings))}
                         </div>
@@ -830,10 +830,10 @@ function ItemDetail({ item, data, api }: { item: BudgetItem; data: FinancePayloa
             )}
 
             <div>
-                <div className="text-xs font-semibold text-gray-500 mb-1">Notes</div>
+                <div className="text-xs font-semibold text-gray-500 mb-1">Заметки</div>
                 <InlineText
                     value={item.notes ?? ''}
-                    placeholder="Vendor, contract terms, deposit schedule…"
+                    placeholder="Подрядчик, условия договора, график авансов…"
                     onCommit={(notes) => api.update('items', { id: item.id, notes })}
                     className="bg-white border border-gray-200 rounded-xl"
                 />
@@ -841,7 +841,7 @@ function ItemDetail({ item, data, api }: { item: BudgetItem; data: FinancePayloa
 
             <div>
                 <div className="text-xs font-semibold text-gray-500 mb-1">
-                    Payments against this line ({linkedPurchases.length})
+                    Платежи по статье ({linkedPurchases.length})
                 </div>
                 {linkedPurchases.length ? (
                     <div className="space-y-1">
@@ -856,7 +856,7 @@ function ItemDetail({ item, data, api }: { item: BudgetItem; data: FinancePayloa
                     </div>
                 ) : (
                     <div className="text-xs text-gray-400">
-                        Nothing logged yet. Add one from the Purchases tab.
+                        Записей пока нет. Добавьте платёж во вкладке «Покупки».
                     </div>
                 )}
             </div>

@@ -28,14 +28,14 @@ async function create(req: Request) {
     try {
         const item: RegistryItem = await req.json();
         if (!item || typeof item.id !== 'string' || typeof item.title !== 'string') {
-            return NextResponse.json({ error: 'id and title are required' }, { status: 400 });
+            return NextResponse.json({ error: 'Укажите идентификатор и название' }, { status: 400 });
         }
         await updateSiteConfig((config) => {
             config.registryItems = [...itemsOf(config), item];
         });
         return NextResponse.json({ success: true });
     } catch {
-        return NextResponse.json({ error: 'Failed to save' }, { status: 500 });
+        return NextResponse.json({ error: 'Не удалось сохранить' }, { status: 500 });
     }
 }
 
@@ -52,10 +52,10 @@ export async function PATCH(req: Request) {
             items[idx] = updated;
             config.registryItems = items;
         });
-        if (!found) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        if (!found) return NextResponse.json({ error: 'Не найдено' }, { status: 404 });
         return NextResponse.json({ success: true });
     } catch {
-        return NextResponse.json({ error: 'Failed to update' }, { status: 500 });
+        return NextResponse.json({ error: 'Не удалось обновить' }, { status: 500 });
     }
 }
 
@@ -68,7 +68,7 @@ export async function DELETE(req: Request) {
         });
         return NextResponse.json({ success: true });
     } catch {
-        return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });
+        return NextResponse.json({ error: 'Не удалось удалить' }, { status: 500 });
     }
 }
 

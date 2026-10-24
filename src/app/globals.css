@@ -1,6 +1,11 @@
 @import "tailwindcss";
 
 :root {
+  --font-geist-sans: "Noto Sans Variable";
+  --font-geist-mono: "Noto Sans Mono Variable";
+  --font-wedding-serif: "Playfair Display Variable";
+  --font-wedding-script: "Marck Script";
+
   /* Core colors */
   --background: #ffffff;
   --foreground: #171717;
@@ -20,8 +25,8 @@
 
   --font-sans: var(--font-geist-sans), Arial, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
-  --font-serif: "Playfair Display", Georgia, serif;
-  --font-script: var(--font-script), cursive;
+  --font-serif: var(--font-wedding-serif), Georgia, serif;
+  --font-script: var(--font-wedding-script), cursive;
 }
 
 /*

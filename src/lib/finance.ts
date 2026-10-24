@@ -253,10 +253,10 @@ export function paidState(paid: number, budget: number, override: boolean): Paid
 }
 
 export const PAID_STATE_LABEL: Record<PaidState, string> = {
-    unpaid: 'Not paid',
-    partial: 'Part paid',
-    paid: 'Paid',
-    overpaid: 'Overpaid',
+    unpaid: 'Не оплачено',
+    partial: 'Частично оплачено',
+    paid: 'Оплачено',
+    overpaid: 'Переплата',
 };
 
 export interface ItemSummary {
@@ -629,10 +629,10 @@ export function buildSummary(input: SummaryInput): FinanceSummary {
         return {
             ...sp,
             targetName: sp.item_id != null
-                ? itemName.get(sp.item_id) ?? 'Deleted line'
+                ? itemName.get(sp.item_id) ?? 'Удалённая статья'
                 : sp.category_id != null
-                    ? categoryName.get(sp.category_id) ?? 'Deleted section'
-                    : 'Whole wedding',
+                    ? categoryName.get(sp.category_id) ?? 'Удалённый раздел'
+                    : 'Вся свадьба',
             daysUntilDue: days,
             isOverdue: !sp.settled && days != null && days < 0,
             isDueSoon: !sp.settled && days != null && days >= 0 && days <= 30,
@@ -670,9 +670,9 @@ export function buildSummary(input: SummaryInput): FinanceSummary {
         warnings.push({
             kind: 'no-drinkers',
             message: drinkerLines.length === 1
-                ? `${drinkerLines[0].name} is charged per drinker, but nobody is counted as drinking.`
-                : `${drinkerLines.length} lines are charged per drinker, but nobody is counted as drinking.`,
-            detail: 'Set the Drinkers count in Settings — until you do, these lines total $0.',
+                ? `${drinkerLines[0].name} рассчитано на гостей с алкоголем, но их число равно нулю.`
+                : `${drinkerLines.length} статей рассчитано на гостей с алкоголем, но их число равно нулю.`,
+            detail: 'Задайте число гостей с алкоголем в настройках. Пока стоимость этих статей равна $0.',
             amount: 0,
         });
     }
@@ -684,8 +684,8 @@ export function buildSummary(input: SummaryInput): FinanceSummary {
     if (drinkerLines.length === 0 && num(settings.drinking_count) > 0) {
         warnings.push({
             kind: 'drinkers-unused',
-            message: `${num(settings.drinking_count)} people are counted as drinking, but no budget line is charged per drinker.`,
-            detail: 'Set a line\u2019s Qty from to Drinkers (21+) \u2014 usually the bar \u2014 or the count changes nothing.',
+            message: `${num(settings.drinking_count)} гостей с алкоголем, но нет статей с таким расчётом.`,
+            detail: 'У статьи бара выберите источник количества «С алкоголем (21+)», иначе число не влияет на бюджет.',
             amount: 0,
         });
     }
@@ -703,10 +703,10 @@ export function buildSummary(input: SummaryInput): FinanceSummary {
             if (sameTarget || shared.length > 0) {
                 warnings.push({
                     kind: sameTarget ? 'same-amount' : 'similar-name',
-                    message: `"${a.description}" and "${b.description}" are both ${formatMoney(num(a.amount))}`,
+                    message: `"${a.description}» и «${b.description}» имеют одинаковую сумму ${formatMoney(num(a.amount))}`,
                     detail: sameTarget
-                        ? 'Same amount against the same budget line — possibly logged twice.'
-                        : 'Same amount and overlapping wording — possibly logged twice.',
+                        ? 'Одинаковая сумма по одной статье — возможный дубликат.'
+                        : 'Одинаковая сумма и похожее описание — возможный дубликат.',
                     amount: money(num(a.amount)),
                 });
             }
@@ -716,8 +716,8 @@ export function buildSummary(input: SummaryInput): FinanceSummary {
         if (item.total > 0 && item.paid > item.total * 2) {
             warnings.push({
                 kind: 'over-line',
-                message: `${item.name}: ${formatMoney(item.paid)} paid against a ${formatMoney(item.total)} budget`,
-                detail: 'More than double the budgeted amount — check the budget figure or the payments.',
+                message: `${item.name}: ${formatMoney(item.paid)} оплачено при бюджете ${formatMoney(item.total)} бюджета`,
+                detail: 'Больше чем вдвое превышает бюджет — проверьте сумму и платежи.',
                 amount: money(item.paid - item.total),
             });
         }
@@ -766,6 +766,6 @@ export function buildSummary(input: SummaryInput): FinanceSummary {
 
 export function formatMoney(value: number): string {
     const n = num(value);
-    const s = Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const s = Math.abs(n).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     return `${n < 0 ? '-' : ''}$${s}`;
 }

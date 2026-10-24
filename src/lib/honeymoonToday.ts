@@ -10,6 +10,7 @@
  * it can be checked (`npm run check:honeymoon`) and reused by both the admin tab
  * and the read-only link a partner opens.
  */
+import { counted } from './locale';
 import {
     addDays, categoryMeta, dateForDay, daysBetween, formatDate, formatTime, isoOf, legArrivalDay,
     legIsOvernight, todayIso, travelModeMeta,
@@ -162,7 +163,7 @@ export function planForDay(
         return {
             stop,
             place,
-            label: place?.name ?? stop.custom_label ?? 'Something',
+            label: place?.name ?? stop.custom_label ?? 'Что-то',
             time: stop.start_time,
             lat: place?.lat ?? null,
             lng: place?.lng ?? null,
@@ -305,27 +306,27 @@ export function emergencyFor(country: string | null | undefined): {
     const entry = clean ? EMERGENCY_NUMBERS[clean] : undefined;
     if (!entry) {
         return {
-            country: clean || 'Wherever you are',
-            numbers: [{ label: 'Emergency (GSM)', number: '112' }],
+            country: clean || 'Где бы вы ни были',
+            numbers: [{ label: 'Экстренная помощь (GSM)', number: '112' }],
             guessed: true,
         };
     }
     const numbers: { label: string; number: string }[] = [];
-    if (entry.all) numbers.push({ label: 'Emergency', number: entry.all });
-    if (entry.police) numbers.push({ label: 'Police', number: entry.police });
-    if (entry.ambulance) numbers.push({ label: 'Ambulance', number: entry.ambulance });
-    if (entry.fire) numbers.push({ label: 'Fire', number: entry.fire });
+    if (entry.all) numbers.push({ label: 'Экстренная помощь', number: entry.all });
+    if (entry.police) numbers.push({ label: 'Полиция', number: entry.police });
+    if (entry.ambulance) numbers.push({ label: 'Скорая помощь', number: entry.ambulance });
+    if (entry.fire) numbers.push({ label: 'Пожарная служба', number: entry.fire });
     return { country: clean, numbers, guessed: false };
 }
 
 /** The sections of `trip.info`, in the order they are worth reading. */
 export const INFO_SECTIONS: { key: keyof TripInfo & string; label: string; hint: string }[] = [
-    { key: 'emergency', label: 'Emergency contacts', hint: 'Who to call, and their number' },
-    { key: 'insurance', label: 'Insurance', hint: 'Policy number and the 24h hotline' },
-    { key: 'embassy', label: 'Embassy', hint: 'Address and phone in each country' },
-    { key: 'medical', label: 'Medical', hint: 'Allergies, prescriptions, blood type' },
-    { key: 'contacts', label: 'On the ground', hint: "The driver's WhatsApp, the hotel desk" },
-    { key: 'money', label: 'Money', hint: 'Cards packed, bank numbers, ATM notes' },
+    { key: 'emergency', label: 'Экстренные контакты', hint: 'Кому звонить и по какому номеру' },
+    { key: 'insurance', label: 'Страховка', hint: 'Номер полиса и круглосуточный телефон' },
+    { key: 'embassy', label: 'Посольство', hint: 'Адрес и телефон в каждой стране' },
+    { key: 'medical', label: 'Медицинские сведения', hint: 'Аллергии, лекарства, группа крови' },
+    { key: 'contacts', label: 'Местные контакты', hint: "WhatsApp водителя, стойка отеля" },
+    { key: 'money', label: 'Деньги', hint: 'Карты, телефоны банков, заметки о банкоматах' },
 ];
 
 /**
@@ -375,10 +376,12 @@ export function stopWindow(stop: DayStop, format: '12h' | '24h'): string | null 
 export function relativeDayLabel(date: string | null, today = todayIso()): string | null {
     const diff = daysBetween(today, date);
     if (diff == null) return null;
-    if (diff === 0) return 'Today';
-    if (diff === -1) return 'Yesterday';
-    if (diff === 1) return 'Tomorrow';
-    return diff > 0 ? `In ${diff} days` : `${-diff} days ago`;
+    if (diff === 0) return 'Сегодня';
+    if (diff === -1) return 'Вчера';
+    if (diff === 1) return 'Завтра';
+    return diff > 0
+        ? `Через ${counted(diff, 'день', 'дня', 'дней')}`
+        : `${counted(-diff, 'день', 'дня', 'дней')} назад`;
 }
 
 /**
@@ -408,7 +411,7 @@ export function dayText(plan: TodayPlan, trip: Pick<Trip, 'time_format'>, extra:
                 + (leg.flight_no ? ` (${leg.flight_no})` : ''),
             join([
                 join([at(leg.depart_time), at(leg.arrive_time)], ' → ')
-                    + (legIsOvernight(leg) ? ' (+1 day)' : ''),
+                    + (legIsOvernight(leg) ? ' (+1 день)' : ''),
                 terminals, leg.confirmation_ref, note,
             ]),
         ].filter(Boolean);
@@ -419,7 +422,7 @@ export function dayText(plan: TodayPlan, trip: Pick<Trip, 'time_format'>, extra:
     sections.push([
         join([
             plan.dayNumber == null ? null
-                : `Day ${plan.dayNumber}${plan.totalDays ? ` of ${plan.totalDays}` : ''}`,
+                : `День ${plan.dayNumber}${plan.totalDays ? ` из ${plan.totalDays}` : ''}`,
             formatDate(plan.date),
         ]),
         plan.day?.title ?? '',
@@ -427,14 +430,14 @@ export function dayText(plan: TodayPlan, trip: Pick<Trip, 'time_format'>, extra:
             `${weather.kind === 'climate' ? '≈ ' : ''}${weather.high != null ? `${Math.round(weather.high)}°` : ''}`
                 + (weather.low != null ? ` / ${Math.round(weather.low)}°` : ''),
             weather.label,
-            weather.rain_chance != null && `${Math.round(weather.rain_chance)}% rain`,
+            weather.rain_chance != null && `${Math.round(weather.rain_chance)}% вероятность дождя`,
         ]) : '',
-        sun?.sunrise && sun.sunset ? `Sunrise ${sun.sunrise} · sunset ${sun.sunset}` : '',
+        sun?.sunrise && sun.sunset ? `Восход ${sun.sunrise} · закат ${sun.sunset}` : '',
     ].filter(Boolean));
 
     if (plan.arrivals.length) {
-        sections.push(['🛬 LANDING TODAY', ...plan.arrivals.flatMap(({ leg, fromDayNumber }) =>
-            legLines(leg, `left on day ${fromDayNumber}`))]);
+        sections.push(['🛬 ПРИБЫТИЕ СЕГОДНЯ', ...plan.arrivals.flatMap(({ leg, fromDayNumber }) =>
+            legLines(leg, `отправление в день ${fromDayNumber}`))]);
     }
 
     if (plan.base) {
@@ -442,50 +445,50 @@ export function dayText(plan: TodayPlan, trip: Pick<Trip, 'time_format'>, extra:
         const booking = plan.stops.find((stop) => stop.booking)?.booking ?? null;
         const own = booking && booking.place_id === base.id ? booking : null;
         sections.push([
-            '🏨 TONIGHT',
+            '🏨 СЕГОДНЯ НОЧЬЮ',
             join([base.name, plan.baseNights && plan.baseNight
-                ? `night ${plan.baseNight} of ${plan.baseNights}` : null], ' — '),
+                ? `ночь ${plan.baseNight} из ${plan.baseNights}` : null], ' — '),
             base.address ?? '',
             own ? join([
-                own.confirmation && `Ref ${own.confirmation}`,
-                at(own.check_in_time) && `check in ${at(own.check_in_time)}`,
-                at(own.check_out_time) && `out by ${at(own.check_out_time)}`,
+                own.confirmation && `Бронь ${own.confirmation}`,
+                at(own.check_in_time) && `заезд ${at(own.check_in_time)}`,
+                at(own.check_out_time) && `выезд до ${at(own.check_out_time)}`,
                 own.contact,
             ]) : '',
             mapLink(base) ?? '',
         ].filter(Boolean));
     } else if (plan.day) {
-        sections.push(['🏨 TONIGHT', 'No stay set for this day.']);
+        sections.push(['🏨 СЕГОДНЯ НОЧЬЮ', 'Проживание на этот день не указано.']);
     }
 
     if (plan.departures.length) {
-        sections.push(['🚗 TRAVEL TODAY', ...plan.departures.flatMap((leg) => legLines(leg))]);
+        sections.push(['🚗 ПЕРЕЕЗДЫ СЕГОДНЯ', ...plan.departures.flatMap((leg) => legLines(leg))]);
     }
 
     if (plan.day) {
         if (!plan.stops.length) {
-            sections.push(['📍 THE DAY', 'A free day.']);
+            sections.push(['📍 ПЛАН ДНЯ', 'Свободный день.']);
         } else {
             const stops = plan.stops.map((stop) => {
                 const category = stop.place ? categoryMeta(stop.place.category) : null;
                 const booking = stop.booking?.confirmation ? join([
-                    `Ref ${stop.booking.confirmation}`,
+                    `Бронь ${stop.booking.confirmation}`,
                     stop.booking.party_size && stop.booking.kind !== 'stay'
-                        ? `table for ${stop.booking.party_size}` : null,
+                        ? `стол на ${stop.booking.party_size}` : null,
                     stop.booking.dress_code,
                 ]) : '';
                 return [
                     join([stopWindow(stop, format), `${category ? `${category.icon} ` : ''}${stop.label}`]),
                     stop.address ?? '',
-                    stop.place?.best_time ? `Best: ${stop.place.best_time}` : '',
+                    stop.place?.best_time ? `Лучшее время: ${stop.place.best_time}` : '',
                     stop.stop.notes?.trim() ?? '',
                     booking,
                     mapLink({ lat: stop.lat, lng: stop.lng, name: stop.label, address: stop.address }) ?? '',
                 ].filter(Boolean).join('\n');
             });
-            sections.push(['📍 THE DAY', stops.join('\n\n')]);
+            sections.push(['📍 ПЛАН ДНЯ', stops.join('\n\n')]);
         }
-        if (plan.day.notes?.trim()) sections.push(['📝 NOTES', plan.day.notes.trim()]);
+        if (plan.day.notes?.trim()) sections.push(['📝 ЗАМЕТКИ', plan.day.notes.trim()]);
     }
 
     return sections.map((lines) => lines.join('\n')).join('\n\n');

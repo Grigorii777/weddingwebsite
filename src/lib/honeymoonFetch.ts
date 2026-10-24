@@ -448,7 +448,7 @@ export async function flightLookup(flightNumber: string, dateIso: string): Promi
 
     const clean = flightNumber.replace(/\s+/g, '').toUpperCase();
     if (!/^[A-Z0-9]{2,3}\d{1,4}$/.test(clean)) {
-        return { configured: true, flight: null, error: 'That does not look like a flight number' };
+        return { configured: true, flight: null, error: 'Это не похоже на номер рейса' };
     }
 
     const host = process.env.FLIGHT_API_HOST || 'aerodatabox.p.rapidapi.com';
@@ -481,16 +481,16 @@ export async function flightLookup(flightNumber: string, dateIso: string): Promi
             }
             return {
                 rows: null,
-                error: 'The lookup service is rate-limiting us — try again in a moment.',
+                error: 'Сервис ограничил число запросов. Попробуйте немного позже.',
             };
         }
-        if (!res.ok) return { rows: null, error: `The lookup service said ${res.status}` };
+        if (!res.ok) return { rows: null, error: `Ответ сервиса: ${res.status}` };
         const text = await res.text();
         if (!text.trim()) return null;
         try {
             return { rows: JSON.parse(text) };
         } catch {
-            return { rows: null, error: 'The lookup service sent something unreadable' };
+            return { rows: null, error: 'Сервис вернул некорректные данные' };
         }
     };
 
@@ -522,10 +522,10 @@ export async function flightLookup(flightNumber: string, dateIso: string): Promi
         return {
             configured: true,
             flight: null,
-            error: `No schedule found for ${clean}. Check the number, or enter the times by hand.`,
+            error: `Расписание не найдено для ${clean}. Проверьте номер или укажите время вручную.`,
         };
     } catch {
-        return { configured: true, flight: null, error: 'Could not reach the lookup service' };
+        return { configured: true, flight: null, error: 'Не удалось связаться с сервисом поиска' };
     }
 }
 

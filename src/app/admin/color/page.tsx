@@ -52,8 +52,8 @@ export default function AdminColorSettings() {
     return (
         <div className="max-w-4xl">
             <AutosaveHeader
-                title="Color Settings"
-                subtitle="Customize your wedding website colors and themes. Changes save themselves."
+                title="Настройки цветов"
+                subtitle="Настройте цвета сайта. Изменения сохраняются автоматически."
                 state={state}
                 onRetry={retry}
             />
@@ -62,11 +62,11 @@ export default function AdminColorSettings() {
                 {/* Accent Colors Section */}
                 <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-lg">
                     <div className="bg-gradient-to-br from-accent/10 to-accent-light/20 rounded-xl p-6 border border-accent/20">
-                        <h2 className="text-xl font-semibold text-gray-900 mb-4">Accent Colors</h2>
-                        <p className="text-sm text-gray-600 mb-4">Set your primary wedding accent colors used throughout the site</p>
+                        <h2 className="text-xl font-semibold text-gray-900 mb-4">Акцентные цвета</h2>
+                        <p className="text-sm text-gray-600 mb-4">Основные акцентные цвета для всего сайта</p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Primary Accent</label>
+                                <label className="block text-sm font-medium text-gray-700">Основной акцент</label>
                                 <div className="flex items-center mt-1 space-x-2">
                                     <input
                                         type="color"
@@ -90,14 +90,14 @@ export default function AdminColorSettings() {
                                                 onClick={() => setConfig({ ...config, accentColor: color })}
                                                 className="w-8 h-8 rounded-lg border-2 border-gray-300 hover:border-gray-900 transition-all shadow-sm hover:shadow-md"
                                                 style={{ backgroundColor: color }}
-                                                title={`Use ${color}`}
+                                                title={`Использовать ${color}`}
                                             />
                                         ))}
                                     </div>
                                 )}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Light Accent</label>
+                                <label className="block text-sm font-medium text-gray-700">Светлый акцент</label>
                                 <div className="flex items-center mt-1 space-x-2">
                                     <input
                                         type="color"
@@ -121,14 +121,14 @@ export default function AdminColorSettings() {
                                                 onClick={() => setConfig({ ...config, accentLightColor: color })}
                                                 className="w-8 h-8 rounded-lg border-2 border-gray-300 hover:border-gray-900 transition-all shadow-sm hover:shadow-md"
                                                 style={{ backgroundColor: color }}
-                                                title={`Use ${color}`}
+                                                title={`Использовать ${color}`}
                                             />
                                         ))}
                                     </div>
                                 )}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Dark Accent</label>
+                                <label className="block text-sm font-medium text-gray-700">Тёмный акцент</label>
                                 <div className="flex items-center mt-1 space-x-2">
                                     <input
                                         type="color"
@@ -152,7 +152,7 @@ export default function AdminColorSettings() {
                                                 onClick={() => setConfig({ ...config, accentDarkColor: color })}
                                                 className="w-8 h-8 rounded-lg border-2 border-gray-300 hover:border-gray-900 transition-all shadow-sm hover:shadow-md"
                                                 style={{ backgroundColor: color }}
-                                                title={`Use ${color}`}
+                                                title={`Использовать ${color}`}
                                             />
                                         ))}
                                     </div>
@@ -165,12 +165,12 @@ export default function AdminColorSettings() {
                 {/* Wedding Color Palette Section */}
                 <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-lg">
                     <div className="bg-gradient-to-br from-accent/10 to-accent-light/20 rounded-xl p-6 border border-accent/20">
-                        <h2 className="text-xl font-semibold text-gray-900 mb-4">Wedding Color Palette</h2>
-                        <p className="text-sm text-gray-600 mb-4">Define 5 custom colors that will appear as quick-select options under all color pickers throughout the admin panel</p>
+                        <h2 className="text-xl font-semibold text-gray-900 mb-4">Свадебная палитра</h2>
+                        <p className="text-sm text-gray-600 mb-4">Выберите 5 цветов для быстрого выбора во всех редакторах цвета в админке</p>
                         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                             {[0, 1, 2, 3, 4].map((idx) => (
                                 <div key={idx}>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Color {idx + 1}</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Цвета {idx + 1}</label>
                                     <div className="flex flex-col gap-2">
                                         <input
                                             type="color"
@@ -202,17 +202,17 @@ export default function AdminColorSettings() {
                 {/* Page Background Colors Section */}
                 <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-lg">
                     <div className="bg-gradient-to-br from-accent/10 to-accent-light/20 rounded-xl p-6 border border-accent/20">
-                        <h2 className="text-xl font-semibold text-gray-900 mb-4">Page Background Colors</h2>
-                        <p className="text-sm text-gray-600 mb-4">Set custom background colors for each public page on your website</p>
+                        <h2 className="text-xl font-semibold text-gray-900 mb-4">Фон страниц</h2>
+                        <p className="text-sm text-gray-600 mb-4">Настройте фон каждой страницы для гостей</p>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {[
-                                { key: 'home', label: 'Home' },
-                                { key: 'about', label: 'About' },
-                                { key: 'ourStory', label: 'Timeline' },
-                                { key: 'weddingParty', label: 'Wedding Party' },
-                                { key: 'schedule', label: 'Schedule' },
-                                { key: 'photos', label: 'Photos' },
-                                { key: 'rsvp', label: 'RSVP' },
+                                { key: 'home', label: 'Главная' },
+                                { key: 'about', label: 'О нас' },
+                                { key: 'ourStory', label: 'Наша история' },
+                                { key: 'weddingParty', label: 'Наши близкие' },
+                                { key: 'schedule', label: 'Программа' },
+                                { key: 'photos', label: 'Фотографии' },
+                                { key: 'rsvp', label: 'Ответ на приглашение' },
                             ].map(({ key, label }) => (
                                 <div key={key}>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
@@ -257,7 +257,7 @@ export default function AdminColorSettings() {
                                                     })}
                                                     className="w-6 h-6 rounded border-2 border-gray-300 hover:border-gray-900 transition-all shadow-sm hover:shadow-md"
                                                     style={{ backgroundColor: color }}
-                                                    title={`Use ${color}`}
+                                                    title={`Использовать ${color}`}
                                                 />
                                             ))}
                                         </div>

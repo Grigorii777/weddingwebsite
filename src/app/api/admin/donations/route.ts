@@ -48,7 +48,7 @@ export async function GET() {
     return NextResponse.json(result.rows);
   } catch (error) {
     console.error('Error fetching donations:', error);
-    return NextResponse.json({ error: 'Failed to fetch donations' }, { status: 500 });
+    return NextResponse.json({ error: 'Не удалось загрузить подарки' }, { status: 500 });
   }
 }
 
@@ -61,7 +61,7 @@ async function create(request: Request) {
     const { amount, gift, valid } = normalize(body);
     if (!guest_name || !valid) {
       return NextResponse.json(
-        { error: 'guest_name and either a numeric amount or a gift are required' },
+        { error: 'Укажите имя гостя и сумму или подарок' },
         { status: 400 }
       );
     }
@@ -75,7 +75,7 @@ async function create(request: Request) {
     return NextResponse.json(result.rows[0]);
   } catch (error) {
     console.error('Error adding donation:', error);
-    return NextResponse.json({ error: 'Failed to add donation' }, { status: 500 });
+    return NextResponse.json({ error: 'Не удалось добавить подарок' }, { status: 500 });
   }
 }
 
@@ -87,7 +87,7 @@ export async function PUT(request: Request) {
     const { amount, gift, valid } = normalize(body);
     if (!id || !guest_name || !valid) {
       return NextResponse.json(
-        { error: 'id, guest_name and either a numeric amount or a gift are required' },
+        { error: 'Укажите идентификатор, имя гостя и сумму или подарок' },
         { status: 400 }
       );
     }
@@ -101,12 +101,12 @@ export async function PUT(request: Request) {
        JSON.stringify(Array.isArray(co_donors) ? co_donors : []), id]
     );
     if (result.rowCount === 0) {
-      return NextResponse.json({ error: 'Donation not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Подарок не найден' }, { status: 404 });
     }
     return NextResponse.json(result.rows[0]);
   } catch (error) {
     console.error('Error updating donation:', error);
-    return NextResponse.json({ error: 'Failed to update donation' }, { status: 500 });
+    return NextResponse.json({ error: 'Не удалось изменить подарок' }, { status: 500 });
   }
 }
 
@@ -117,7 +117,7 @@ export async function PATCH(request: Request) {
     const { ids, thank_you_sent } = await request.json();
     const cleanIds = (Array.isArray(ids) ? ids : []).map(Number).filter(n => Number.isInteger(n));
     if (cleanIds.length === 0) {
-      return NextResponse.json({ error: 'ids must be a non-empty array' }, { status: 400 });
+      return NextResponse.json({ error: 'Укажите непустой список идентификаторов' }, { status: 400 });
     }
     const sent = thank_you_sent !== false;
     const result = await pool.query(
@@ -131,7 +131,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ success: true, updated: result.rowCount, rows: result.rows });
   } catch (error) {
     console.error('Error updating thank-you status:', error);
-    return NextResponse.json({ error: 'Failed to update thank-you status' }, { status: 500 });
+    return NextResponse.json({ error: 'Не удалось изменить отметку благодарности' }, { status: 500 });
   }
 }
 
@@ -140,13 +140,13 @@ export async function DELETE(request: Request) {
     await ensureTable();
     const { id } = await request.json();
     if (!id) {
-      return NextResponse.json({ error: 'id is required' }, { status: 400 });
+      return NextResponse.json({ error: 'Укажите идентификатор' }, { status: 400 });
     }
     await pool.query('DELETE FROM donations WHERE id = $1', [id]);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting donation:', error);
-    return NextResponse.json({ error: 'Failed to delete donation' }, { status: 500 });
+    return NextResponse.json({ error: 'Не удалось удалить подарок' }, { status: 500 });
   }
 }
 

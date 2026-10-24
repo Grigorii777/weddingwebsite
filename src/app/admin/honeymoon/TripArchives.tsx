@@ -27,10 +27,10 @@ export default function TripArchives({ api }: { api: HoneymoonApi }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name }),
             });
-            if (!res.ok) { setMessage('Could not save a snapshot.'); return; }
+            if (!res.ok) { setMessage('Не удалось сохранить снимок.'); return; }
             setName('');
             await api.refresh();
-            setMessage('Saved.');
+            setMessage('Сохранено.');
         } finally {
             setBusy('');
         }
@@ -38,8 +38,8 @@ export default function TripArchives({ api }: { api: HoneymoonApi }) {
 
     const restore = async (id: number, label: string) => {
         if (!confirm(
-            `Restore “${label}”? Everything currently in the portal is replaced — `
-            + 'the current state is snapshotted first, so this is undoable.',
+            `Восстановить «${label}»? Текущая поездка будет заменена. `
+            + 'Перед заменой сохранится снимок, поэтому действие можно отменить.',
         )) return;
         setBusy(`restore-${id}`);
         setMessage('');
@@ -50,16 +50,16 @@ export default function TripArchives({ api }: { api: HoneymoonApi }) {
                 body: JSON.stringify({ id, confirm: true }),
             });
             const body = await res.json().catch(() => ({}));
-            if (!res.ok) { setMessage(body.error ?? 'Could not restore that.'); return; }
+            if (!res.ok) { setMessage(body.error ?? 'Не удалось восстановить.'); return; }
             await api.refresh();
-            setMessage(`Restored “${body.restored}”. The previous state was saved as a snapshot.`);
+            setMessage(`Восстановлено «${body.restored}». Предыдущее состояние сохранено снимком.`);
         } finally {
             setBusy('');
         }
     };
 
     const forget = async (id: number, label: string) => {
-        if (!confirm(`Delete the snapshot “${label}”? This one is not undoable.`)) return;
+        if (!confirm(`Удалить снимок «${label}»? Это действие нельзя отменить.`)) return;
         await fetch(`/api/admin/honeymoon/archives?id=${id}`, { method: 'DELETE' });
         await api.refresh();
     };
@@ -69,16 +69,16 @@ export default function TripArchives({ api }: { api: HoneymoonApi }) {
             <div className="flex flex-wrap items-end gap-2">
                 <div className="min-w-40 flex-1">
                     <label className="mb-1 block text-xs font-semibold text-gray-500">
-                        Call it
+                        Название
                     </label>
                     <TextField
                         value={name}
-                        placeholder="Before I moved everything to week two"
+                        placeholder="До переноса планов на вторую неделю"
                         onChange={(e) => setName(e.target.value)}
                     />
                 </div>
                 <Button tone="primary" onClick={snapshot} disabled={busy === 'save'}>
-                    {busy === 'save' ? 'Saving…' : 'Snapshot the trip'}
+                    {busy === 'save' ? 'Сохраняем…' : 'Сохранить снимок поездки'}
                 </Button>
             </div>
 
@@ -86,8 +86,7 @@ export default function TripArchives({ api }: { api: HoneymoonApi }) {
 
             {archives.length === 0 ? (
                 <p className="text-xs text-gray-400">
-                    No snapshots yet. Worth taking one before a big reshuffle — and one at the end,
-                    which is how the portal outlives the honeymoon.
+                    Снимков пока нет. Сохраните перед большими изменениями и после поездки на память.
                 </p>
             ) : (
                 <ul className="space-y-1.5">
@@ -101,19 +100,19 @@ export default function TripArchives({ api }: { api: HoneymoonApi }) {
                                 {archive.name}
                             </span>
                             <span className="shrink-0 text-[11px] text-gray-400 tabular-nums">
-                                {archive.places} places · {archive.days} days
+                                {archive.places} мест · {archive.days} дней
                                 {archive.created_at
-                                    ? ` · ${new Date(archive.created_at).toLocaleDateString()}`
+                                    ? ` · ${new Date(archive.created_at).toLocaleDateString('ru-RU')}`
                                     : ''}
                             </span>
                             <Button
                                 onClick={() => restore(archive.id, archive.name)}
                                 disabled={busy === `restore-${archive.id}`}
                             >
-                                {busy === `restore-${archive.id}` ? 'Restoring…' : 'Restore'}
+                                {busy === `restore-${archive.id}` ? 'Восстанавливаем…' : 'Восстановить'}
                             </Button>
                             <Button tone="danger" onClick={() => forget(archive.id, archive.name)}>
-                                Delete
+                                Удалить
                             </Button>
                         </li>
                     ))}

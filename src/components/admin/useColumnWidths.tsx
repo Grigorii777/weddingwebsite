@@ -123,10 +123,10 @@ export function ColumnResizer({
         <span
             role="separator"
             aria-orientation="vertical"
-            aria-label={`Resize the ${label} column`}
+            aria-label={`Изменить ширину столбца ${label}`}
             onPointerDown={onPointerDown}
             onDoubleClick={onReset}
-            title={`Drag to resize ${label} · double-click to reset`}
+            title={`Перетащите, чтобы изменить ширину: ${label} · двойной щелчок — сбросить`}
             className="absolute top-0 right-0 h-full w-2 cursor-col-resize select-none
                 touch-none group flex justify-center"
         >

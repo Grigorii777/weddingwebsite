@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -240,11 +241,11 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
         return (
             <Card>
                 <EmptyState
-                    title="No days yet"
-                    hint="Add your first day to start building the itinerary. Days are numbered, and turn into real dates once you set a start date in Settings."
+                    title="Дни ещё не добавлены"
+                    hint="Добавьте первый день маршрута. Номера дней станут датами, когда вы укажете начало поездки в настройках."
                 />
                 <div className="flex justify-center pb-6">
-                    <Button tone="primary" onClick={() => api.create('days', {})}>+ Add day 1</Button>
+                    <Button tone="primary" onClick={() => api.create('days', {})}>+ Добавить первый день</Button>
                 </div>
             </Card>
         );
@@ -266,31 +267,29 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                                 control that does nothing. */}
                             {view === 'timeline' && !phone && (
                                 <Segmented<DayShape>
-                                    ariaLabel="Timeline shape"
+                                    ariaLabel="Вид временной шкалы"
                                     tone="dark"
                                     value={shape}
                                     onChange={chooseShape}
                                     options={[
-                                        { key: 'bars', label: '▤ Stacked' },
-                                        { key: 'clock', label: '⏱ Clock' },
+                                        { key: 'bars', label: '▤ Полосы' },
+                                        { key: 'clock', label: '⏱ Часы' },
                                     ]}
                                 />
                             )}
                             <Segmented<View>
-                                ariaLabel="Itinerary view"
+                                ariaLabel="Вид маршрута"
                                 value={view}
                                 onChange={chooseView}
                                 options={[
-                                    { key: 'list', label: '☰ Days' },
-                                    { key: 'timeline', label: '▤ Timeline' },
-                                    { key: 'calendar', label: '🗓 Calendar' },
+                                    { key: 'list', label: '☰ Дни' },
+                                    { key: 'timeline', label: '▤ По времени' },
+                                    { key: 'calendar', label: '🗓 Календарь' },
                                 ]}
                             />
                             <span className="hidden md:contents">
-                            <Hint label="How the itinerary works">
-                                Drag a day by its ⠿ handle to reorder the trip — the days renumber and
-                                their dates follow. Timeline draws each day against the clock, travel
-                                included; Calendar puts the trip on real dates.
+                            <Hint label="Как работает маршрут">
+                                Перетаскивайте день за ⠿ для изменения порядка — номера и даты обновятся. Вид по времени включает переезды, календарь показывает реальные даты.
                             </Hint>
                             </span>
                         </>
@@ -306,18 +305,18 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                     ) : undefined}
                     right={(
                         <OverflowMenu items={[
-                            { label: '🖨 Print…', onClick: () => setPrinting(true) },
+                            { label: '🖨 Печать…', onClick: () => setPrinting(true) },
                             // A real navigation to a download endpoint: a client-side
                             // route change would download nothing.
                             {
-                                label: '🗓 Export to a calendar',
+                                label: '🗓 Экспорт в календарь',
                                 onClick: () => {
                                     const link = document.createElement('a');
                                     link.href = '/api/admin/honeymoon/ics';
                                     link.click();
                                 },
                             },
-                            ...(data ? [{ label: '⬇ Download offline copy', onClick: () => downloadOfflineCopy(data) }] : []),
+                            ...(data ? [{ label: '⬇ Скачать для работы без интернета', onClick: () => downloadOfflineCopy(data) }] : []),
                         ]} />
                     )}
                 />
@@ -327,12 +326,9 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                 <div className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2.5">
                     <p className="text-xs text-rose-800">
                         <strong className="font-semibold">
-                            {beyond.size} day{beyond.size === 1 ? '' : 's'} past the end of the trip.
+                            {counted(beyond.size, 'день', 'дня', 'дней')} после конца поездки.
                         </strong>{' '}
-                        The dates now stop at {formatDate(data?.trip.end_date)}, and the days below
-                        marked in red fall after it. Nothing was deleted — move their stops onto
-                        earlier days, delete the days you don&apos;t need, or set the dates back in
-                        Settings.
+                        Поездка теперь заканчивается {formatDate(data?.trip.end_date)}. Дни после этой даты отмечены красным. Данные сохранены — перенесите планы на более ранние дни, удалите лишние или измените даты в настройках.
                     </p>
                 </div>
             )}
@@ -353,16 +349,16 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                     {warnCount > 0
                         ? (
                             <span className="shrink-0 whitespace-nowrap text-amber-700">
-                                ⚠ {warnCount}<span className="max-md:hidden"> thing{warnCount === 1 ? '' : 's'}</span> to check
+                                ⚠ {warnCount}<span className="max-md:hidden"> замечание{warnCount === 1 ? '' : ''}</span> на проверку
                             </span>
                         )
-                        : <span className="shrink-0 whitespace-nowrap text-emerald-700">✓ Nothing to fix</span>}
+                        : <span className="shrink-0 whitespace-nowrap text-emerald-700">✓ Всё в порядке</span>}
                     <span className="text-gray-300">·</span>
                     <span className="min-w-0 truncate">
-                        {stretches.filter((st) => st.place).length} stay{stretches.length === 1 ? '' : 's'}
-                        <span className="max-md:hidden"> across the trip</span>
+                        {counted(stretches.filter((st) => st.place).length, 'вариант проживания', 'варианта проживания', 'вариантов проживания')}
+                        <span className="max-md:hidden"> за всю поездку</span>
                     </span>
-                    <span className="ml-auto shrink-0 text-xs text-gray-400 max-md:hidden">{checksOpen ? 'Hide ▴' : 'Show ▾'}</span>
+                    <span className="ml-auto shrink-0 text-xs text-gray-400 max-md:hidden">{checksOpen ? 'Скрыть ▴' : 'Показать ▾'}</span>
                     <Icon
                         name="chevron"
                         className={`md:hidden ml-auto size-4 shrink-0 text-gray-400 transition-transform ${checksOpen ? '-rotate-90' : 'rotate-90'}`}
@@ -375,11 +371,11 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                         <div className="rounded-2xl border border-gray-200 bg-white p-3">
                             <div className="mb-1.5 flex items-baseline justify-between gap-2">
                                 <h3 className="text-sm font-semibold text-gray-900">
-                                    Worth a look
+                                    Стоит проверить
                                 </h3>
                                 <span className="text-[11px] text-gray-400">
                                     {conflicts.filter((entry) => entry.severity === 'warn').length}
-                                    {' '}to fix
+                                    {' '}исправить
                                 </span>
                             </div>
                             <ul className="space-y-1">
@@ -402,8 +398,8 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                                         decoration-dotted"
                                 >
                                     {showAllConflicts
-                                        ? 'Show fewer'
-                                        : `Show all ${conflicts.length}`}
+                                        ? 'Свернуть'
+                                        : `Показать все ${conflicts.length}`}
                                 </button>
                             )}
                         </div>
@@ -412,7 +408,7 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                     {stretches.length > 0 && (
                         <div className="rounded-2xl border border-gray-200 bg-white p-3">
                             <h3 className="mb-1.5 text-sm font-semibold text-gray-900">
-                                Where you sleep
+                                Где вы ночуете
                             </h3>
                             <ul className="space-y-1">
                                 {stretches.map((stretch) => (
@@ -422,14 +418,14 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                                     >
                                         <span className="tabular-nums text-gray-400">
                                             {stretch.firstDay === stretch.lastDay
-                                                ? `Day ${stretch.firstDay}`
-                                                : `Days ${stretch.firstDay}–${stretch.lastDay}`}
+                                                ? `День ${stretch.firstDay}`
+                                                : `Дни ${stretch.firstDay}–${stretch.lastDay}`}
                                         </span>
                                         <span className="font-medium text-gray-800">
-                                            {stretch.place?.name ?? 'nowhere set'}
+                                            {stretch.place?.name ?? 'проживание не указано'}
                                         </span>
                                         <span className="text-gray-400">
-                                            {stretch.nights} night{stretch.nights === 1 ? '' : 's'}
+                                            {counted(stretch.nights, 'ночь', 'ночи', 'ночей')}
                                         </span>
                                         {stretch.booking?.confirmation && (
                                             <span className="text-emerald-700">
@@ -438,15 +434,14 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                                         )}
                                         {stretch.mismatch && (
                                             <span className="text-rose-700">
-                                                booked dates do not match these nights
+                                                даты брони не совпадают с ночёвками
                                             </span>
                                         )}
                                     </li>
                                 ))}
                             </ul>
                             <p className="mt-1.5 text-[11px] text-gray-400">
-                                A base is set per day; a stay is a stretch. This is the sentence a
-                                confirmation email gets checked against.
+                                Место ночёвки задаётся на каждый день, проживание — на период. Сверьте этот список с подтверждениями бронирований.
                             </p>
                         </div>
                     )}
@@ -461,10 +456,10 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                 column of A4. These are the four choices that actually change what
                 you carry. */}
             {printing && (
-                <Modal open onClose={() => setPrinting(false)} title="Print the trip">
+                <Modal open onClose={() => setPrinting(false)} title="Распечатать поездку">
                     <div className="space-y-3">
                         <div>
-                            <p className="text-xs font-semibold text-gray-500">Days</p>
+                            <p className="text-xs font-semibold text-gray-500">Дни</p>
                             <div className="mt-1 flex flex-wrap gap-1">
                                 <button
                                     onClick={() => setPrintOptions({ ...printOptions, days: [] })}
@@ -473,7 +468,7 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                                             ? 'border-transparent bg-accent text-white'
                                             : 'border-gray-200 text-gray-600'}`}
                                 >
-                                    All
+                                    Все
                                 </button>
                                 {days.map((day) => {
                                     const on = printOptions.days.includes(day.day_number);
@@ -501,10 +496,10 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                         </div>
 
                         {([
-                            ['bookings', 'Confirmation numbers and contacts'],
-                            ['info', 'Emergency and practical details'],
-                            ['notes', 'The guide notes'],
-                            ['a5', 'A5 booklet (smaller type, folds into a passport)'],
+                            ['bookings', 'Номера подтверждений и контакты'],
+                            ['info', 'Экстренные контакты и полезные сведения'],
+                            ['notes', 'Заметки путеводителя'],
+                            ['a5', 'Буклет A5 (мелкий шрифт, помещается в паспорт)'],
                         ] as const).map(([key, label]) => (
                             <label key={key} className="flex items-center gap-2 text-sm text-gray-700">
                                 <input
@@ -520,7 +515,7 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                         ))}
 
                         <div className="flex justify-end gap-2 border-t border-gray-100 pt-3">
-                            <Button onClick={() => setPrinting(false)}>Cancel</Button>
+                            <Button onClick={() => setPrinting(false)}>Отмена</Button>
                             <Button
                                 tone="primary"
                                 onClick={() => {
@@ -530,7 +525,7 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                                     setTimeout(() => window.print(), 50);
                                 }}
                             >
-                                Print
+                                Печать
                             </Button>
                         </div>
                     </div>
@@ -584,7 +579,7 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
 
             <div className="flex justify-center pt-1">
                 <Button tone="primary" onClick={() => api.create('days', {})}>
-                    + Add day {Math.max(0, ...days.map((d) => d.day_number)) + 1}
+                    + Добавить день {Math.max(0, ...days.map((d) => d.day_number)) + 1}
                 </Button>
             </div>
 
@@ -593,7 +588,7 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
 }
 
 
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAYS = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 
 /**
  * The trip on a real calendar.
@@ -639,8 +634,8 @@ function CalendarView({ api, days, onEditPlace, onViewPlace, onFocusDay, beyond,
         return (
             <Card>
                 <EmptyState
-                    title="No start date yet"
-                    hint="A calendar needs to know when day 1 is. Set the trip's start date in Settings and every day lands on a real date."
+                    title="Дата начала не задана"
+                    hint="Задайте дату начала поездки в настройках, чтобы дни появились в календаре."
                 />
             </Card>
         );
@@ -689,7 +684,7 @@ function CalendarView({ api, days, onEditPlace, onViewPlace, onFocusDay, beyond,
                 open={openDay != null}
                 onClose={() => setOpenDayId(null)}
                 title={openDay
-                    ? `Day ${openDay.day_number}${openDay.title ? ` — ${openDay.title}` : ''}`
+                    ? `День ${openDay.day_number}${openDay.title ? ` — ${openDay.title}` : ''}`
                     : ''}
                 wide
             >
@@ -743,7 +738,7 @@ function CalendarCellBox({ cell, day, api, beyondRange, arrivals, onOpen }: {
     return (
         <button
             onClick={onOpen}
-            title={beyondRange ? 'This day falls past the end of the trip' : undefined}
+            title={beyondRange ? 'Этот день после конца поездки' : undefined}
             data-calendar-day={day.day_number}
             className={`min-h-[3.25rem] md:min-h-[5.5rem] rounded-xl border p-1.5 text-left transition
                 focus:outline-none focus:ring-2 overflow-hidden ${beyondRange
@@ -757,8 +752,8 @@ function CalendarCellBox({ cell, day, api, beyondRange, arrivals, onOpen }: {
                 <span className={`text-[9px] font-semibold ${beyondRange ? 'text-rose-700' : 'text-accent'}`}>
                     D{day.day_number}
                 </span>
-                <span className="flex items-center gap-0.5" aria-label={`${day.stops.length} stops${
-                    day.travel.length + arrivals.length ? ', travel' : ''}`}>
+                <span className="flex items-center gap-0.5" aria-label={`${day.stops.length} остановок${
+                    day.travel.length + arrivals.length ? ', переезды' : ''}`}>
                     {(day.travel.length > 0 || arrivals.length > 0) && <span className="text-[9px]" aria-hidden>✈</span>}
                     {day.stops.slice(0, 3).map((stop) => (
                         <span key={stop.id} className="size-1.5 rounded-full bg-accent/70" aria-hidden />
@@ -770,7 +765,7 @@ function CalendarCellBox({ cell, day, api, beyondRange, arrivals, onOpen }: {
                 <span className="text-[11px] tabular-nums text-gray-500">{cell.dayOfMonth}</span>
                 <span className={`text-[10px] font-semibold shrink-0
                     ${beyondRange ? 'text-rose-700' : 'text-accent'}`}>
-                    Day {day.day_number}
+                    День {day.day_number}
                 </span>
             </div>
             {day.title && (
@@ -800,11 +795,11 @@ function CalendarCellBox({ cell, day, api, beyondRange, arrivals, onOpen }: {
                     {stop.start_time ? `${fmt(stop.start_time)} ` : '• '}
                     {stop.custom_label
                         || (stop.place_id != null ? api.placeById.get(stop.place_id)?.name : '')
-                        || 'Untitled stop'}
+                        || 'Без названия'}
                 </p>
             ))}
             {day.stops.length > 3 && (
-                <p className="text-[10px] text-gray-400">+{day.stops.length - 3} more</p>
+                <p className="text-[10px] text-gray-400">+{day.stops.length - 3} ещё</p>
             )}
             {!day.stops.length && !day.title && base && (
                 <p className="text-[10px] text-gray-500 truncate">🛏 {base.name}</p>
@@ -876,7 +871,7 @@ function DayCard({
         const total = daysBetween(booking.check_in, booking.check_out);
         const night = daysBetween(booking.check_in, iso);
         if (total == null || night == null || total < 1) return null;
-        return `night ${night + 1} of ${total}`;
+        return `ночь ${night + 1} из ${total}`;
     }, [startDate, day.day_number, api.data?.bookings]);
     /**
      * Whether there is anything on this day the map could actually fly to.
@@ -983,7 +978,7 @@ function DayCard({
      */
     const suggest = async () => {
         if (!base) {
-            setSuggestion({ names: [], why: 'Set a stay for this day first — the suggestions are places near it.' });
+            setSuggestion({ names: [], why: 'Сначала задайте проживание на этот день — подсказки будут рядом с ним.' });
             return;
         }
         const proposal = suggestDay(
@@ -992,7 +987,7 @@ function DayCard({
             scheduledPlaceIds(api.data?.days ?? []),
         );
         if (!proposal) {
-            setSuggestion({ names: [], why: 'Nothing nearby that is unscheduled and not already ruled out.' });
+            setSuggestion({ names: [], why: 'Рядом нет ещё не запланированных подходящих мест.' });
             return;
         }
         const ok = await api.createMany('stops', proposal.places.map((place, index) => ({
@@ -1004,7 +999,7 @@ function DayCard({
         if (ok) {
             setSuggestion({
                 names: proposal.places.map((place) => place.name),
-                why: `${proposal.why} · about ${formatDistance(proposal.km)} of driving in total`,
+                why: `${proposal.why} · примерно ${formatDistance(proposal.km)} всего в дороге`,
             });
         }
     };
@@ -1068,7 +1063,7 @@ function DayCard({
         const next = Math.max(0, ...(api.data?.days ?? []).map((d) => d.day_number)) + 1;
         const created = await api.createRow('days', {
             day_number: next,
-            title: day.title ? `${day.title} (copy)` : '',
+            title: day.title ? `${day.title} (копия)` : '',
             base_place_id: day.base_place_id,
             notes: day.notes ?? '',
         });
@@ -1177,9 +1172,8 @@ function DayCard({
             {beyondRange && (
                 <p className="mb-2 rounded-xl bg-rose-50 border border-rose-200 px-2.5 py-1.5
                     text-[11px] text-rose-700">
-                    Past the end of the trip{formatDate(api.data?.trip.end_date)
-                        ? ` (${formatDate(api.data?.trip.end_date)})` : ''}. Move these stops onto an
-                    earlier day, or extend the dates in Settings.
+                    После конца поездки{formatDate(api.data?.trip.end_date)
+                        ? ` (${formatDate(api.data?.trip.end_date)})` : ''}. Перенесите планы на более ранний день или продлите поездку в настройках.
                 </p>
             )}
             {/* ---- Day header ---- */}
@@ -1193,21 +1187,21 @@ function DayCard({
                             {...dayListeners}
                             className="[@media(pointer:coarse)]:hidden cursor-grab active:cursor-grabbing text-gray-300
                                 hover:text-gray-500 touch-none -ml-1 px-1 shrink-0"
-                            aria-label={`Drag day ${day.day_number} to reorder`}
+                            aria-label={`Перетащите день ${day.day_number} для изменения порядка`}
                         >
                             ⠿
                         </button>
                         <span className="text-sm font-semibold text-gray-900 shrink-0">
-                            Day {day.day_number}
+                            День {day.day_number}
                             {totalDays > 1 && (
-                                <span className="font-normal text-gray-400"> of {totalDays}</span>
+                                <span className="font-normal text-gray-400"> из {totalDays}</span>
                             )}
                         </span>
                         {realDate && <span className="text-xs text-gray-400">{realDate}</span>}
                     </div>
                     <InlineText
                         value={day.title ?? ''}
-                        placeholder="What's this day about?"
+                        placeholder="Каков план на день?"
                         className="font-medium text-gray-800 -ml-2 mt-0.5 max-md:text-lg max-md:font-semibold max-md:text-gray-900"
                         onCommit={(title) => api.update('days', { id: day.id, title })}
                     />
@@ -1217,42 +1211,42 @@ function DayCard({
                         onClick={() => onFocusDay(day)}
                         disabled={!pinnedStops}
                         title={pinnedStops
-                            ? `Move the map to day ${day.day_number}'s stops, and show the route`
-                            : 'Nothing on this day is pinned yet'}
+                            ? `Показать на карте день ${day.day_number} и его маршрут`
+                            : 'В этом дне ещё нет мест с координатами'}
                         className="shrink-0 rounded-full border border-gray-200 bg-gray-50 px-2 py-1
                             text-[11px] font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900
                             disabled:opacity-40 disabled:hover:bg-gray-50 transition"
                     >
-                        ◎ Map
+                        ◎ Карта
                     </button>
                 )}
                 <OverflowMenu
                     items={[
                         {
-                            label: `Add a day before day ${day.day_number}`,
+                            label: `Добавить день перед днём ${day.day_number}`,
                             onClick: () => insertDay('before'),
                         },
                         {
-                            label: `Add a day after day ${day.day_number}`,
+                            label: `Добавить день после дня ${day.day_number}`,
                             onClick: () => insertDay('after'),
                         },
                         {
-                            label: 'Add travel leg',
+                            label: 'Добавить участок пути',
                             onClick: () => api.create('travel', { day_id: day.id, mode: 'flight' }),
                         },
-                        { label: 'Duplicate day (at the end)', onClick: () => duplicate('end') },
+                        { label: 'Копировать день в конец', onClick: () => duplicate('end') },
                         // The common case: "the same again tomorrow". Appending
                         // and then dragging it back seven positions was the only
                         // way to say that.
-                        { label: 'Duplicate right after this one', onClick: () => duplicate('after') },
+                        { label: 'Копировать сразу после этого дня', onClick: () => duplicate('after') },
                         {
-                            label: showNotes ? 'Hide notes' : 'Add a note',
+                            label: showNotes ? 'Скрыть заметки' : 'Добавить заметку',
                             onClick: () => setShowNotes((v) => !v),
                         },
                         {
                             // No confirm: this is undoable, stops and travel legs
                             // included, and one speed bump is enough for one hazard.
-                            label: 'Delete day',
+                            label: 'Удалить день',
                             danger: true,
                             onClick: () => api.removeDay(day),
                         },
@@ -1270,7 +1264,7 @@ function DayCard({
                     <InlineText
                         multiline
                         value={day.notes ?? ''}
-                        placeholder="Anything about this day — pack the good camera, book ahead…"
+                        placeholder="Заметки на день: взять камеру, забронировать заранее…"
                         className="text-sm text-gray-700 max-md:resize-none"
                         onCommit={(notes) => api.update('days', { id: day.id, notes })}
                     />
@@ -1287,12 +1281,12 @@ function DayCard({
                     className="mt-2 rounded-2xl bg-slate-100 border border-slate-200 px-2.5 py-1.5
                         text-[11px] text-slate-700"
                 >
-                    {travelModeMeta(leg.mode).icon} Arrives
+                    {travelModeMeta(leg.mode).icon} Прибытие
                     {leg.arrive_time ? ` ${fmt(leg.arrive_time)}` : ''}
-                    {leg.to_text ? ` at ${leg.to_text}` : ''} — the{' '}
-                    {travelModeMeta(leg.mode).label.toLowerCase()} that left on day{' '}
+                    {leg.to_text ? ` в ${leg.to_text}` : ''} —{' '}
+                    {travelModeMeta(leg.mode).label.toLowerCase()} отправление в день{' '}
                     {fromDay.day_number}
-                    {leg.depart_time ? ` at ${fmt(leg.depart_time)}` : ''}.
+                    {leg.depart_time ? ` в ${fmt(leg.depart_time)}` : ''}.
                 </p>
             ))}
 
@@ -1304,13 +1298,13 @@ function DayCard({
                 trip knows about the place, the confirmation included. */}
             <div className="mt-2 flex items-center gap-2 min-w-0">
                 <span className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold shrink-0">
-                    Sleep
+                    Ночёвка
                 </span>
                 {base ? (
                     <button
                         data-sleep-place
                         onClick={() => onViewPlace(base)}
-                        title={`${base.name} — open the booking and everything else about it`}
+                        title={`${base.name} — открыть бронирование и подробности`}
                         className="min-w-0 min-h-11 md:min-h-0 flex items-center md:items-baseline gap-1.5 text-left rounded-xl px-1.5 py-0.5
                             hover:bg-gray-50 group/base"
                     >
@@ -1327,7 +1321,7 @@ function DayCard({
                     </button>
                 ) : (
                     <span className="text-xs text-gray-400">
-                        No stay booked for this night — add the dates on Stays.
+                        На эту ночь нет бронирования. Добавьте даты во вкладке «Проживание».
                     </span>
                 )}
             </div>
@@ -1345,7 +1339,7 @@ function DayCard({
                         className="mt-2"
                     >
                         <summary className="min-h-11 md:min-h-0 cursor-pointer py-1 text-xs text-gray-500 hover:text-gray-800">
-                            Travel details ({day.travel.length})
+                            Подробности переезда ({day.travel.length})
                         </summary>
                         <div className="mt-1 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                             {day.travel.map((leg) => (
@@ -1409,7 +1403,7 @@ function DayCard({
                         />
                     )
                 ) : day.stops.length === 0 ? (
-                    <p className="text-xs text-gray-400 py-2">Nothing planned yet.</p>
+                    <p className="text-xs text-gray-400 py-2">Пока ничего не запланировано.</p>
                 ) : (
                     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
                         <SortableContext
@@ -1466,7 +1460,7 @@ function DayCard({
             {regionNotes.length > 0 && (
                 <details className="mt-2 rounded-xl bg-amber-50/60 px-2.5 py-1.5">
                     <summary className="cursor-pointer text-[11px] font-medium text-amber-900">
-                        {regionName ? `About ${regionName}` : 'Guide notes'}
+                        {regionName ? `О регионе ${regionName}` : 'Заметки путеводителя'}
                         {' '}({regionNotes.length})
                     </summary>
                     <div className="mt-1.5 space-y-2">
@@ -1492,19 +1486,19 @@ function DayCard({
                     text-gray-500">
                     {dayIntel.weather && (
                         <span title={dayIntel.weather.kind === 'forecast'
-                            ? 'Forecast from Open-Meteo'
-                            : 'The month’s average over the last decade — too far out to forecast'}>
+                            ? 'Прогноз Open-Meteo'
+                            : 'Среднее за этот месяц по последним десяти годам — для прогноза ещё рано'}>
                             {dayIntel.weather.kind === 'climate' && '≈ '}
                             {dayIntel.weather.high != null && `${Math.round(dayIntel.weather.high)}°`}
                             {dayIntel.weather.low != null && ` / ${Math.round(dayIntel.weather.low)}°`}
                             {dayIntel.weather.label && ` · ${dayIntel.weather.label}`}
                             {dayIntel.weather.rain_chance != null
                                 && ` · ${Math.round(dayIntel.weather.rain_chance)}%${
-                                    dayIntel.weather.kind === 'climate' ? ' of days wet' : ' rain'}`}
+                                    dayIntel.weather.kind === 'climate' ? ' дождливых дней' : ' осадки'}`}
                         </span>
                     )}
                     {dayIntel.sunrise && dayIntel.sunset && (
-                        <span className="tabular-nums" title="Sunrise and sunset at the day’s base">
+                        <span className="tabular-nums" title="Восход и закат в месте ночёвки">
                             ☀ {dayIntel.sunrise} – {dayIntel.sunset}
                         </span>
                     )}
@@ -1512,11 +1506,11 @@ function DayCard({
                         <span
                             className={timeline.longDrive ? 'text-amber-700 font-medium' : ''}
                             title={timeline.estimated
-                                ? 'Partly estimated from straight-line distance'
-                                : 'Driving time from OSRM'}
+                                ? 'Частично оценено по расстоянию по прямой'
+                                : 'Время в пути по OSRM'}
                         >
                             🚗 {formatDuration(timeline.driveMinutes * 60)}
-                            {timeline.estimated && ' (est.)'}
+                            {timeline.estimated && ' (примерно)'}
                         </span>
                     )}
                 </div>
@@ -1524,27 +1518,23 @@ function DayCard({
 
             {timeline.lateCount > 0 && (
                 <p className="text-[11px] text-rose-700 bg-rose-50 rounded-xl px-2.5 py-1.5 mt-2">
-                    ⚠ {timeline.lateCount === 1 ? 'One stop' : `${timeline.lateCount} stops`} cannot be
-                    reached at the time set — the drive from the stop before puts you there later.
-                    The arrival times below are the honest ones.
+                    ⚠ {timeline.lateCount === 1 ? 'Одна остановка' : `${timeline.lateCount} остановок`} недостижима к заданному времени с учётом предыдущего переезда. Ниже показано расчётное время прибытия.
                 </p>
             )}
             {timeline.overlapCount > 0 && (
                 <p className="text-[11px] text-amber-700 bg-amber-50 rounded-xl px-2.5 py-1.5 mt-2">
-                    ⚠ Two stops overlap: one is still going when the next is due to start.
+                    ⚠ Две остановки пересекаются по времени.
                 </p>
             )}
             {timeline.longDrive && (
                 <p className="text-[11px] text-amber-700 bg-amber-50 rounded-xl px-2.5 py-1.5 mt-2">
-                    ⚠ {formatDuration(timeline.driveMinutes * 60)} of driving on this day. That is
-                    most of it spent in a car.
+                    ⚠ {formatDuration(timeline.driveMinutes * 60)} в машине за день — большая часть дня в дороге.
                 </p>
             )}
 
             {longest >= SPREAD_WARNING_KM && !timeline.longDrive && (
                 <p className="text-[11px] text-amber-700 bg-amber-50 rounded-xl px-2.5 py-1.5 mt-2">
-                    ⚠ This day covers {formatDistance(longest)} in one hop. On Bali&apos;s roads that is a
-                    long way — consider splitting it or moving the far stop to another day.
+                    ⚠ За этот день {formatDistance(longest)} за один переезд. Для дорог Бали это много — разделите переезд или перенесите дальнюю остановку.
                 </p>
             )}
 
@@ -1553,31 +1543,31 @@ function DayCard({
                 <div className="mt-3 rounded-2xl border border-gray-200 p-3 space-y-2">
                     {insertAt != null && (
                         <p className="text-[11px] text-accent">
-                            Inserting at position {insertAt + 1} of {day.stops.length + 1}.
+                            Добавляем на позицию {insertAt + 1} из {day.stops.length + 1}.
                         </p>
                     )}
                     <SelectField value={pickPlace} onChange={(e) => setPickPlace(e.target.value)}>
-                        <option value="">— pick a place from your library —</option>
+                        <option value="">— выберите место из подборки —</option>
                         {(api.data?.places ?? []).map((p) => (
                             <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
                     </SelectField>
-                    <div className="text-[11px] text-gray-400 text-center">or</div>
+                    <div className="text-[11px] text-gray-400 text-center">или</div>
                     <TextField
                         value={customLabel}
                         onChange={(e) => setCustomLabel(e.target.value)}
-                        placeholder="Something not in the library — lunch near the rice terraces"
+                        placeholder="Не из подборки: обед у рисовых террас"
                     />
                     <div className="flex justify-end gap-2">
                         <Button onClick={() => { setAdding(false); setInsertAt(null); }}>
-                            Cancel
+                            Отмена
                         </Button>
                         <Button
                             tone="primary"
                             onClick={addStop}
                             disabled={!pickPlace && !customLabel.trim()}
                         >
-                            Add stop
+                            Добавить остановку
                         </Button>
                     </div>
                 </div>
@@ -1587,14 +1577,14 @@ function DayCard({
                         onClick={() => setAdding(true)}
                         className="min-h-11 md:min-h-0 text-sm text-gray-400 hover:text-gray-700"
                     >
-                        + Add stop
+                        + Добавить остановку
                     </button>
                     <button
                         onClick={suggest}
-                        title="Three places near the stay that you have not scheduled or ruled out"
+                        title="Три места рядом с проживанием, ещё не запланированные и не отклонённые"
                         className="min-h-11 md:min-h-0 text-sm text-gray-400 hover:text-accent"
                     >
-                        ✨ Suggest a day
+                        ✨ Предложить план дня
                     </button>
                 </div>
             )}
@@ -1602,13 +1592,13 @@ function DayCard({
             {suggestion && (
                 <p className="mt-2 rounded-xl bg-sky-50 px-2.5 py-1.5 text-[11px] text-sky-900">
                     {suggestion.names.length > 0
-                        ? `Added ${suggestion.names.join(', ')} — ${suggestion.why}`
+                        ? `Добавлено: ${suggestion.names.join(', ')} — ${suggestion.why}`
                         : suggestion.why}
                     <button
                         onClick={() => setSuggestion(null)}
                         className="ml-2 underline decoration-dotted"
                     >
-                        dismiss
+                        закрыть
                     </button>
                 </p>
             )}
@@ -1676,7 +1666,7 @@ function StopRow({
      */
     const [timeFocused, setTimeFocused] = useState(false);
     const reservation = (api.data?.bookings ?? []).find((booking) => booking.stop_id === stop.id);
-    const label = stop.custom_label || place?.name || 'this stop';
+    const label = stop.custom_label || place?.name || 'эта остановка';
 
     /**
      * Move a stop to another day.
@@ -1708,7 +1698,7 @@ function StopRow({
             {...listeners}
             className={`[@media(pointer:coarse)]:hidden cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500
                 touch-none ${compact ? 'px-0.5 text-sm leading-5' : 'px-1'}`}
-            aria-label="Drag to reorder"
+            aria-label="Перетащите для изменения порядка"
         >
             ⠿
         </button>
@@ -1762,7 +1752,7 @@ function StopRow({
                 className={`bg-transparent shrink-0 rounded-lg px-1
                     hover:bg-gray-50 focus:bg-white focus:outline-none focus:ring-2
                     focus:ring-accent/30 ${phone ? 'w-[8rem] min-h-11 text-base py-1 font-medium text-gray-800 tabular-nums' : compact ? 'w-[6.75rem] text-gray-500 text-[11px] py-0' : 'w-[6.75rem] text-gray-500 text-xs py-1'}`}
-                aria-label="Start time"
+                aria-label="Время начала"
             />
             {showPresets && (
                 <span className="flex shrink-0 gap-0.5">
@@ -1780,7 +1770,7 @@ function StopRow({
                             }}
                             className="rounded-md px-1 py-0.5 text-[10px] text-gray-400
                                 hover:bg-gray-100 hover:text-gray-700 tabular-nums"
-                            title={`Start at ${time}`}
+                            title={`Начало в ${time}`}
                         >
                             {time}
                         </button>
@@ -1795,7 +1785,7 @@ function StopRow({
                             }}
                             className="rounded-md px-1 py-0.5 text-[10px] text-accent
                                 hover:bg-accent/10 tabular-nums"
-                            title={`Straight after the stop before (${previousEnd})`}
+                            title={`Сразу после предыдущей остановки (${previousEnd})`}
                         >
                             +{previousEnd}
                         </button>
@@ -1815,7 +1805,7 @@ function StopRow({
             step="15"
             key={`d-${stop.duration_minutes ?? ''}`}
             defaultValue={stop.duration_minutes ?? ''}
-            placeholder="min"
+            placeholder="мин."
             onBlur={(e) => {
                 const next = e.target.value.trim();
                 if (next !== String(stop.duration_minutes ?? '')) {
@@ -1826,7 +1816,7 @@ function StopRow({
                 hover:bg-gray-50 focus:bg-white focus:outline-none focus:ring-2
                 focus:ring-accent/30 tabular-nums
                 ${phone ? 'min-h-11 w-16 text-base py-1' : compact ? 'text-[11px] py-0' : 'text-xs py-1'}`}
-            aria-label="Minutes here"
+            aria-label="Длительность, минут"
         />
     );
 
@@ -1837,7 +1827,7 @@ function StopRow({
         // and fix it.
         <button
             onClick={() => onEditPlace(place)}
-            title={`Edit ${place.name}`}
+            title={`Изменить ${place.name}`}
             className={`flex min-h-11 md:min-h-0 items-center gap-2 text-left group/place w-full min-w-0
                 ${compact ? '' : 'flex-wrap'}`}
         >
@@ -1851,7 +1841,7 @@ function StopRow({
     ) : (
         <InlineText
             value={stop.custom_label ?? ''}
-            placeholder="Untitled stop"
+            placeholder="Без названия"
             className="text-sm -ml-2"
             onCommit={(custom_label) => api.update('stops', { id: stop.id, custom_label })}
         />
@@ -1860,22 +1850,22 @@ function StopRow({
     const menu = (
         <OverflowMenu items={[
             ...(place ? [{
-                label: `Open ${place.name}`,
+                label: `Открыть ${place.name}`,
                 onClick: () => onEditPlace(place),
             }] : []),
             {
-                label: showNotes || stop.notes ? 'Hide note' : 'Add a note',
+                label: showNotes || stop.notes ? 'Скрыть заметку' : 'Добавить заметку',
                 onClick: () => setShowNotes((v) => !v),
             },
-            ...(onMove && !isFirst ? [{ label: 'Move up', onClick: () => onMove(-1) }] : []),
-            ...(onMove && !isLast ? [{ label: 'Move down', onClick: () => onMove(1) }] : []),
+            ...(onMove && !isFirst ? [{ label: 'Выше', onClick: () => onMove(-1) }] : []),
+            ...(onMove && !isLast ? [{ label: 'Ниже', onClick: () => onMove(1) }] : []),
             // One entry each, not one per day: a fortnight's trip put thirty
             // "move to day N" lines above the actions worth reading. The days
             // live one level in, in a list that scrolls.
             {
-                label: 'Move to day',
+                label: 'Перенести на день',
                 submenu: otherDays.map((d) => ({
-                    label: `Day ${d.day_number}${d.title ? ` — ${d.title}` : ''}`,
+                    label: `День ${d.day_number}${d.title ? ` — ${d.title}` : ''}`,
                     onClick: () => moveTo(d.id),
                 })),
             },
@@ -1883,9 +1873,9 @@ function StopRow({
             // plan, not a mistake, and rebuilding the stop by hand to
             // say so is busywork.
             {
-                label: 'Copy to day',
+                label: 'Копировать на день',
                 submenu: otherDays.map((d) => ({
-                    label: `Day ${d.day_number}${d.title ? ` — ${d.title}` : ''}`,
+                    label: `День ${d.day_number}${d.title ? ` — ${d.title}` : ''}`,
                     onClick: () => api.create('stops', {
                         day_id: d.id,
                         place_id: stop.place_id,
@@ -1900,13 +1890,13 @@ function StopRow({
                 // A dinner reservation is a booking on a stop: time,
                 // party size, confirmation, dress code, and the date
                 // after which cancelling costs you.
-                label: reservation ? 'Edit the reservation' : 'Add a reservation',
+                label: reservation ? 'Изменить бронирование' : 'Добавить бронирование',
                 onClick: () => setShowBooking((v) => !v),
             },
             {
-                label: 'Remove stop',
+                label: 'Убрать остановку',
                 danger: true,
-                onClick: () => api.removeRow('stops', stop, `Removed ${label}`),
+                onClick: () => api.removeRow('stops', stop, `Удалено: ${label}`),
             },
         ]} />
     );
@@ -1932,7 +1922,7 @@ function StopRow({
                     <button
                         type="button"
                         onClick={onInsertBefore}
-                        aria-label="Add a stop here"
+                        aria-label="Добавить остановку здесь"
                         className="absolute inset-x-8 top-1/2 flex h-4 -translate-y-1/2
                             items-center justify-center opacity-0 transition
                             group-hover/insert:opacity-100"
@@ -1940,7 +1930,7 @@ function StopRow({
                         <span className="h-px flex-1 bg-accent/40" />
                         <span className="mx-1 rounded-full bg-accent px-1.5 text-[10px]
                             font-semibold leading-4 text-white">
-                            + here
+                            + здесь
                         </span>
                         <span className="h-px flex-1 bg-accent/40" />
                     </button>
@@ -1987,7 +1977,7 @@ function StopRow({
                     <InlineText
                         multiline
                         value={stop.notes ?? ''}
-                        placeholder="Booking ref, what to bring, who to ask for…"
+                        placeholder="Номер брони, что взять, к кому обратиться…"
                         className="text-[11px] text-gray-600"
                         onCommit={(notes) => api.update('stops', { id: stop.id, notes })}
                     />
@@ -2001,7 +1991,7 @@ function StopRow({
             {phase === 'after' && (
                 <div className={`flex flex-wrap items-center gap-1.5 pr-2 pb-1
                     ${compact ? 'pl-7' : 'pl-10'}`}>
-                    {([['did', '✓ Did it'], ['skipped', '– Skipped']] as const).map(([key, label]) => (
+                    {([['did', '✓ Посетили'], ['skipped', '– Пропустили']] as const).map(([key, label]) => (
                         <button
                             key={key}
                             type="button"
@@ -2023,14 +2013,14 @@ function StopRow({
                             ${stop.favourite
                             ? 'border-transparent bg-amber-400 text-white'
                             : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}
-                        title="One of the good ones"
+                        title="Особенно понравилось"
                     >
                         ★
                     </button>
                     <InlineText
                         multiline
                         value={stop.journal ?? ''}
-                        placeholder="What was it actually like?"
+                        placeholder="Как всё прошло?"
                         className="text-[11px] text-gray-600 flex-1 min-w-[8rem]"
                         onCommit={(journal) => api.update('stops', { id: stop.id, journal })}
                     />
@@ -2045,7 +2035,7 @@ function StopRow({
                     text-[11px] ${compact ? 'pl-7' : 'pl-10'}`}>
                     {row.late ? (
                         <span className="text-rose-700 font-medium tabular-nums">
-                            arrive {row.arrive} · {row.lateBy} min late
+                            прибытие {row.arrive} · {row.lateBy} мин. опоздания
                         </span>
                     ) : row.arrive && row.leave ? (
                         <span className="text-gray-400 tabular-nums">
@@ -2055,21 +2045,21 @@ function StopRow({
                         <span className="text-gray-400 tabular-nums">≈ {row.arrive}</span>
                     ) : null}
                     {row.overlaps && (
-                        <span className="text-amber-700">overlaps the stop before</span>
+                        <span className="text-amber-700">пересекается с предыдущей остановкой</span>
                     )}
                     {row.walkable && (
-                        <span className="text-emerald-700" title="Within 800 m of the day’s base">
-                            🚶 walkable
+                        <span className="text-emerald-700" title="В пределах 800 м от места ночёвки">
+                            🚶 пешком
                         </span>
                     )}
                     {outsideHours && (
                         <span className="text-rose-700" title={hoursLabel ?? undefined}>
-                            ⚠ closed at this time
+                            ⚠ закрыто в это время
                         </span>
                     )}
                     {afterDark && (
-                        <span className="text-indigo-700" title={`Sunset is ${sunset}`}>
-                            🌙 after dark
+                        <span className="text-indigo-700" title={`Закат в ${sunset}`}>
+                            🌙 после заката
                         </span>
                     )}
                 </div>
@@ -2077,14 +2067,14 @@ function StopRow({
             {hopKm != null && (
                 <div className={`py-0.5 text-[11px] text-gray-400 ${compact ? 'pl-7' : 'pl-10'}`}>
                     {row?.hopIn && row.hopIn.source === 'road' ? (
-                        <span title="Driving time from OSRM">
-                            ↓ {formatDuration(row.hopIn.seconds)} drive
-                            {' · '}{formatDistance(row.hopIn.meters / 1000)} by road
+                        <span title="Время в пути по OSRM">
+                            ↓ {formatDuration(row.hopIn.seconds)} в пути
+                            {' · '}{formatDistance(row.hopIn.meters / 1000)} по дороге
                         </span>
                     ) : (
-                        <span title="No road time yet — this is a straight line at 32 km/h">
-                            ↓ {formatDistance(hopKm)} straight line
-                            {row?.hopIn && ` · ~${formatDuration(row.hopIn.seconds)} (est.)`}
+                        <span title="Время по дороге неизвестно: оценка по прямой со скоростью 32 км/ч">
+                            ↓ {formatDistance(hopKm)} по прямой
+                            {row?.hopIn && ` · ~${formatDuration(row.hopIn.seconds)} (примерно)`}
                         </span>
                     )}
                 </div>
@@ -2135,13 +2125,13 @@ function PhoneDayStrip({ days, current, startDate, todayNumber, onPick }: {
                         data-strip-day={day.id}
                         onClick={() => onPick(day)}
                         aria-pressed={on}
-                        aria-label={`Day ${day.day_number}${parts ? `, ${parts.label}` : ''}`}
+                        aria-label={`День ${day.day_number}${parts ? `, ${parts.label}` : ''}`}
                         className={`relative flex h-14 w-12 shrink-0 snap-center flex-col items-center justify-center rounded-2xl
                             leading-tight transition active:scale-95 motion-reduce:active:scale-100
                             ${on ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600'}`}
                     >
                         <span className={`text-[10px] font-semibold uppercase tracking-wide ${on ? 'text-white/70' : 'text-gray-400'}`}>
-                            {parts ? parts.weekday : 'Day'}
+                            {parts ? parts.weekday : 'День'}
                         </span>
                         <span className="text-[17px] font-semibold tabular-nums">
                             {parts ? parts.date : day.day_number}
@@ -2166,8 +2156,8 @@ function dayChipParts(startDate: string | null, dayNumber: number): { weekday: s
     if (Number.isNaN(date.getTime())) return null;
     date.setDate(date.getDate() + dayNumber - 1);
     return {
-        weekday: date.toLocaleDateString(undefined, { weekday: 'short' }).replace('.', ''),
+        weekday: date.toLocaleDateString('ru-RU', { weekday: 'short' }).replace('.', ''),
         date: String(date.getDate()),
-        label: date.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }),
+        label: date.toLocaleDateString('ru-RU', { weekday: 'long', month: 'long', day: 'numeric' }),
     };
 }

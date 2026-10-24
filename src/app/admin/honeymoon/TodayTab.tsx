@@ -112,7 +112,7 @@ export default function TodayTab({ api }: { api: HoneymoonApi }) {
                                 className="max-md:hidden min-h-11 rounded-full border border-gray-200 px-4
                                     text-sm text-gray-600"
                             >
-                                Back to today
+                                Вернуться к сегодня
                             </button>
                         )}
                         <Link
@@ -120,14 +120,14 @@ export default function TodayTab({ api }: { api: HoneymoonApi }) {
                             className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-gray-200
                                 bg-white px-4 text-sm text-gray-700 hover:bg-gray-50"
                         >
-                            🗂️ Travel documents
+                            🗂️ Документы поездки
                         </Link>
                         <p>
                             {offline === 'ready'
-                                ? 'Saved for offline — this page opens without signal.'
+                                ? 'Сохранено на устройстве — страница доступна без интернета.'
                                 : offline === 'failed'
-                                    ? 'Offline copy unavailable in this browser.'
-                                    : 'Preparing the offline copy…'}
+                                    ? 'В этом браузере копия без интернета недоступна.'
+                                    : 'Готовим копию для работы без интернета…'}
                         </p>
                     </div>
                 )}
@@ -143,7 +143,7 @@ export default function TodayTab({ api }: { api: HoneymoonApi }) {
                     rounded-full bg-gray-900 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-black/20
                     transition active:scale-95 motion-reduce:active:scale-100"
             >
-                Back to today
+                Вернуться к сегодня
             </button>
         )}
         </>

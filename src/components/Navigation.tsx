@@ -116,14 +116,14 @@ export default function Navigation({
     }, [pathname]);
 
     const allLinks = [
-        { href: '/', label: 'Home' },
-        { href: '/#about', label: 'About' },
-        { href: '/our-story', label: 'Our Story' },
-        { href: '/wedding-party', label: 'Wedding Party' },
-        { href: '/schedule', label: 'Schedule' },
-        { href: '/photos', label: 'Photos' },
-        { href: '/registry', label: 'Registry' },
-        { href: '/rsvp', label: 'RSVP' },
+        { href: '/', label: 'Главная' },
+        { href: '/#about', label: 'О нас' },
+        { href: '/our-story', label: 'Наша история' },
+        { href: '/wedding-party', label: 'Наши близкие' },
+        { href: '/schedule', label: 'Программа' },
+        { href: '/photos', label: 'Фотографии' },
+        { href: '/registry', label: 'Подарки' },
+        { href: '/rsvp', label: 'Ответ на приглашение' },
     ];
     const basicModePages = ['/', '/#about', '/our-story', '/photos'];
     const links = (basicMode && !isAdmin
@@ -178,7 +178,7 @@ export default function Navigation({
     // On mobile (no desktop links visible) always use inset style so hamburger fits
     const [isMobileNav, setIsMobileNav] = useState(false);
     useEffect(() => {
-        const mq = window.matchMedia('(max-width: 767px)');
+        const mq = window.matchMedia('(max-width: 1279px)');
         const update = () => setIsMobileNav(mq.matches);
         update();
         mq.addEventListener('change', update);
@@ -243,7 +243,7 @@ export default function Navigation({
                         {logoMode && weddingLogo ? (
                             <Image
                                 src={`/api/photos/${weddingLogo}`}
-                                alt="Wedding Logo"
+                                alt="Свадебный логотип"
                                 width={400}
                                 height={72}
                                 className="h-[72px] w-auto object-contain"
@@ -256,7 +256,7 @@ export default function Navigation({
                 </div>
 
                 {/* Desktop links */}
-                <div ref={linksRef} className="hidden md:flex items-center" style={{ gap: '4px' }}>
+                <div ref={linksRef} className="hidden xl:flex items-center" style={{ gap: '4px' }}>
                     {links.map(link => {
                         const active = isActive(link.href);
                         return (
@@ -293,19 +293,19 @@ export default function Navigation({
                             href="/admin"
                             className="ml-2 px-4 py-1.5 rounded-full bg-accent text-white text-xs font-bold uppercase tracking-widest hover:bg-accent-dark transition-colors shadow"
                         >
-                            Admin
+                            Управление
                         </Link>
                     )}
                 </div>
 
                 {/* Mobile hamburger */}
-                <div className="flex items-center gap-3 md:hidden">
+                <div className="flex items-center gap-3 xl:hidden">
                     {(isAdmin || isDemo) && (
                         <Link
                             href="/admin"
                             className="px-3 py-1 rounded-full bg-accent text-white text-xs font-bold uppercase tracking-widest hover:bg-accent-dark transition-colors shadow"
                         >
-                            Admin
+                            Управление
                         </Link>
                     )}
                     <button
@@ -316,7 +316,7 @@ export default function Navigation({
                         aria-controls="mobile-menu"
                         aria-expanded={isOpen}
                     >
-                        <span className="sr-only">Open main menu</span>
+                        <span className="sr-only">Открыть меню</span>
                         <div className="relative w-6 h-5 flex flex-col justify-between">
                             <span className={`block h-0.5 bg-current rounded-full transition-all duration-300 origin-center ${isOpen ? 'rotate-45 translate-y-2.5' : ''}`} />
                             <span className={`block h-0.5 bg-current rounded-full transition-all duration-200 ${isOpen ? 'opacity-0 scale-x-0' : ''}`} />
@@ -330,7 +330,7 @@ export default function Navigation({
             {/* ── Mobile drawer ── */}
             <div
                 id="mobile-menu"
-                className="fixed md:hidden overflow-hidden"
+                className="fixed xl:hidden overflow-hidden"
                 style={{
                     top:       drawerTop,
                     left:      island ? islandL : '0',

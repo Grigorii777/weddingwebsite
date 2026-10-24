@@ -52,20 +52,20 @@ export async function assertPublicUrl(raw: string): Promise<URL> {
     try {
         url = new URL(raw);
     } catch {
-        throw new Error('That is not a valid URL');
+        throw new Error('Некорректная ссылка');
     }
     if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-        throw new Error('Only http and https links can be fetched');
+        throw new Error('Допустимы только ссылки HTTP и HTTPS');
     }
     const host = url.hostname.replace(/^\[|\]$/g, '');
     if (host === 'localhost' || host.endsWith('.local') || host.endsWith('.internal')) {
-        throw new Error('That address is not reachable from here');
+        throw new Error('Этот адрес недоступен');
     }
     const addresses = isIP(host)
         ? [{ address: host }]
         : await lookup(host, { all: true }).catch(() => []);
     if (!addresses.length || addresses.some((a) => !isPublicAddress(a.address))) {
-        throw new Error('That address is not reachable from here');
+        throw new Error('Этот адрес недоступен');
     }
     return url;
 }
@@ -123,5 +123,5 @@ export async function safeFetch(raw: string, init: RequestInit & { timeoutMs?: n
             json: async () => JSON.parse(await text()),
         };
     }
-    throw new Error('Too many redirects');
+    throw new Error('Слишком много перенаправлений');
 }

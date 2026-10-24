@@ -18,6 +18,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { getSiteConfig } from '@/lib/config';
+import { formatWeddingDate } from '@/lib/locale';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,19 +35,20 @@ export async function GET(request: NextRequest) {
     const iconQuery = isAdmin ? '&variant=admin' : '';
 
     const manifest = {
+        lang: 'ru',
         // Distinct ids so the two are separate installed apps rather than one
         // app whose start_url keeps changing.
         id: isAdmin ? '/admin' : '/',
         name: isAdmin
-            ? `${couple ? `${couple} ` : ''}Wedding Admin`
-            : (couple ? `${couple} | The Wedding` : 'Our Wedding'),
+            ? `${couple ? `${couple} ` : ''}Управление свадьбой`
+            : (couple ? `${couple} | Наша свадьба` : 'Наша свадьба'),
         // iOS truncates the Home Screen label around 12 characters anyway.
-        short_name: isAdmin ? 'Admin' : (couple ?? 'Our Wedding'),
+        short_name: isAdmin ? 'Управление' : (couple ?? 'Наша свадьба'),
         description: isAdmin
-            ? 'Manage RSVPs, finances, photos and page content.'
+            ? 'Ответы гостей, бюджет, фотографии и содержимое сайта.'
             : (config.weddingDate
-                ? `Join us in celebrating our wedding on ${config.weddingDate}.`
-                : 'Our wedding website.'),
+                ? `Приглашаем вас на нашу свадьбу: ${formatWeddingDate(config.weddingDate)}.`
+                : 'Сайт нашей свадьбы.'),
         start_url: isAdmin ? '/admin' : '/',
         scope: '/',
         display: 'standalone',

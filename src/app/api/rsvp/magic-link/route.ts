@@ -21,12 +21,12 @@ export async function POST(request: Request) {
         try {
             body = await request.json();
         } catch {
-            return NextResponse.json({ error: 'Please enter the name you would use to look up your RSVP.' }, { status: 400 });
+            return NextResponse.json({ error: 'Введите имя, указанное в вашем приглашении.' }, { status: 400 });
         }
         const rawName = body && typeof body === 'object' ? (body as { name?: unknown }).name : null;
         const typedName = typeof rawName === 'string' ? rawName.trim() : '';
         if (!typedName || typedName.length > 255) {
-            return NextResponse.json({ error: 'Please enter the name you would use to look up your RSVP.' }, { status: 400 });
+            return NextResponse.json({ error: 'Введите имя, указанное в вашем приглашении.' }, { status: 400 });
         }
 
         const normalized = typedName.toLowerCase();
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
 
         const generic = NextResponse.json({
             ok: true,
-            message: 'If that name is on our list, an RSVP link is on its way to the email we have for it.',
+            message: 'Если это имя есть в списке гостей, мы отправили ссылку для ответа на указанный в приглашении email.',
         });
 
         if (guestResult.rows.length === 0) return generic;
@@ -97,7 +97,7 @@ export async function POST(request: Request) {
         // used to tell what is on the list, in any state.
         return NextResponse.json({
             ok: true,
-            message: 'If that name is on our list, an RSVP link is on its way to the email we have for it.',
+            message: 'Если это имя есть в списке гостей, мы отправили ссылку для ответа на указанный в приглашении email.',
         });
     }
 }

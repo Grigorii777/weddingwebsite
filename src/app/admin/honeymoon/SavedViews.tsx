@@ -39,13 +39,13 @@ export default function SavedViews({ api, current, onApply, tab = 'places' }: {
             {views.length > 0 && (
                 <MiniSelect
                     value=""
-                    aria-label="Saved views"
+                    aria-label="Сохранённые фильтры"
                     onChange={(e) => {
                         const view = views.find((row) => String(row.id) === e.target.value);
                         if (view) onApply(view.filters);
                     }}
                 >
-                    <option value="">Saved views…</option>
+                    <option value="">Сохранённые фильтры…</option>
                     {views.map((view) => (
                         <option key={view.id} value={view.id}>{view.name}</option>
                     ))}
@@ -57,28 +57,28 @@ export default function SavedViews({ api, current, onApply, tab = 'places' }: {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') void save(); }}
-                        placeholder="Ubud eats"
+                        placeholder="Где поесть в Убуде"
                         autoFocus
                         className="w-32 rounded-full border border-gray-200 bg-gray-50 px-3 py-1
                             text-xs focus:bg-white focus:outline-none focus:ring-2
                             focus:ring-accent/30"
                     />
-                    <Button onClick={save} disabled={!name.trim()}>Save</Button>
-                    <Button tone="ghost" onClick={() => setNaming(false)}>Cancel</Button>
+                    <Button onClick={save} disabled={!name.trim()}>Сохранить</Button>
+                    <Button tone="ghost" onClick={() => setNaming(false)}>Отмена</Button>
                 </span>
             ) : (
-                <Button onClick={() => setNaming(true)}>Save this view</Button>
+                <Button onClick={() => setNaming(true)}>Сохранить фильтр</Button>
             )}
             {views.length > 0 && (
                 <MiniSelect
                     value=""
-                    aria-label="Delete a saved view"
+                    aria-label="Удалить сохранённый фильтр"
                     onChange={(e) => {
                         const view = views.find((row) => String(row.id) === e.target.value);
-                        if (view) api.removeRow('views', view, `Removed “${view.name}”`);
+                        if (view) api.removeRow('views', view, `Удалено «${view.name}”`);
                     }}
                 >
-                    <option value="">Remove a view…</option>
+                    <option value="">Удалить фильтр…</option>
                     {views.map((view) => (
                         <option key={view.id} value={view.id}>{view.name}</option>
                     ))}

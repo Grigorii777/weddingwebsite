@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
@@ -50,11 +51,11 @@ function buildPayload(events: ScheduleEvent[], subtitle: string, shuttle: string
  * because unknown ids fall back to the default rather than being kept.
  */
 const COLUMNS = [
-    { id: 'public', label: 'Public', width: 84 },
-    { id: 'time', label: 'Time', width: 132 },
-    { id: 'title', label: 'Event', width: 224 },
-    { id: 'location', label: 'Location', width: 224 },
-    { id: 'description', label: 'Description', width: 340 },
+    { id: 'public', label: 'Для гостей', width: 84 },
+    { id: 'time', label: 'Время', width: 132 },
+    { id: 'title', label: 'Событие', width: 224 },
+    { id: 'location', label: 'Место', width: 224 },
+    { id: 'description', label: 'Описание', width: 340 },
     { id: 'actions', label: '', width: 56 },
 ] as const;
 
@@ -82,7 +83,7 @@ export default function AdminSchedule() {
                 const day: ScheduleEvent[] = data.scheduleEvents
                     ? sortByTime(data.scheduleEvents)
                     // Default starter event if empty
-                    : [{ time: '4:00 PM', title: 'Ceremony', description: '', location: '', public: true }];
+                    : [{ time: '4:00 PM', title: 'Церемония', description: '', location: '', public: true }];
                 const subtitle = data.scheduleSubtitle ?? '';
                 const shuttle = data.scheduleShuttleText ?? '';
                 const dress = data.scheduleDressCode ?? '';
@@ -195,7 +196,7 @@ export default function AdminSchedule() {
             type="button"
             onClick={() => removeEvent(index)}
             className="p-1.5 rounded-full text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-            title="Remove this row"
+            title="Удалить строку"
         >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -211,28 +212,27 @@ export default function AdminSchedule() {
             onChange={e => handleEventChange(index, 'public', e.target.checked)}
             className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent/30 cursor-pointer"
             style={{ accentColor: 'var(--accent)' }}
-            title={isPublicEvent(event) ? 'Guests can see this' : 'Only you can see this'}
+            title={isPublicEvent(event) ? 'Видно гостям' : 'Видно только вам'}
         />
     );
 
     return (
         <div className="max-w-6xl">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Schedule Management</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Управление программой дня</h1>
             <p className="text-gray-600 mb-8">
-                The whole run of the day. Tick <span className="font-medium text-gray-800">Public</span> on the rows
-                guests should see on the schedule page — everything else stays here. Changes save themselves.
+                Полная программа дня. Отметьте <span className="font-medium text-gray-800">Для гостей</span> у событий, которые должны видеть гости. Остальное доступно только здесь. Изменения сохраняются автоматически.
             </p>
 
             <div className="space-y-8">
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
                     <div className="flex flex-wrap items-center gap-3 px-4 py-3 border-b border-gray-200">
                         <p className="text-sm text-gray-500">
-                            {events.length} row{events.length === 1 ? '' : 's'} ·{' '}
-                            <span className="font-medium text-gray-700">{publicCount} public</span>
-                            {events.length - publicCount > 0 && ` · ${events.length - publicCount} private`}
+                            {counted(events.length, 'строка', 'строки', 'строк')} ·{' '}
+                            <span className="font-medium text-gray-700">{publicCount} для гостей</span>
+                            {events.length - publicCount > 0 && ` · ${events.length - publicCount} только для вас`}
                         </p>
                         <p className="hidden sm:block text-xs text-gray-400">
-                            Ordered by time — press Enter to file a row.
+                            Сортировка по времени. Enter — сохранить строку.
                         </p>
                         <div className="ml-auto flex items-center gap-2">
                             {resized && (
@@ -240,9 +240,9 @@ export default function AdminSchedule() {
                                     type="button"
                                     onClick={resetAll}
                                     className="hidden md:inline-block px-4 py-1 rounded-full text-xs font-medium text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors"
-                                    title="Put every column back to its starting width"
+                                    title="Вернуть исходную ширину столбцов"
                                 >
-                                    Reset widths
+                                    Сбросить ширину
                                 </button>
                             )}
                             <button
@@ -250,9 +250,9 @@ export default function AdminSchedule() {
                                 onClick={exportCsv}
                                 disabled={events.length === 0}
                                 className="px-4 py-1 rounded-full text-xs font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 disabled:opacity-40 transition-colors"
-                                title="Every row, with a Public column, as a spreadsheet"
+                                title="Все строки и столбец видимости для гостей в виде таблицы"
                             >
-                                ⬇ Export CSV
+                                ⬇ Экспорт CSV
                             </button>
                             <SaveStatus state={saveState} onRetry={retry} />
                         </div>
@@ -282,7 +282,7 @@ export default function AdminSchedule() {
                                         >
                                             {col.label
                                                 ? <span className="truncate block">{col.label}</span>
-                                                : <span className="sr-only">Actions</span>}
+                                                : <span className="sr-only">Действия</span>}
                                             {/* No handle on the last column: its
                                                 right edge is the table's, and
                                                 dragging it resizes nothing the
@@ -316,8 +316,8 @@ export default function AdminSchedule() {
                                                 onBlur={() => tidyTime(index)}
                                                 data-time-cell={index}
                                                 className={CELL_INPUT}
-                                                placeholder="4:00 PM"
-                                                aria-label={`Time for row ${index + 1}`}
+                                                placeholder="16:00"
+                                                aria-label={`Время в строке ${index + 1}`}
                                             />
                                         </td>
                                         <td className="px-3 py-2">
@@ -326,8 +326,8 @@ export default function AdminSchedule() {
                                                 value={event.title}
                                                 onChange={e => handleEventChange(index, 'title', e.target.value)}
                                                 className={CELL_INPUT}
-                                                placeholder="Ceremony"
-                                                aria-label={`Event for row ${index + 1}`}
+                                                placeholder="Церемония"
+                                                aria-label={`Событие в строке ${index + 1}`}
                                             />
                                         </td>
                                         <td className="px-3 py-2">
@@ -336,8 +336,8 @@ export default function AdminSchedule() {
                                                 value={event.location}
                                                 onChange={e => handleEventChange(index, 'location', e.target.value)}
                                                 className={CELL_INPUT}
-                                                placeholder="Garden Courtyard"
-                                                aria-label={`Location for row ${index + 1}`}
+                                                placeholder="Сад у усадьбы"
+                                                aria-label={`Место в строке ${index + 1}`}
                                             />
                                         </td>
                                         <td className="px-3 py-2">
@@ -346,8 +346,8 @@ export default function AdminSchedule() {
                                                 value={event.description}
                                                 onChange={e => handleEventChange(index, 'description', e.target.value)}
                                                 className={CELL_INPUT}
-                                                placeholder="Brief details…"
-                                                aria-label={`Description for row ${index + 1}`}
+                                                placeholder="Краткое описание…"
+                                                aria-label={`Описание в строке ${index + 1}`}
                                             />
                                         </td>
                                         <td className="px-3 py-2">{rowActions(index)}</td>
@@ -368,7 +368,7 @@ export default function AdminSchedule() {
                                 <div className="flex items-center gap-3">
                                     <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                                         {publicToggle(index, event)}
-                                        Public
+                                        Для гостей
                                     </label>
                                     <div className="ml-auto">{rowActions(index)}</div>
                                 </div>
@@ -379,16 +379,16 @@ export default function AdminSchedule() {
                                         onChange={e => handleEventChange(index, 'time', e.target.value)}
                                         onBlur={() => tidyTime(index)}
                                         className={CELL_INPUT}
-                                        placeholder="4:00 PM"
-                                        aria-label={`Time for row ${index + 1}`}
+                                        placeholder="16:00"
+                                        aria-label={`Время в строке ${index + 1}`}
                                     />
                                     <input
                                         type="text"
                                         value={event.title}
                                         onChange={e => handleEventChange(index, 'title', e.target.value)}
                                         className={CELL_INPUT}
-                                        placeholder="Ceremony"
-                                        aria-label={`Event for row ${index + 1}`}
+                                        placeholder="Церемония"
+                                        aria-label={`Событие в строке ${index + 1}`}
                                     />
                                 </div>
                                 <input
@@ -396,16 +396,16 @@ export default function AdminSchedule() {
                                     value={event.location}
                                     onChange={e => handleEventChange(index, 'location', e.target.value)}
                                     className={CELL_INPUT}
-                                    placeholder="Garden Courtyard"
-                                    aria-label={`Location for row ${index + 1}`}
+                                    placeholder="Сад у усадьбы"
+                                    aria-label={`Место в строке ${index + 1}`}
                                 />
                                 <input
                                     type="text"
                                     value={event.description}
                                     onChange={e => handleEventChange(index, 'description', e.target.value)}
                                     className={CELL_INPUT}
-                                    placeholder="Brief details…"
-                                    aria-label={`Description for row ${index + 1}`}
+                                    placeholder="Краткое описание…"
+                                    aria-label={`Описание в строке ${index + 1}`}
                                 />
                             </div>
                         ))}
@@ -420,47 +420,47 @@ export default function AdminSchedule() {
                             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                             </svg>
-                            Add row
+                            Добавить строку
                         </button>
                     </div>
                 </div>
 
                 {/* Extra cards under the timeline. Blank = not shown. */}
                 <div className="space-y-4 bg-gradient-to-br from-accent/5 to-accent-light/10 rounded-xl p-6 border border-accent/10">
-                    <h2 className="text-xl font-semibold text-gray-900">Details Cards</h2>
-                    <p className="text-sm text-gray-500">Two optional cards shown under the schedule. Leave one blank to hide it.</p>
+                    <h2 className="text-xl font-semibold text-gray-900">Карточки подробностей</h2>
+                    <p className="text-sm text-gray-500">Две необязательные карточки под программой дня. Пустая карточка не показывается.</p>
                     <div>
-                        <label className="block text-xs font-medium text-gray-500 uppercase">Getting There (shuttles, parking, transport)</label>
+                        <label className="block text-xs font-medium text-gray-500 uppercase">Как добраться: трансфер, парковка, транспорт</label>
                         <textarea
                             rows={3}
                             value={shuttleText}
                             onChange={(e) => setShuttleText(e.target.value)}
                             className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border text-gray-900"
-                            placeholder="e.g. Shuttles leave the hotel every 30 minutes from 2:30 PM. Return service starts at 9:00 PM."
+                            placeholder="Например: Трансфер от отеля каждые 30 минут с 14:30. Обратно — с 21:00."
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-gray-500 uppercase">Dress Code</label>
+                        <label className="block text-xs font-medium text-gray-500 uppercase">Дресс-код</label>
                         <textarea
                             rows={2}
                             value={dressCode}
                             onChange={(e) => setDressCode(e.target.value)}
                             className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border text-gray-900"
-                            placeholder="e.g. Cocktail attire — suits or dresses, no jeans please."
+                            placeholder="Например: Коктейльный стиль — костюмы или платья, без джинсов."
                         />
                     </div>
                 </div>
 
                 {/* Nav Card Subtitle */}
                 <div className="space-y-4 bg-gradient-to-br from-accent/5 to-accent-light/10 rounded-xl p-6 border border-accent/10">
-                    <h2 className="text-xl font-semibold text-gray-900">Nav Card Subtitle</h2>
-                    <p className="text-sm text-gray-500">Short tagline shown on the Schedule card at the bottom of the home page.</p>
+                    <h2 className="text-xl font-semibold text-gray-900">Подпись карточки раздела</h2>
+                    <p className="text-sm text-gray-500">Подпись карточки «Программа» внизу главной страницы.</p>
                     <input
                         type="text"
                         value={scheduleSubtitle}
                         onChange={(e) => setScheduleSubtitle(e.target.value)}
                         className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border text-gray-900"
-                        placeholder="e.g. Every moment planned for you"
+                        placeholder="Например: План нашего особенного дня"
                     />
                 </div>
 

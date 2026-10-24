@@ -38,13 +38,13 @@ export function safeImageFilename(original: string, prefix = ''): string | null 
 
 /** Reasons an upload is refused, as a message for the client, or null when it is fine. */
 export function rejectUpload(file: File | null | undefined): string | null {
-    if (!file) return 'No file provided';
-    if (file.size === 0) return 'The file is empty';
-    if (file.size > MAX_IMAGE_BYTES) return 'The file is larger than 25MB';
+    if (!file) return 'Файл не выбран';
+    if (file.size === 0) return 'Файл пуст';
+    if (file.size > MAX_IMAGE_BYTES) return 'Файл больше 25 МБ';
     if (!IMAGE_EXTENSIONS.has(extensionOf(file.name))) {
-        return 'Use a JPG, PNG, GIF, WebP, AVIF or HEIC image';
+        return 'Выберите изображение JPG, PNG, GIF, WebP, AVIF или HEIC';
     }
-    if (file.type && !file.type.startsWith('image/')) return 'That is not an image';
+    if (file.type && !file.type.startsWith('image/')) return 'Это не изображение';
     return null;
 }
 

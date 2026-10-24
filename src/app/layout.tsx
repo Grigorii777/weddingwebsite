@@ -1,5 +1,9 @@
 import type { Metadata, Viewport } from 'next';
-import { Playfair_Display, Geist, Geist_Mono, Great_Vibes } from 'next/font/google';
+// Bundled fonts keep Cyrillic available offline and builds independent of Google.
+import '@fontsource-variable/noto-sans';
+import '@fontsource-variable/noto-sans-mono';
+import '@fontsource-variable/playfair-display';
+import '@fontsource/marck-script/400.css';
 import './globals.css';
 import AppShell from '@/components/AppShell';
 import DemoBanner from '@/components/DemoBanner';
@@ -7,39 +11,19 @@ import { demoStatus } from '@/lib/demo';
 import { getSiteConfig } from '@/lib/config';
 import { cookies } from 'next/headers';
 import { ADMIN_COOKIE, verifyAdminToken } from '@/lib/auth';
+import { formatWeddingDate } from '@/lib/locale';
 
 // Force this layout to be dynamic so it re-reads config on every request
 export const dynamic = 'force-dynamic';
-
-const playfair = Playfair_Display({
-  variable: '--font-serif',
-  subsets: ['latin'],
-});
-
-const greatVibes = Great_Vibes({
-  variable: '--font-script',
-  subsets: ['latin'],
-  weight: '400',
-});
-
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
 
 export async function generateMetadata(): Promise<Metadata> {
   const config = getSiteConfig();
   const couple = config.brideName && config.groomName
     ? `${config.brideName} & ${config.groomName}`
-    : 'Our Wedding';
+    : 'Наша свадьба';
   return {
-    title: `${couple} | The Wedding`,
-    description: `Join us in celebrating our wedding on ${config.weddingDate}.`,
+    title: `${couple} | Наша свадьба`,
+    description: `Приглашаем вас на нашу свадьбу: ${formatWeddingDate(config.weddingDate)}.`,
     // Linked explicitly because the manifest is a route handler now, not the
     // `app/manifest.ts` convention — that export gets no request and so could
     // only ever emit one variant. The admin layout overrides this.
@@ -95,7 +79,7 @@ export default async function RootLayout({
   // hydration — React logged a warning on every single admin page, which is
   // noise that hides real ones. The class is the only difference on this element.
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="ru" suppressHydrationWarning>
       <head>
         {/*
           Next emits the standardised `mobile-web-app-capable`, but iOS before
@@ -114,7 +98,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} ${greatVibes.variable} antialiased`}>
+      <body className="antialiased">
         <style dangerouslySetInnerHTML={{
           __html: `
             :root {

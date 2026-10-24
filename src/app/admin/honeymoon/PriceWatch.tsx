@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import { useState } from 'react';
 import { formatDate } from '@/lib/honeymoon';
@@ -48,20 +49,20 @@ export default function PriceWatch({ api }: { api: HoneymoonApi }) {
                 body: JSON.stringify({ entries }),
             });
             const body = await res.json().catch(() => ({}));
-            if (!res.ok) { setResult(body.error ?? 'Could not record those.'); return; }
+            if (!res.ok) { setResult(body.error ?? 'Не удалось записать.'); return; }
             await api.refresh();
             const moved = (body.recorded ?? []).filter(
                 (row: { change: number | null }) => row.change != null && row.change !== 0,
             );
             setResult([
-                `Recorded ${body.recorded?.length ?? 0}.`,
+                `Записано: ${body.recorded?.length ?? 0}.`,
                 moved.length
                     ? moved.map((row: { name: string; change: number }) => (
                         `${row.name} ${row.change > 0 ? 'up' : 'down'} ${Math.abs(row.change)}`
                     )).join(', ')
-                    : 'No changes since last time.',
+                    : 'Изменений с прошлой проверки нет.',
                 body.unmatched?.length
-                    ? `${body.unmatched.length} link${body.unmatched.length === 1 ? '' : 's'} matched no stay.`
+                    ? `${counted(body.unmatched.length, 'ссылка', 'ссылки', 'ссылок')} без соответствующего проживания.`
                     : '',
             ].filter(Boolean).join(' '));
             setText('');
@@ -78,19 +79,19 @@ export default function PriceWatch({ api }: { api: HoneymoonApi }) {
     return (
         <Card className="space-y-2 p-3">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h3 className="text-sm font-semibold text-gray-900">Watch the prices</h3>
+                <h3 className="text-sm font-semibold text-gray-900">Следить за ценами</h3>
                 <button
                     onClick={() => setShowHow((v) => !v)}
                     className="text-[11px] text-gray-500 underline decoration-dotted"
                 >
-                    {showHow ? 'Hide' : 'How this works'}
+                    {showHow ? 'Скрыть' : 'Как это работает'}
                 </button>
             </div>
 
             {showHow && (
                 <div className="space-y-2 rounded-2xl bg-gray-50 p-3">
                     <p className="text-xs text-gray-600">
-                        Drag this to your bookmarks bar (or right-click → bookmark the link):
+                        Перетащите на панель закладок или нажмите правой кнопкой → Добавить в закладки:
                     </p>
                     {/* A javascript: href is the whole point — this is a
                         bookmarklet, not navigation. */}
@@ -100,16 +101,15 @@ export default function PriceWatch({ api }: { api: HoneymoonApi }) {
                         className="inline-block cursor-grab rounded-full bg-gray-900 px-4 py-2
                             text-xs font-semibold text-white"
                     >
-                        💰 Grab this price
+                        💰 Скопировать цену
                     </a>
                     <ol className="list-inside list-decimal space-y-0.5 text-xs text-gray-600">
-                        <li>Open a stay&apos;s booking page with your dates and guests set</li>
-                        <li>Click the bookmark — it copies the URL and the price</li>
-                        <li>Paste it below (several lines at once is fine)</li>
+                        <li>Откройте страницу проживания с выбранными датами и гостями</li>
+                        <li>Нажмите закладку — она скопирует ссылку и цену</li>
+                        <li>Вставьте ниже (можно сразу несколько строк)</li>
                     </ol>
                     <p className="text-[11px] text-gray-400">
-                        A shortlist sits for weeks and prices move; this is how you find out without
-                        opening six tabs and trying to remember what they said last time.
+                        Сохраняйте цены, чтобы сравнивать их изменения без повторного просмотра всех предложений.
                     </p>
                 </div>
             )}
@@ -123,7 +123,7 @@ export default function PriceWatch({ api }: { api: HoneymoonApi }) {
             />
             <div className="flex items-center gap-2">
                 <Button tone="primary" onClick={record} disabled={!text.trim() || busy}>
-                    {busy ? 'Recording…' : 'Record prices'}
+                    {busy ? 'Записываем…' : 'Записать цены'}
                 </Button>
                 {result && <span className="text-[11px] text-gray-600">{result}</span>}
             </div>
@@ -144,7 +144,7 @@ export default function PriceWatch({ api }: { api: HoneymoonApi }) {
                                 className="flex items-baseline gap-2 text-xs"
                             >
                                 <span className="min-w-0 flex-1 truncate text-gray-700">
-                                    {place?.name ?? 'A stay'}
+                                    {place?.name ?? 'Проживание'}
                                 </span>
                                 <span className="shrink-0 tabular-nums text-gray-500">
                                     {row.price_note ?? row.amount ?? '—'}

@@ -12,7 +12,7 @@ export async function PATCH(
     const { id } = await params;
     const tableId = parseInt(id, 10);
     if (isNaN(tableId)) {
-      return NextResponse.json({ error: 'Invalid table id' }, { status: 400 });
+      return NextResponse.json({ error: 'Некорректный идентификатор стола' }, { status: 400 });
     }
 
     const body = await request.json();
@@ -30,7 +30,7 @@ export async function PATCH(
 
     if (updates.length === 0) {
       return NextResponse.json(
-        { error: 'No valid fields to update' },
+        { error: 'Нет допустимых полей для обновления' },
         { status: 400 }
       );
     }
@@ -45,7 +45,7 @@ export async function PATCH(
   } catch (error) {
     console.error('Error updating table:', error);
     return NextResponse.json(
-      { error: 'Failed to update table' },
+      { error: 'Не удалось изменить стол' },
       { status: 500 }
     );
   } finally {
@@ -62,7 +62,7 @@ export async function DELETE(
     const { id } = await params;
     const tableId = parseInt(id, 10);
     if (isNaN(tableId)) {
-      return NextResponse.json({ error: 'Invalid table id' }, { status: 400 });
+      return NextResponse.json({ error: 'Некорректный идентификатор стола' }, { status: 400 });
     }
 
     // Cascade to seat_assignments is handled by FK constraint
@@ -72,7 +72,7 @@ export async function DELETE(
   } catch (error) {
     console.error('Error deleting table:', error);
     return NextResponse.json(
-      { error: 'Failed to delete table' },
+      { error: 'Не удалось удалить стол' },
       { status: 500 }
     );
   } finally {

@@ -20,7 +20,7 @@ async function create(request: Request) {
 
     if (!floor_plan_id || !name) {
       return NextResponse.json(
-        { error: 'floor_plan_id and name are required' },
+        { error: 'Укажите план зала и название' },
         { status: 400 }
       );
     }
@@ -36,7 +36,7 @@ async function create(request: Request) {
   } catch (error) {
     console.error('Error creating table:', error);
     return NextResponse.json(
-      { error: 'Failed to create table' },
+      { error: 'Не удалось создать стол' },
       { status: 500 }
     );
   } finally {

@@ -23,12 +23,17 @@
     "check:types": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
     "audit:finance": "npx --yes tsx scripts/audit-finance-logic.mts",
     "check:changelog": "npx --yes tsx scripts/check-changelog.mts",
+    "check:locale": "npx --yes tsx scripts/verify-locale.mts",
     "seed:demo": "npx --yes tsx scripts/seed-demo.mts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@fontsource-variable/noto-sans": "5.3.0",
+    "@fontsource-variable/noto-sans-mono": "5.3.0",
+    "@fontsource-variable/playfair-display": "5.3.0",
+    "@fontsource/marck-script": "5.3.0",
     "@xyflow/react": "^12.10.2",
     "jose": "^6.1.3",
     "leaflet": "^1.9.4",

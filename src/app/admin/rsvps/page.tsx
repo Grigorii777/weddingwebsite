@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { FundItem, SiteConfig } from '@/lib/config';
@@ -114,7 +115,7 @@ export default function RSVPDashboard() {
     const [donationFundId, setDonationFundId] = useState('');
     const [selectedDonations, setSelectedDonations] = useState<number[]>([]);
     const [markingThanks, setMarkingThanks] = useState(false);
-    const [donationEvent, setDonationEvent] = useState('Wedding Day');
+    const [donationEvent, setDonationEvent] = useState('День свадьбы');
     const [donationOtherEvent, setDonationOtherEvent] = useState('');
     const [savingDonation, setSavingDonation] = useState(false);
     const [coGivers, setCoGivers] = useState<{ id: number | null; name: string }[]>([]);
@@ -353,7 +354,7 @@ export default function RSVPDashboard() {
         setDonationAmount('');
         setDonationGift('');
         setDonationFundId('');
-        setDonationEvent('Wedding Day');
+        setDonationEvent('День свадьбы');
         setDonationOtherEvent('');
         setCoGivers([]);
         setCoGiverSearch('');
@@ -377,9 +378,9 @@ export default function RSVPDashboard() {
         setDonationAmount(d.amount ? String(d.amount) : '');
         setDonationGift(d.gift || '');
         setDonationFundId(d.fund_item_id || '');
-        const presets = ['Bridal Shower', 'Engagement Party', 'Wedding Day'];
+        const presets = ['Девичник', 'Помолвка', 'День свадьбы'];
         if (d.event && presets.includes(d.event)) { setDonationEvent(d.event); setDonationOtherEvent(''); }
-        else { setDonationEvent('Other'); setDonationOtherEvent(d.event || ''); }
+        else { setDonationEvent('Другое'); setDonationOtherEvent(d.event || ''); }
         setCoGivers(Array.isArray(d.co_donors) ? d.co_donors : []);
         setCoGiverSearch('');
         setShowDonationModal(true);
@@ -396,7 +397,7 @@ export default function RSVPDashboard() {
         const funds: FundItem[] = config?.registry?.items || [];
         const fund = amount ? funds.find(f => f.id === donationFundId) : null;
         if (amount && !fund) return;
-        const eventValue = donationEvent === 'Other' ? (donationOtherEvent.trim() || 'Other') : donationEvent;
+        const eventValue = donationEvent === 'Other' ? (donationOtherEvent.trim() || 'Другое') : donationEvent;
         setSavingDonation(true);
         try {
             // Build per-fund delta map (edit reverses the original first)
@@ -577,7 +578,7 @@ export default function RSVPDashboard() {
     };
 
     const handleDeleteGuest = async (id: number) => {
-        if (!confirm('Are you sure you want to delete this guest?')) return;
+        if (!confirm('Удалить этого гостя?')) return;
 
         try {
             const response = await fetch('/api/admin/guest-list', {
@@ -726,7 +727,7 @@ export default function RSVPDashboard() {
 
     const handleBulkUnmarkInvited = async () => {
         if (selectedGuests.length === 0) return;
-        if (!confirm(`Mark ${selectedGuests.length} guest(s) as Not Invited?`)) return;
+        if (!confirm(`Отметить ${selectedGuests.length} гостей как неприглашённых?`)) return;
 
         try {
             await Promise.all(
@@ -757,7 +758,7 @@ export default function RSVPDashboard() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ids: selectedGuests, ...fields }),
         });
-        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Update failed');
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Не удалось обновить');
         const data = await res.json();
         return data.updated ?? selectedGuests.length;
     };
@@ -770,12 +771,12 @@ export default function RSVPDashboard() {
         const allHaveIt = chosen.length > 0 && chosen.every(g => g.flag === flag);
         try {
             const n = await patchSelectedGuests({ flag: allHaveIt ? '' : flag });
-            const label = flag === 'issue' ? '⚠️ Issue' : '📌 Need';
-            setBulkResult(allHaveIt ? `Cleared ${label} on ${n} guest${n === 1 ? '' : 's'}` : `Marked ${n} guest${n === 1 ? '' : 's'} as ${label}`);
+            const label = flag === 'issue' ? '⚠️ Проблема' : '📌 Требуется';
+            setBulkResult(allHaveIt ? `Сброшено: ${label} у ${counted(n, 'гость', 'гостя', 'гостей')}` : `Отмечено: ${counted(n, 'гость', 'гостя', 'гостей')} как ${label}`);
             fetchGuests();
         } catch (error) {
             console.error('Error flagging guests:', error);
-            setBulkResult('Could not update the selected guests');
+            setBulkResult('Не удалось обновить выбранных гостей');
         }
     };
 
@@ -802,7 +803,7 @@ export default function RSVPDashboard() {
             fields.notes = bulkNote;
         }
         if (Object.keys(fields).length === 0) {
-            setBulkResult('Nothing to change — pick a field first');
+            setBulkResult('Сначала выберите поле для изменения');
             return;
         }
 
@@ -811,11 +812,11 @@ export default function RSVPDashboard() {
             const n = await patchSelectedGuests(fields);
             setShowBulkModal(false);
             setSelectedGuests([]);
-            setBulkResult(`Updated ${n} guest${n === 1 ? '' : 's'}`);
+            setBulkResult(`Обновлено: ${counted(n, 'гость', 'гостя', 'гостей')}`);
             fetchGuests();
         } catch (error) {
             console.error('Error bulk editing guests:', error);
-            setBulkResult(error instanceof Error ? error.message : 'Could not update the selected guests');
+            setBulkResult(error instanceof Error ? error.message : 'Не удалось обновить выбранных гостей');
         } finally {
             setBulkSaving(false);
         }
@@ -823,7 +824,7 @@ export default function RSVPDashboard() {
 
     const handleBulkDelete = async () => {
         if (selectedGuests.length === 0) return;
-        if (!confirm(`Are you sure you want to delete ${selectedGuests.length} guest(s)?`)) return;
+        if (!confirm(`Удалить ${selectedGuests.length} гостей?`)) return;
 
         try {
             await Promise.all(
@@ -853,7 +854,7 @@ export default function RSVPDashboard() {
             const lines = text.split('\n').filter(line => line.trim());
 
             if (lines.length === 0) {
-                alert('CSV file is empty');
+                alert('CSV-файл пуст');
                 setImporting(false);
                 return;
             }
@@ -908,7 +909,7 @@ export default function RSVPDashboard() {
                 };
 
                 if (!guest.guest_name) {
-                    results.errors.push(`Row ${i + 1}: Missing guest name`);
+                    results.errors.push(`Строка ${i + 1}: Missing guest name`);
                     results.failed++;
                     continue;
                 }
@@ -929,24 +930,24 @@ export default function RSVPDashboard() {
                         }
                     } else {
                         results.failed++;
-                        results.errors.push(`Row ${i + 1}: ${guest.guest_name} - Failed to import`);
+                        results.errors.push(`Строка ${i + 1}: ${guest.guest_name} — ошибка импорта`);
                     }
                 } catch (error) {
                     results.failed++;
-                    results.errors.push(`Row ${i + 1}: ${guest.guest_name} - ${error}`);
+                    results.errors.push(`Строка ${i + 1}: ${guest.guest_name} - ${error}`);
                 }
             }
 
             setImportResults(results);
             fetchGuests();
         } catch (error) {
-            alert('Error parsing CSV file: ' + error);
+            alert('Ошибка чтения CSV: ' + error);
         } finally {
             setImporting(false);
         }
     };
 
-    if (loading) return <div className="p-8">Loading...</div>;
+    if (loading) return <div className="p-8">Загрузка...</div>;
 
     // The couple's card writes their dietary answers the way every card does —
     // onto an RSVP — so giving the bride a nut allergy creates an RSVP row in
@@ -1030,8 +1031,8 @@ export default function RSVPDashboard() {
         if (addingCouple || coupleRow(guests)) return;
         setAddingCouple(true);
         try {
-            const bride = (config?.brideName || '').trim() || 'Bride';
-            const groom = (config?.groomName || '').trim() || 'Groom';
+            const bride = (config?.brideName || '').trim() || 'Невеста';
+            const groom = (config?.groomName || '').trim() || 'Жених';
             const res = await fetch('/api/admin/guest-list', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1050,11 +1051,11 @@ export default function RSVPDashboard() {
                     kind: 'couple',
                 }),
             });
-            if (!res.ok) throw new Error('Failed to add the couple');
+            if (!res.ok) throw new Error('Не удалось добавить молодожёнов');
             await fetchGuests();
         } catch (error) {
             console.error('Error adding the couple:', error);
-            alert('Could not add the couple to the guest list.');
+            alert('Не удалось добавить молодожёнов в список гостей.');
         } finally {
             setAddingCouple(false);
         }
@@ -1120,13 +1121,13 @@ export default function RSVPDashboard() {
         const match = filteredGuests[0];
         if (!match) {
             // Keep the text so a typo can be corrected rather than retyped.
-            setQuickPick({ text: `No guest matches “${query}”`, ok: false });
+            setQuickPick({ text: `Гость не найден: «${query}”`, ok: false });
             return;
         }
         const already = selectedGuests.includes(match.id);
         if (!already) setSelectedGuests(prev => [...prev, match.id]);
         setQuickPick({
-            text: already ? `${match.guest_name} was already checked` : `Checked ${match.guest_name}`,
+            text: already ? `${match.guest_name} уже выбран` : `Выбрано: ${match.guest_name}`,
             ok: true,
         });
         setGuestSearch('');
@@ -1192,9 +1193,9 @@ export default function RSVPDashboard() {
             <span
                 role="separator"
                 aria-orientation="vertical"
-                aria-label={`Resize the ${label} column`}
+                aria-label={`Изменить ширину столбца ${label}`}
                 tabIndex={0}
-                title={`Drag to resize ${label} — until you reload`}
+                title={`Перетащите, чтобы изменить ширину: ${label} — до перезагрузки`}
                 onPointerDown={(event) => {
                     event.preventDefault();
                     event.currentTarget.setPointerCapture(event.pointerId);
@@ -1230,15 +1231,15 @@ export default function RSVPDashboard() {
         <div>
             {/* Nav Card Subtitle */}
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-6">
-                <h2 className="text-lg font-bold text-gray-900 mb-1">Nav Card Subtitle</h2>
-                <p className="text-sm text-gray-500 mb-3">Short tagline shown on the RSVP card at the bottom of the home page.</p>
+                <h2 className="text-lg font-bold text-gray-900 mb-1">Подпись карточки раздела</h2>
+                <p className="text-sm text-gray-500 mb-3">Подпись карточки ответа на приглашение внизу главной страницы.</p>
                 <div className="flex gap-3">
                     <input
                         type="text"
                         value={rsvpSubtitle}
                         onChange={(e) => setRsvpSubtitle(e.target.value)}
                         className="flex-1 rounded-full border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all"
-                        placeholder="e.g. Let us know you're coming"
+                        placeholder="Например: Сообщите, что придёте"
                     />
                     <SaveStatus state={subtitleState} onRetry={retrySubtitle} />
                 </div>
@@ -1246,8 +1247,8 @@ export default function RSVPDashboard() {
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">RSVP & Guest Management</h1>
-                    <p className="text-gray-600">Track RSVPs and manage your guest list</p>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Ответы и список гостей</h1>
+                    <p className="text-gray-600">Следите за ответами и управляйте списком гостей</p>
                 </div>
 
                 {/* Tab Buttons — equal columns on mobile. Four of them no longer fit
@@ -1262,8 +1263,8 @@ export default function RSVPDashboard() {
                                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:shadow-lg'
                         }`}
                     >
-                        <span className="sm:hidden">RSVPs</span>
-                        <span className="hidden sm:inline">RSVP Management</span>
+                        <span className="sm:hidden">Ответы гостей</span>
+                        <span className="hidden sm:inline">Ответы на приглашения</span>
                     </button>
                     <button
                         onClick={() => setActiveTab('guestlist')}
@@ -1273,8 +1274,8 @@ export default function RSVPDashboard() {
                                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:shadow-lg'
                         }`}
                     >
-                        <span className="sm:hidden">Guests</span>
-                        <span className="hidden sm:inline">Guest List</span>
+                        <span className="sm:hidden">Гости</span>
+                        <span className="hidden sm:inline">Список гостей</span>
                     </button>
                     <button
                         onClick={() => setActiveTab('vendors')}
@@ -1284,7 +1285,7 @@ export default function RSVPDashboard() {
                                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:shadow-lg'
                         }`}
                     >
-                        Vendors
+                        Подрядчики
                     </button>
                     <button
                         onClick={() => setActiveTab('donations')}
@@ -1294,7 +1295,7 @@ export default function RSVPDashboard() {
                                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:shadow-lg'
                         }`}
                     >
-                        Donations
+                        Подарки
                     </button>
                 </div>
             </div>
@@ -1305,23 +1306,23 @@ export default function RSVPDashboard() {
                     {/* Stats Cards */}
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
                         <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 border border-gray-200">
-                            <p className="text-sm font-medium text-gray-500">Total RSVPs</p>
+                            <p className="text-sm font-medium text-gray-500">Всего ответов</p>
                             <p className="text-3xl font-bold text-gray-900">{guestRsvps.length}</p>
                         </div>
                         <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 border border-green-200">
-                            <p className="text-sm font-medium text-green-600">Total Attending</p>
+                            <p className="text-sm font-medium text-green-600">Всего придут</p>
                             <p className="text-3xl font-bold text-green-700">{totalGuests}</p>
                         </div>
                         <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 border border-red-200">
-                            <p className="text-sm font-medium text-red-600">Declined</p>
+                            <p className="text-sm font-medium text-red-600">Отказались</p>
                             <p className="text-3xl font-bold text-red-700">{totalDeclinedGuests}</p>
                         </div>
                         <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 border border-orange-200">
-                            <p className="text-sm font-medium text-orange-600">Likely Not Coming</p>
+                            <p className="text-sm font-medium text-orange-600">Вероятно, не придут</p>
                             <p className="text-3xl font-bold text-orange-700">{likelyNotComingCount}</p>
                         </div>
                         <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 border border-yellow-200">
-                            <p className="text-sm font-medium text-yellow-600">Missing RSVPs</p>
+                            <p className="text-sm font-medium text-yellow-600">Нет ответа</p>
                             <p className="text-3xl font-bold text-yellow-700">{missingRsvps}</p>
                         </div>
                     </div>
@@ -1349,15 +1350,15 @@ export default function RSVPDashboard() {
                             >
                                 <thead className="bg-gray-50">
                                     <tr ref={rsvpHeadRef}>
-                                        {rsvpHeader('name', 'Name')}
-                                        {rsvpHeader('status', 'Status')}
-                                        {rsvpHeader('guests', 'Guests')}
+                                        {rsvpHeader('name', 'Имя')}
+                                        {rsvpHeader('status', 'Статус')}
+                                        {rsvpHeader('guests', 'Гости')}
                                         {/* Dietary hands roughly a third of its width to the
                                             message beside it: it holds a few short flags, and the
                                             message is the column anyone actually leans in to read. */}
-                                        {rsvpHeader('dietary', 'Dietary', '10%')}
-                                        {rsvpHeader('message', 'Message', '35%')}
-                                        {rsvpHeader('date', 'Date')}
+                                        {rsvpHeader('dietary', 'Питание', '10%')}
+                                        {rsvpHeader('message', 'Сообщение', '35%')}
+                                        {rsvpHeader('date', 'Дата')}
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
@@ -1372,13 +1373,13 @@ export default function RSVPDashboard() {
                                         const dietaryFlags = (entry: DietaryEntry | null) => {
                                             if (!entry) return '-';
                                             const flags = [
-                                                entry.vegetarian && 'Vegetarian',
-                                                entry.vegan && 'Vegan',
-                                                entry.gluten_free && 'Gluten Free',
-                                                entry.nut_allergy && 'Nut Allergy',
-                                                entry.other && (entry.other_text || 'Other'),
-                                                entry.kids_meal && 'Kids meal',
-                                                entry.no_meal && 'Not eating',
+                                                entry.vegetarian && 'Вегетарианское',
+                                                entry.vegan && 'Веганское',
+                                                entry.gluten_free && 'Без глютена',
+                                                entry.nut_allergy && 'Аллергия на орехи',
+                                                entry.other && (entry.other_text || 'Другое'),
+                                                entry.kids_meal && 'Детское меню',
+                                                entry.no_meal && 'Без питания',
                                             ].filter(Boolean);
                                             return flags.length ? flags.join(', ') : '-';
                                         };
@@ -1393,7 +1394,7 @@ export default function RSVPDashboard() {
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${rsvp.attending ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                                            {rsvp.attending ? 'Attending' : 'Declined'}
+                                                            {rsvp.attending ? 'Придёт' : 'Отказались'}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -1409,13 +1410,13 @@ export default function RSVPDashboard() {
                                                         {rsvp.message || '-'}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 relative">
-                                                        {new Date(rsvp.created_at).toLocaleDateString()}
+                                                        {new Date(rsvp.created_at).toLocaleDateString('ru-RU')}
                                                         <div className="absolute right-0 inset-y-0 flex items-center pr-4 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-l from-gray-50 via-gray-50 to-transparent pl-8">
                                                             <button
                                                                 onClick={() => { setDeletingRsvp(rsvp); setConfirmName(''); }}
                                                                 className="text-red-600 hover:text-red-900 bg-white border border-gray-200 shadow-sm px-3 py-1 rounded-full text-xs font-medium"
                                                             >
-                                                                Delete
+                                                                Удалить
                                                             </button>
                                                         </div>
                                                     </td>
@@ -1425,10 +1426,10 @@ export default function RSVPDashboard() {
                                                     <tr key={`${rsvp.id}-m${mi}`} className="bg-gray-50/60">
                                                         <td className="pl-10 pr-6 py-1.5 whitespace-nowrap border-l-2 border-gray-200">
                                                             <span className="text-gray-300 mr-1.5 text-xs">└</span>
-                                                            <span className="text-sm text-gray-500 italic">{member.name || 'Unknown'}</span>
+                                                            <span className="text-sm text-gray-500 italic">{member.name || 'Неизвестно'}</span>
                                                         </td>
                                                         <td className="px-6 py-1.5 whitespace-nowrap">
-                                                            <span className="px-2 inline-flex text-xs leading-5 font-medium rounded-full bg-gray-100 text-gray-500">Attending</span>
+                                                            <span className="px-2 inline-flex text-xs leading-5 font-medium rounded-full bg-gray-100 text-gray-500">Придёт</span>
                                                         </td>
                                                         <td className="px-6 py-1.5 text-xs text-gray-300">—</td>
                                                         <td className="px-6 py-1.5 text-xs text-gray-400">{dietaryFlags(member)}</td>
@@ -1452,24 +1453,24 @@ export default function RSVPDashboard() {
                     {/* Guest List Stats */}
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-6 mb-8">
                         <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 border border-gray-200">
-                            <p className="text-sm font-medium text-gray-500">Total Invited</p>
+                            <p className="text-sm font-medium text-gray-500">Всего приглашены</p>
                             <p className="text-3xl font-bold text-gray-900">{totalInvited}</p>
                         </div>
                         <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 border border-gray-200">
-                            <p className="text-sm font-medium text-gray-500">Not Invited Yet</p>
+                            <p className="text-sm font-medium text-gray-500">Ещё не приглашены</p>
                             <p className="text-3xl font-bold text-gray-900">{totalNotInvited}</p>
                         </div>
                         <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 border border-gray-200">
-                            <p className="text-sm font-medium text-gray-500">Expected Guests</p>
+                            <p className="text-sm font-medium text-gray-500">Ожидается гостей</p>
                             <p className="text-3xl font-bold text-gray-900">{totalGuestListSize}</p>
-                            <p className="text-xs text-gray-400 mt-1">excl. likely not coming &amp; declined</p>
+                            <p className="text-xs text-gray-400 mt-1">без отказавшихся и тех, кто, вероятно, не придёт</p>
                         </div>
                         <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 border border-orange-200">
-                            <p className="text-sm font-medium text-orange-600">Likely Not Coming</p>
+                            <p className="text-sm font-medium text-orange-600">Вероятно, не придут</p>
                             <p className="text-3xl font-bold text-orange-700">{likelyNotComingCount}</p>
                         </div>
                         <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 border border-green-200">
-                            <p className="text-sm font-medium text-gray-500">Total Attending</p>
+                            <p className="text-sm font-medium text-gray-500">Всего придут</p>
                             <p className="text-3xl font-bold text-green-600">{totalGuests}</p>
                         </div>
                     </div>
@@ -1480,29 +1481,29 @@ export default function RSVPDashboard() {
                             {selectedGuests.length > 0 && (
                                 <>
                                     <span className="text-sm font-semibold text-gray-700 self-center">
-                                        {selectedGuests.length} selected
+                                        {selectedGuests.length} выбрано
                                     </span>
                                     <button
                                         onClick={handleBulkMarkInvited}
                                         className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 text-sm transition-all duration-300 shadow-md hover:shadow-lg"
                                     >
-                                        Mark as Invited
+                                        Отметить приглашёнными
                                     </button>
                                     <button
                                         onClick={handleBulkDelete}
                                         className="bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700 text-sm transition-all duration-300 shadow-md hover:shadow-lg"
                                     >
-                                        Delete Selected
+                                        Удалить выбранных
                                     </button>
 
                                     {/* Overflow menu for the less-used bulk actions */}
                                     <div className="relative" ref={bulkMenuRef}>
                                         <button
                                             onClick={() => setShowBulkMenu(v => !v)}
-                                            title="More actions for the selected guests"
+                                            title="Другие действия с выбранными гостями"
                                             aria-haspopup="menu"
                                             aria-expanded={showBulkMenu}
-                                            aria-label="More actions"
+                                            aria-label="Другие действия"
                                             className={`w-9 h-9 flex items-center justify-center rounded-full text-sm transition-all duration-300 shadow-sm hover:shadow-md ${
                                                 showBulkMenu ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                             }`}
@@ -1519,30 +1520,30 @@ export default function RSVPDashboard() {
                                                 className="absolute left-0 mt-2 w-64 bg-white/95 backdrop-blur rounded-2xl shadow-2xl border border-gray-200 py-2 z-40"
                                             >
                                                 <p className="px-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                                                    {selectedGuests.length} selected
+                                                    {selectedGuests.length} выбрано
                                                 </p>
                                                 <button
                                                     role="menuitem"
                                                     onClick={() => { setShowBulkMenu(false); handleBulkUnmarkInvited(); }}
                                                     className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                                                 >
-                                                    Mark as Not Invited
+                                                    Отметить неприглашёнными
                                                 </button>
                                                 <button
                                                     role="menuitem"
                                                     onClick={() => { setShowBulkMenu(false); handleBulkFlag('issue'); }}
-                                                    title="Click again later to clear the flag"
+                                                    title="Нажмите повторно, чтобы снять отметку"
                                                     className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-red-50 transition-colors"
                                                 >
-                                                    ⚠️ Flag as Issue
+                                                    ⚠️ Отметить проблему
                                                 </button>
                                                 <button
                                                     role="menuitem"
                                                     onClick={() => { setShowBulkMenu(false); handleBulkFlag('need'); }}
-                                                    title="Click again later to clear the flag"
+                                                    title="Нажмите повторно, чтобы снять отметку"
                                                     className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-amber-50 transition-colors"
                                                 >
-                                                    📌 Flag as Need
+                                                    📌 Отметить потребность
                                                 </button>
                                                 <div className="my-1.5 border-t border-gray-100" />
                                                 <button
@@ -1550,8 +1551,8 @@ export default function RSVPDashboard() {
                                                     onClick={() => { setShowBulkMenu(false); openBulkModal(); }}
                                                     className="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition-colors"
                                                 >
-                                                    ✏️ Edit Selected…
-                                                    <span className="block text-xs font-normal text-gray-400 mt-0.5">Note, flag, side or RSVP status</span>
+                                                    ✏️ Изменить выбранных…
+                                                    <span className="block text-xs font-normal text-gray-400 mt-0.5">Заметка, отметка, сторона или ответ</span>
                                                 </button>
                                             </div>
                                         )}
@@ -1572,18 +1573,18 @@ export default function RSVPDashboard() {
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                 </svg>
-                                Import CSV
+                                Импорт CSV
                             </button>
                             <button
                                 onClick={handleExportGuests}
                                 disabled={mailableGuests.length === 0}
-                                title={`Download the ${mailableGuests.length} guest${mailableGuests.length === 1 ? '' : 's'} currently shown as a mailing-list CSV`}
+                                title={`Скачать ${counted(mailableGuests.length, 'гость', 'гостя', 'гостей')} из текущего списка в CSV для рассылки`}
                                 className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 transition-all duration-300 shadow-md hover:shadow-lg"
                             >
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 9l-3 3m0 0l-3-3m3 3V3" />
                                 </svg>
-                                Export CSV ({mailableGuests.length})
+                                Экспорт CSV ({mailableGuests.length})
                             </button>
                             <button
                                 onClick={() => setShowReconcileModal(true)}
@@ -1592,7 +1593,7 @@ export default function RSVPDashboard() {
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                                 </svg>
-                                Compare Addresses
+                                Сравнить адреса
                             </button>
                             <button
                                 onClick={() => {
@@ -1616,7 +1617,7 @@ export default function RSVPDashboard() {
                                 }}
                                 className="bg-accent text-white px-4 py-2 rounded-full hover:bg-accent/90 transition-all duration-300 shadow-md hover:shadow-lg"
                             >
-                                Add Guest
+                                Добавить гостя
                             </button>
                         </div>
                     </div>
@@ -1631,11 +1632,10 @@ export default function RSVPDashboard() {
                         <div className="mb-4 px-5 py-4 rounded-2xl bg-gray-50 border border-gray-100 flex flex-wrap items-center gap-3">
                             <div className="min-w-0">
                                 <p className="text-sm font-medium text-gray-800">
-                                    {config?.brideName || 'The bride'} and {config?.groomName || 'the groom'} are not on the list
+                                    {config?.brideName || 'Невеста'} и {config?.groomName || 'жених'} отсутствуют в списке
                                 </p>
                                 <p className="text-xs text-gray-500 mt-0.5">
-                                    Add them and they can be seated at a table and counted for the
-                                    kitchen. They stay out of the invitation totals and the mailing export.
+                                    Добавьте их для рассадки и подсчёта питания. В статистике приглашений и экспорте рассылки они не учитываются.
                                 </p>
                             </div>
                             <button
@@ -1643,7 +1643,7 @@ export default function RSVPDashboard() {
                                 disabled={addingCouple}
                                 className="ml-auto shrink-0 px-5 py-2.5 rounded-full bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 disabled:opacity-40 transition-colors"
                             >
-                                {addingCouple ? 'Adding…' : 'Add the couple'}
+                                {addingCouple ? 'Добавляем…' : 'Добавить молодожёнов'}
                             </button>
                         </div>
                     )}
@@ -1653,7 +1653,7 @@ export default function RSVPDashboard() {
                         <input
                             ref={guestSearchRef}
                             type="text"
-                            placeholder="Search guests… (Enter to check off)"
+                            placeholder="Поиск гостей… (Enter — выбрать)"
                             value={guestSearch}
                             onChange={e => { setGuestSearch(e.target.value); if (quickPick) setQuickPick(null); }}
                             onKeyDown={handleGuestSearchKeyDown}
@@ -1661,19 +1661,19 @@ export default function RSVPDashboard() {
                         />
                         <div className="flex flex-wrap gap-2">
                             {([
-                                { key: 'all', label: 'All', color: 'gray' },
-                                { key: 'no_response', label: '⏳ No Response', color: 'yellow' },
-                                { key: 'attending', label: '✓ Attending', color: 'green' },
-                                { key: 'declined', label: '✗ Declined', color: 'red' },
-                                { key: 'likely_not_coming', label: '🙁 Likely Not Coming', color: 'orange' },
-                                { key: 'invited', label: '✉ Invited', color: 'blue' },
-                                { key: 'not_invited', label: 'Not Invited', color: 'gray' },
-                                { key: 'bride', label: `${config?.brideName || 'Bride'}'s Side`, color: 'pink' },
-                                { key: 'groom', label: `${config?.groomName || 'Groom'}'s Side`, color: 'blue' },
-                                { key: 'kids_meal', label: '🧒 Kids Meal', color: 'blue' },
-                                { key: 'noted', label: '📝 Noted', color: 'indigo' },
-                                { key: 'issue', label: '⚠️ Issue', color: 'red' },
-                                { key: 'need', label: '📌 Need', color: 'amber' },
+                                { key: 'all', label: 'Все', color: 'gray' },
+                                { key: 'no_response', label: '⏳ Нет ответа', color: 'yellow' },
+                                { key: 'attending', label: '✓ Придут', color: 'green' },
+                                { key: 'declined', label: '✗ Отказались', color: 'red' },
+                                { key: 'likely_not_coming', label: '🙁 Вероятно, не придут', color: 'orange' },
+                                { key: 'invited', label: '✉ Приглашены', color: 'blue' },
+                                { key: 'not_invited', label: 'Не приглашены', color: 'gray' },
+                                { key: 'bride', label: `${config?.brideName || 'Невеста'} — сторона`, color: 'pink' },
+                                { key: 'groom', label: `${config?.groomName || 'Жених'} — сторона`, color: 'blue' },
+                                { key: 'kids_meal', label: '🧒 Детское меню', color: 'blue' },
+                                { key: 'noted', label: '📝 Есть заметка', color: 'indigo' },
+                                { key: 'issue', label: '⚠️ Проблема', color: 'red' },
+                                { key: 'need', label: '📌 Требуется', color: 'amber' },
                             ] as { key: GuestFilter; label: string; color: string }[]).map(f => (
                                 <button
                                     key={f.key}
@@ -1691,7 +1691,7 @@ export default function RSVPDashboard() {
                     </div>
                     <div className="mb-3 flex flex-wrap items-center gap-2">
                         <p className="text-sm text-gray-500">
-                            Showing {filteredGuests.length} of {guests.length} guests
+                            Показано {filteredGuests.length} из {guests.length} гостей
                         </p>
                         {quickPick && (
                             <span
@@ -1722,16 +1722,16 @@ export default function RSVPDashboard() {
                                                 className="rounded border-gray-300 text-accent focus:ring-accent"
                                             />
                                         </th>
-                                        <th data-col="name" className="w-full max-w-0 min-w-[72px] px-2 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Name</th>
-                                        <th data-col="contact" className={`${H('contact')} px-2 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap`}>Contact</th>
-                                        <th data-col="relation" className={`${H('relation')} px-2 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap`}>Relation</th>
-                                        <th data-col="party" className="px-2 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Party</th>
-                                        <th data-col="invited" className="px-2 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Invited</th>
-                                        <th data-col="rsvp" className="px-2 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">RSVP</th>
-                                        <th data-col="notes" className={`${H('notes')} px-2 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap`}>Notes</th>
-                                        <th data-col="address" className={`${H('address')} px-2 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap`}>Address</th>
-                                        <th data-col="donated" className={`${H('donated')} px-2 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap`}>Donated</th>
-                                        <th data-col="actions" className="px-2 sm:px-4 lg:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Actions</th>
+                                        <th data-col="name" className="w-full max-w-0 min-w-[72px] px-2 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Имя</th>
+                                        <th data-col="contact" className={`${H('contact')} px-2 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap`}>Контакт</th>
+                                        <th data-col="relation" className={`${H('relation')} px-2 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap`}>Отношение</th>
+                                        <th data-col="party" className="px-2 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Компания</th>
+                                        <th data-col="invited" className="px-2 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Приглашены</th>
+                                        <th data-col="rsvp" className="px-2 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Ответ на приглашение</th>
+                                        <th data-col="notes" className={`${H('notes')} px-2 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap`}>Заметки</th>
+                                        <th data-col="address" className={`${H('address')} px-2 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap`}>Адрес</th>
+                                        <th data-col="donated" className={`${H('donated')} px-2 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap`}>Подарено</th>
+                                        <th data-col="actions" className="px-2 sm:px-4 lg:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Действия</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
@@ -1747,13 +1747,13 @@ export default function RSVPDashboard() {
                                         const dietaryFlags = (entry: DietaryEntry | null | undefined) => {
                                             if (!entry) return null;
                                             const flags = [
-                                                entry.vegetarian && 'Vegetarian',
-                                                entry.vegan && 'Vegan',
-                                                entry.gluten_free && 'Gluten Free',
-                                                entry.nut_allergy && 'Nut Allergy',
-                                                entry.other && (entry.other_text || 'Other'),
-                                                entry.kids_meal && 'Kids meal',
-                                                entry.no_meal && 'Not eating',
+                                                entry.vegetarian && 'Вегетарианское',
+                                                entry.vegan && 'Веганское',
+                                                entry.gluten_free && 'Без глютена',
+                                                entry.nut_allergy && 'Аллергия на орехи',
+                                                entry.other && (entry.other_text || 'Другое'),
+                                                entry.kids_meal && 'Детское меню',
+                                                entry.no_meal && 'Без питания',
                                             ].filter(Boolean);
                                             return flags.length ? flags.join(', ') : null;
                                         };
@@ -1775,9 +1775,9 @@ export default function RSVPDashboard() {
                                                         <span
                                                             className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold"
                                                             style={{ backgroundColor: 'var(--accent-light)', color: 'var(--accent-dark)' }}
-                                                            title="Not invited, never counted — here so they can be seated and fed"
+                                                            title="Не учитываются в приглашениях — добавлены для рассадки и питания"
                                                         >
-                                                            💍 The couple
+                                                            💍 Молодожёны
                                                         </span>
                                                     </div>
                                                 )}
@@ -1786,13 +1786,13 @@ export default function RSVPDashboard() {
                                                     // wrap one-per-line and balloon the row height.
                                                     <div className="flex flex-nowrap items-center gap-1 mt-1 overflow-hidden">
                                                         {guest.flag === 'issue' && (
-                                                            <span className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-100 text-red-700">⚠️ Issue</span>
+                                                            <span className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-100 text-red-700">⚠️ Проблема</span>
                                                         )}
                                                         {guest.flag === 'need' && (
-                                                            <span className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-700">📌 Need</span>
+                                                            <span className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-700">📌 Требуется</span>
                                                         )}
                                                         {guest.notes && guest.notes.trim() && (
-                                                            <span className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-100 text-indigo-700" title={guest.notes}>📝 Note</span>
+                                                            <span className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-100 text-indigo-700" title={guest.notes}>📝 Заметка</span>
                                                         )}
                                                     </div>
                                                 )}
@@ -1811,18 +1811,18 @@ export default function RSVPDashboard() {
                                                 <span className={`inline-block text-center px-2 py-0.5 text-xs font-semibold rounded-full ${
                                                     guest.invited ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
                                                 }`}>
-                                                    {guest.invited ? 'Invited' : 'Not Invited'}
+                                                    {guest.invited ? 'Приглашены' : 'Не приглашены'}
                                                 </span>
                                             </td>
                                             <td data-col="rsvp" className="px-2 sm:px-4 lg:px-6 py-4 whitespace-nowrap">
                                                 {guest.rsvp_status === 'attending' ? (
-                                                    <span className="inline-block text-center px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Attending</span>
+                                                    <span className="inline-block text-center px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Придёт</span>
                                                 ) : guest.rsvp_status === 'declined' ? (
-                                                    <span className="inline-block text-center px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800">Declined</span>
+                                                    <span className="inline-block text-center px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800">Отказались</span>
                                                 ) : guest.rsvp_status === 'likely_not_coming' ? (
-                                                    <span className="inline-block text-center px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-700">Likely Not Coming</span>
+                                                    <span className="inline-block text-center px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-700">Вероятно, не придут</span>
                                                 ) : (
-                                                    <span className="text-sm text-gray-400">No Response</span>
+                                                    <span className="text-sm text-gray-400">Нет ответа</span>
                                                 )}
                                             </td>
                                             <td data-col="notes" className={`${H('notes')} px-2 sm:px-4 lg:px-6 py-4 text-sm max-w-[220px] truncate ${isLikelyNotComing ? 'text-gray-400' : 'text-gray-500'}`} title={guest.notes || ''}>
@@ -1833,15 +1833,15 @@ export default function RSVPDashboard() {
                                             </td>
                                             <td data-col="donated" className={`${H('donated')} px-2 sm:px-4 lg:px-6 py-4 text-sm text-gray-700 whitespace-nowrap`}>
                                                 {[
-                                                    donationTotalByGuestId[guest.id] ? `$${donationTotalByGuestId[guest.id].toLocaleString()}` : null,
-                                                    giftGuestIds.has(guest.id) ? 'Gift' : null,
+                                                    donationTotalByGuestId[guest.id] ? `$${donationTotalByGuestId[guest.id].toLocaleString('ru-RU')}` : null,
+                                                    giftGuestIds.has(guest.id) ? 'Подарок' : null,
                                                 ].filter(Boolean).join(' + ') || '-'}
                                             </td>
                                             <td data-col="actions" className="px-2 sm:px-4 lg:px-6 py-4 text-right text-sm font-medium">
                                                 <div className="flex flex-nowrap items-center gap-1.5 justify-end whitespace-nowrap">
                                                     <button
                                                         onClick={() => handleMarkLikelyNotComing(guest)}
-                                                        title={isLikelyNotComing ? 'Clear likely not coming' : 'Mark as likely not coming'}
+                                                        title={isLikelyNotComing ? 'Снять отметку «Вероятно, не придёт»' : 'Отметить «Вероятно, не придёт»'}
                                                         className={`text-xs px-2.5 py-1 rounded-full transition-colors ${isLikelyNotComing ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' : 'bg-gray-100 text-gray-500 hover:bg-orange-100 hover:text-orange-700'}`}
                                                     >
                                                         🙁
@@ -1850,13 +1850,13 @@ export default function RSVPDashboard() {
                                                         onClick={() => openEditGuest(guest)}
                                                         className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
                                                     >
-                                                        Edit
+                                                        Изменить
                                                     </button>
                                                     <button
                                                         onClick={() => handleDeleteGuest(guest.id)}
                                                         className="text-xs font-semibold px-3 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
                                                     >
-                                                        Delete
+                                                        Удалить
                                                     </button>
                                                 </div>
                                             </td>
@@ -1872,8 +1872,8 @@ export default function RSVPDashboard() {
                                                     <td data-col="name" className="w-full max-w-0 px-2 sm:px-4 lg:px-6 py-1.5 border-l-2 border-gray-200 overflow-hidden">
                                                         <div className="flex items-center gap-1 min-w-0">
                                                             <span className="text-gray-300 text-xs shrink-0">└</span>
-                                                            <span className="text-sm text-gray-500 italic truncate" title={member.name || `Unknown Guest ${mi + 2}`}>
-                                                                {member.name || `Unknown Guest ${mi + 2}`}
+                                                            <span className="text-sm text-gray-500 italic truncate" title={member.name || `Неизвестный гость ${mi + 2}`}>
+                                                                {member.name || `Неизвестный гость ${mi + 2}`}
                                                             </span>
                                                         </div>
                                                     </td>
@@ -1883,7 +1883,7 @@ export default function RSVPDashboard() {
                                                     <td data-col="invited" className="px-2 sm:px-4 lg:px-6 py-1.5 text-xs text-gray-300">—</td>
                                                     <td data-col="rsvp" className="px-2 sm:px-4 lg:px-6 py-1.5">
                                                         {mAttending ? (
-                                                            <span className="inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-500">Attending</span>
+                                                            <span className="inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-500">Придёт</span>
                                                         ) : (
                                                             <span className="text-xs text-gray-300">—</span>
                                                         )}
@@ -1917,27 +1917,27 @@ export default function RSVPDashboard() {
                 <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
                     <div className="px-6 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
                         <p className="text-sm text-gray-500">
-                            {donations.length} donation{donations.length === 1 ? '' : 's'} · Total ${donations.reduce((s, d) => s + d.amount, 0).toLocaleString()}
-                            {donations.filter(d => d.gift).length > 0 && ` · ${donations.filter(d => d.gift).length} gift${donations.filter(d => d.gift).length === 1 ? '' : 's'}`}
-                            {' · '}{donations.filter(d => d.thank_you_sent).length}/{donations.length} thanked
+                            {counted(donations.length, 'подарок', 'подарка', 'подарков')} · Всего ${donations.reduce((s, d) => s + d.amount, 0).toLocaleString('ru-RU')}
+                            {donations.filter(d => d.gift).length > 0 && ` · ${counted(donations.filter(d => d.gift).length, 'подарок', 'подарка', 'подарков')}`}
+                            {' · '}{donations.filter(d => d.thank_you_sent).length}/{donations.length} поблагодарили
                         </p>
                         <div className="flex flex-wrap items-center gap-2">
                             {selectedDonations.length > 0 && (
                                 <>
-                                    <span className="text-sm text-gray-600">{selectedDonations.length} selected</span>
+                                    <span className="text-sm text-gray-600">{selectedDonations.length} выбрано</span>
                                     <button
                                         onClick={() => setThankYouSent(true)}
                                         disabled={markingThanks}
                                         className="bg-green-600 text-white px-4 py-2 rounded-full text-sm hover:bg-green-700 disabled:opacity-40 transition-all duration-300 shadow-md hover:shadow-lg"
                                     >
-                                        {markingThanks ? 'Saving...' : 'Mark Thank You Sent'}
+                                        {markingThanks ? 'Сохраняем...' : 'Отметить благодарность отправленной'}
                                     </button>
                                     <button
                                         onClick={() => setThankYouSent(false)}
                                         disabled={markingThanks}
                                         className="bg-gray-500 text-white px-4 py-2 rounded-full text-sm hover:bg-gray-600 disabled:opacity-40 transition-all duration-300 shadow-md hover:shadow-lg"
                                     >
-                                        Unmark
+                                        Снять отметку
                                     </button>
                                 </>
                             )}
@@ -1945,7 +1945,7 @@ export default function RSVPDashboard() {
                                 onClick={() => setShowDonationModal(true)}
                                 className="bg-accent text-white px-4 py-2.5 rounded-full text-sm font-medium hover:opacity-90"
                             >
-                                + Log Donation
+                                + Записать подарок
                             </button>
                         </div>
                     </div>
@@ -1961,19 +1961,19 @@ export default function RSVPDashboard() {
                                             className="rounded border-gray-300 text-accent focus:ring-accent"
                                         />
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Guest</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gift</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fund</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Event</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thank You</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Гость</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Сумма</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Подарок</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Фонд</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Событие</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Благодарность</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дата</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Действия</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {donations.length === 0 ? (
-                                    <tr><td colSpan={9} className="px-6 py-8 text-center text-sm text-gray-400">No donations recorded yet.</td></tr>
+                                    <tr><td colSpan={9} className="px-6 py-8 text-center text-sm text-gray-400">Подарки пока не записаны.</td></tr>
                                 ) : donations.map(d => (
                                     <tr key={d.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4">
@@ -1987,7 +1987,7 @@ export default function RSVPDashboard() {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                                             {[d.guest_name, ...((d.co_donors || []).map(c => c.name))].join(', ')}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{d.amount ? `$${d.amount.toLocaleString()}` : '-'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{d.amount ? `$${d.amount.toLocaleString('ru-RU')}` : '-'}</td>
                                         <td className="px-6 py-4 text-sm text-gray-500 max-w-[220px] truncate" title={d.gift || ''}>{d.gift || '-'}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{d.fund_item_title || '-'}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{d.event || '-'}</td>
@@ -1995,20 +1995,20 @@ export default function RSVPDashboard() {
                                             {d.thank_you_sent ? (
                                                 <span
                                                     className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-medium px-2.5 py-1 rounded-full"
-                                                    title={d.thank_you_sent_at ? `Sent ${new Date(d.thank_you_sent_at).toLocaleDateString()}` : undefined}
+                                                    title={d.thank_you_sent_at ? `Отправлено ${new Date(d.thank_you_sent_at).toLocaleDateString('ru-RU')}` : undefined}
                                                 >
-                                                    ✓ Thank you sent
+                                                    ✓ Благодарность отправлена
                                                 </span>
                                             ) : (
                                                 <span className="inline-flex items-center bg-gray-100 text-gray-500 text-xs font-medium px-2.5 py-1 rounded-full">
-                                                    Not sent
+                                                    Не отправлено
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(d.created_at).toLocaleDateString()}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(d.created_at).toLocaleDateString('ru-RU')}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                            <button onClick={() => openEditDonation(d)} className="text-accent hover:text-accent-dark mr-3">Edit</button>
-                                            <button onClick={() => setDeletingDonation(d)} className="text-red-600 hover:text-red-800">Delete</button>
+                                            <button onClick={() => openEditDonation(d)} className="text-accent hover:text-accent-dark mr-3">Изменить</button>
+                                            <button onClick={() => setDeletingDonation(d)} className="text-red-600 hover:text-red-800">Удалить</button>
                                         </td>
                                     </tr>
                                 ))}
@@ -2023,9 +2023,9 @@ export default function RSVPDashboard() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={resetDonationModal} />
                     <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 z-10">
-                        <h2 className="text-lg font-bold text-gray-900 mb-4">{editingDonationId ? 'Edit Donation' : 'Log a Donation'}</h2>
+                        <h2 className="text-lg font-bold text-gray-900 mb-4">{editingDonationId ? 'Изменить подарок' : 'Записать подарок'}</h2>
 
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Who donated?</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Кто подарил?</label>
                         {donationDonor ? (
                             <div className="flex items-center justify-between border border-gray-200 bg-gray-50 rounded-xl px-3 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all mb-4">
                                 <span>{donationDonor.guest_name}</span>
@@ -2037,7 +2037,7 @@ export default function RSVPDashboard() {
                                     type="text"
                                     value={donationDonorSearch}
                                     onChange={e => setDonationDonorSearch(e.target.value)}
-                                    placeholder="Search guest list..."
+                                    placeholder="Поиск по списку гостей..."
                                     className="w-full border border-gray-200 bg-gray-50 rounded-xl px-3 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all"
                                 />
                                 {donationDonorSearch.trim() && (
@@ -2056,14 +2056,14 @@ export default function RSVPDashboard() {
                                                 </button>
                                             ))}
                                         {donationPeople.filter(p => p.name.toLowerCase().includes(donationDonorSearch.toLowerCase())).length === 0 && (
-                                            <p className="px-3 py-2 text-sm text-gray-400">No matching guest</p>
+                                            <p className="px-3 py-2 text-sm text-gray-400">Гость не найден</p>
                                         )}
                                     </div>
                                 )}
                             </div>
                         )}
 
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Co-givers (optional)</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Совместный подарок (необязательно)</label>
                         {coGivers.length > 0 && (
                             <div className="flex flex-wrap gap-1 mb-2">
                                 {coGivers.map(c => (
@@ -2079,7 +2079,7 @@ export default function RSVPDashboard() {
                             value={coGiverSearch}
                             onChange={e => setCoGiverSearch(e.target.value)}
                             onKeyDown={e => { if (e.key === 'Enter' && coGiverSearch.trim()) { e.preventDefault(); addCoGiver({ id: null, name: coGiverSearch }); } }}
-                            placeholder="Add a co-giver (type & Enter, or pick below)"
+                            placeholder="Добавьте дарителя: введите имя и Enter или выберите ниже"
                             className="w-full border border-gray-200 bg-gray-50 rounded-xl px-3 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all mb-4"
                         />
                         {coGiverSearch.trim() && (
@@ -2096,29 +2096,29 @@ export default function RSVPDashboard() {
                             </div>
                         )}
 
-                        <p className="text-xs text-gray-400 mb-3">Log money, a gift, or both — at least one is required.</p>
+                        <p className="text-xs text-gray-400 mb-3">Укажите сумму, подарок или и то и другое. Нужно заполнить хотя бы одно поле.</p>
 
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Amount received ($)</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Полученная сумма ($)</label>
                         <input
                             type="number"
                             value={donationAmount}
                             onChange={e => setDonationAmount(e.target.value)}
-                            placeholder="Leave blank for a gift only"
+                            placeholder="Оставьте пустым для неденежного подарка"
                             className="w-full border border-gray-200 bg-gray-50 rounded-xl px-3 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all mb-4"
                         />
 
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Gift</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Подарок</label>
                         <input
                             type="text"
                             value={donationGift}
                             onChange={e => setDonationGift(e.target.value)}
-                            placeholder="e.g. Stand mixer, hand-made quilt"
+                            placeholder="Например: миксер, плед ручной работы"
                             className="w-full border border-gray-200 bg-gray-50 rounded-xl px-3 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all mb-4"
                         />
 
                         {/* A fund only applies to money — a gift-only entry has nothing to allocate. */}
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Fund {donationAmount.trim() ? '' : <span className="text-gray-400 font-normal">(money only)</span>}
+                            Фонд {donationAmount.trim() ? '' : <span className="text-gray-400 font-normal">(только деньги)</span>}
                         </label>
                         <select
                             value={donationFundId}
@@ -2126,29 +2126,29 @@ export default function RSVPDashboard() {
                             disabled={!donationAmount.trim()}
                             className="w-full border border-gray-200 bg-gray-50 rounded-xl px-3 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <option value="">Select a fund...</option>
+                            <option value="">Выберите фонд...</option>
                             {(config?.registry?.items || []).map((f: FundItem) => (
                                 <option key={f.id} value={f.id}>{f.title}</option>
                             ))}
                         </select>
 
-                        <label className="block text-sm font-medium text-gray-700 mb-1">From what event?</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">По какому случаю?</label>
                         <select
                             value={donationEvent}
                             onChange={e => setDonationEvent(e.target.value)}
                             className="w-full border border-gray-200 bg-gray-50 rounded-xl px-3 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all mb-3"
                         >
-                            <option>Bridal Shower</option>
-                            <option>Engagement Party</option>
-                            <option>Wedding Day</option>
-                            <option>Other</option>
+                            <option>Девичник</option>
+                            <option>Помолвка</option>
+                            <option>День свадьбы</option>
+                            <option>Другое</option>
                         </select>
                         {donationEvent === 'Other' && (
                             <input
                                 type="text"
                                 value={donationOtherEvent}
                                 onChange={e => setDonationOtherEvent(e.target.value)}
-                                placeholder="Name the event"
+                                placeholder="Название события"
                                 className="w-full border border-gray-200 bg-gray-50 rounded-xl px-3 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all mb-4"
                             />
                         )}
@@ -2163,10 +2163,10 @@ export default function RSVPDashboard() {
                                 }
                                 className="flex-1 bg-accent text-white py-2.5 rounded-full text-sm font-medium disabled:opacity-40"
                             >
-                                {savingDonation ? 'Saving...' : 'Save'}
+                                {savingDonation ? 'Сохраняем...' : 'Сохранить'}
                             </button>
                             <button onClick={resetDonationModal} className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-full text-sm">
-                                Cancel
+                                Отмена
                             </button>
                         </div>
                     </div>
@@ -2178,21 +2178,21 @@ export default function RSVPDashboard() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDeletingDonation(null)} />
                     <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 z-10">
-                        <h2 className="text-lg font-bold text-gray-900 mb-2">Delete donation?</h2>
+                        <h2 className="text-lg font-bold text-gray-900 mb-2">Удалить подарок?</h2>
                         <p className="text-sm text-gray-500 mb-4">
                             {deletingDonation.guest_name} — {[
-                                deletingDonation.amount ? `$${deletingDonation.amount.toLocaleString()} toward ${deletingDonation.fund_item_title || 'a fund'}` : null,
-                                deletingDonation.gift ? `gift: ${deletingDonation.gift}` : null,
+                                deletingDonation.amount ? `$${deletingDonation.amount.toLocaleString('ru-RU')} на ${deletingDonation.fund_item_title || 'фонд'}` : null,
+                                deletingDonation.gift ? `подарок: ${deletingDonation.gift}` : null,
                             ].filter(Boolean).join(' · ')}
-                            . {deletingDonation.amount ? 'This subtracts the amount from that fund’s progress and ' : 'This '}cannot be undone.
+                            . {deletingDonation.amount ? 'Сумма будет вычтена из собранных средств. Это действие ' : 'Это действие '}нельзя отменить.
                         </p>
                         <div className="flex gap-2">
                             <button onClick={confirmDeleteDonation} disabled={savingDonation}
                                 className="flex-1 bg-red-600 text-white py-2.5 rounded-full text-sm font-medium disabled:opacity-40">
-                                {savingDonation ? 'Deleting...' : 'Delete'}
+                                {savingDonation ? 'Удаляем...' : 'Удалить'}
                             </button>
                             <button onClick={() => setDeletingDonation(null)} className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-full text-sm">
-                                Cancel
+                                Отмена
                             </button>
                         </div>
                     </div>
@@ -2203,34 +2203,33 @@ export default function RSVPDashboard() {
             {deletingRsvp && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
                     <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4">Confirm Deletion</h3>
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Подтвердите удаление</h3>
                         <p className="text-sm text-gray-500 mb-4">
-                            Are you sure you want to delete the RSVP for <strong>{deletingRsvp.guest_name}</strong>?
-                            This action cannot be undone.
+                            Удалить ответ гостя <strong>{deletingRsvp.guest_name}</strong>? Это действие нельзя отменить.
                         </p>
                         <p className="text-sm text-gray-700 mb-2">
-                            Type <strong>{deletingRsvp.guest_name}</strong> to confirm:
+                            Введите <strong>{deletingRsvp.guest_name}</strong> для подтверждения:
                         </p>
                         <input
                             type="text"
                             value={confirmName}
                             onChange={(e) => setConfirmName(e.target.value)}
                             className="w-full px-4 py-3 border border-gray-200 bg-gray-50 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-400/50 focus:border-red-400 sm:text-sm mb-6 transition-all"
-                            placeholder="Type guest name here"
+                            placeholder="Введите имя гостя"
                         />
                         <div className="flex justify-end space-x-3">
                             <button
                                 onClick={() => setDeletingRsvp(null)}
                                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-all duration-300 shadow-md hover:shadow-lg"
                             >
-                                Cancel
+                                Отмена
                             </button>
                             <button
                                 onClick={handleDeleteRsvp}
                                 disabled={confirmName !== deletingRsvp.guest_name}
                                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-full hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-md hover:shadow-lg"
                             >
-                                Delete RSVP
+                                Удалить ответ
                             </button>
                         </div>
                     </div>
@@ -2244,12 +2243,12 @@ export default function RSVPDashboard() {
                         {/* Header */}
                         <div className="px-6 sm:px-8 pt-7 pb-5 border-b border-gray-100 sticky top-0 bg-white/95 backdrop-blur z-10 rounded-t-3xl">
                             <h3 className="text-2xl font-bold text-gray-900">
-                                {editingGuest ? 'Edit Guest' : 'Add Guest'}
+                                {editingGuest ? 'Изменить гостя' : 'Добавить гостя'}
                             </h3>
                             <p className="text-sm text-gray-400 mt-1">
                                 {editingGuest
-                                    ? `Update details for ${guestForm.guest_name || 'this guest'}.`
-                                    : 'Add a new guest to your list.'}
+                                    ? `Изменить данные: ${guestForm.guest_name || 'этот гость'}.`
+                                    : 'Добавьте нового гостя в список.'}
                             </p>
                         </div>
 
@@ -2258,14 +2257,14 @@ export default function RSVPDashboard() {
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                        Guest Name <span className="text-accent">*</span>
+                                        Имя гостя <span className="text-accent">*</span>
                                     </label>
                                     <input
                                         type="text"
                                         value={guestForm.guest_name}
                                         onChange={(e) => setGuestForm({ ...guestForm, guest_name: e.target.value })}
                                         className="w-full px-4 py-3 border border-gray-200 rounded-2xl bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all"
-                                        placeholder="First Last"
+                                        placeholder="Имя Фамилия"
                                         required
                                     />
                                     <DietaryPills
@@ -2289,7 +2288,7 @@ export default function RSVPDashboard() {
                                 {Array.from({ length: Math.max(0, guestForm.party_size - 1) }, (_, i) => (
                                     <div key={i}>
                                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                            Guest {i + 2} Name <span className="text-gray-400 font-normal">(leave blank if unknown)</span>
+                                            Гость {i + 2} Имя <span className="text-gray-400 font-normal">(оставьте пустым, если неизвестно)</span>
                                         </label>
                                         <div className="flex gap-2">
                                             <input
@@ -2302,7 +2301,7 @@ export default function RSVPDashboard() {
                                                     setGuestForm({ ...guestForm, party_members: updated });
                                                 }}
                                                 className="flex-1 min-w-0 px-4 py-3 border border-gray-200 rounded-2xl bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all"
-                                                placeholder="Optional"
+                                                placeholder="Необязательно"
                                             />
                                             {/* Per-person answer. The RSVP form sets this; it is editable here for
                                                 the people who answer by phone. The seating chart reads it: someone
@@ -2319,11 +2318,11 @@ export default function RSVPDashboard() {
                                                     setGuestForm({ ...guestForm, party_members: updated });
                                                 }}
                                                 className="w-32 shrink-0 px-3 py-3 border border-gray-200 rounded-2xl bg-gray-50 text-sm text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all"
-                                                title="Is this person coming?"
+                                                title="Этот гость придёт?"
                                             >
-                                                <option value="">No answer</option>
-                                                <option value="yes">Coming</option>
-                                                <option value="no">Not coming</option>
+                                                <option value="">Нет ответа</option>
+                                                <option value="yes">Придёт</option>
+                                                <option value="no">Не придёт</option>
                                             </select>
                                         </div>
                                         {guestForm.party_members[i]?.attending !== false && (
@@ -2358,9 +2357,7 @@ export default function RSVPDashboard() {
                                     it happens, not after. */}
                                 {!rsvpFor(guestForm.guest_name) && guestForm.dietary.some(e => !isEmptyEntry(e)) && (
                                     <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3">
-                                        No RSVP on file for this household. Saving a restriction creates one, so they
-                                        start counting as having answered — on the dashboard, in the budget headcount,
-                                        and on the RSVP page if they visit it.
+                                        Для этого приглашения ещё нет ответа. Сохранение ограничений в питании создаст ответ — он будет учтён в обзоре, бюджете и форме гостя.
                                     </p>
                                 )}
                             </div>
@@ -2368,7 +2365,7 @@ export default function RSVPDashboard() {
                             {/* Contact + details */}
                             <div className="grid sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Электронная почта</label>
                                     <input
                                         type="email"
                                         value={guestForm.email}
@@ -2378,7 +2375,7 @@ export default function RSVPDashboard() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Phone</label>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Телефон</label>
                                     <input
                                         type="tel"
                                         value={guestForm.phone}
@@ -2388,7 +2385,7 @@ export default function RSVPDashboard() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Party Size</label>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Размер компании</label>
                                     <input
                                         type="number"
                                         min="1"
@@ -2405,39 +2402,39 @@ export default function RSVPDashboard() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Side</label>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Сторона</label>
                                     <select
                                         value={guestForm.side}
                                         onChange={(e) => setGuestForm({ ...guestForm, side: e.target.value })}
                                         className="w-full px-4 py-3 border border-gray-200 rounded-2xl bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all"
                                     >
-                                        <option value="">Not Specified</option>
-                                        <option value="bride">{config?.brideName || "Bride"}&apos;s Side</option>
-                                        <option value="groom">{config?.groomName || "Groom"}&apos;s Side</option>
+                                        <option value="">Не указано</option>
+                                        <option value="bride">{config?.brideName || "Невеста"} — сторона</option>
+                                        <option value="groom">{config?.groomName || "Жених"} — сторона</option>
                                     </select>
                                 </div>
                             </div>
 
                             {/* Relationship */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Relationship</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Кем приходится</label>
                                 <input
                                     type="text"
                                     value={guestForm.relationship}
                                     onChange={(e) => setGuestForm({ ...guestForm, relationship: e.target.value })}
                                     className="w-full px-4 py-3 border border-gray-200 rounded-2xl bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all"
-                                    placeholder="e.g. Family, Friend, Bride's cousin"
+                                    placeholder="Например: родственник, друг, сестра невесты"
                                 />
                             </div>
 
                             {/* Flag */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Flag</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Отметка</label>
                                 <div className="flex flex-wrap gap-2">
                                     {([
-                                        { v: '', l: 'None', on: 'bg-gray-800 text-white', off: 'bg-gray-100 text-gray-600 hover:bg-gray-200' },
-                                        { v: 'issue', l: '⚠️ Issue', on: 'bg-red-500 text-white', off: 'bg-red-50 text-red-600 hover:bg-red-100' },
-                                        { v: 'need', l: '📌 Need', on: 'bg-amber-500 text-white', off: 'bg-amber-50 text-amber-700 hover:bg-amber-100' },
+                                        { v: '', l: 'Нет', on: 'bg-gray-800 text-white', off: 'bg-gray-100 text-gray-600 hover:bg-gray-200' },
+                                        { v: 'issue', l: '⚠️ Проблема', on: 'bg-red-500 text-white', off: 'bg-red-50 text-red-600 hover:bg-red-100' },
+                                        { v: 'need', l: '📌 Требуется', on: 'bg-amber-500 text-white', off: 'bg-amber-50 text-amber-700 hover:bg-amber-100' },
                                     ] as { v: string; l: string; on: string; off: string }[]).map(opt => (
                                         <button
                                             key={opt.v || 'none'}
@@ -2449,31 +2446,31 @@ export default function RSVPDashboard() {
                                         </button>
                                     ))}
                                 </div>
-                                <p className="text-xs text-gray-400 mt-1.5">Adds a colored pill to the guest&apos;s row so you can spot it at a glance.</p>
+                                <p className="text-xs text-gray-400 mt-1.5">Цветная отметка поможет быстро найти гостя в списке.</p>
                             </div>
 
                             {/* Notes */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Notes</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Заметки</label>
                                 <textarea
                                     value={guestForm.notes}
                                     onChange={(e) => setGuestForm({ ...guestForm, notes: e.target.value })}
                                     className="w-full px-4 py-3 border border-gray-200 rounded-2xl bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all resize-y"
                                     rows={3}
-                                    placeholder="Anything worth remembering about this guest…"
+                                    placeholder="Что нужно помнить об этом госте…"
                                 />
-                                <p className="text-xs text-gray-400 mt-1.5">Guests with a note get a 📝 pill and can be found via the &quot;Noted&quot; filter.</p>
+                                <p className="text-xs text-gray-400 mt-1.5">Гости с заметкой отмечены 📝. Найти их можно фильтром «Есть заметка».</p>
                             </div>
 
                             {/* Address */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Address</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Адрес</label>
                                 <textarea
                                     value={guestForm.address}
                                     onChange={(e) => setGuestForm({ ...guestForm, address: e.target.value })}
                                     className="w-full px-4 py-3 border border-gray-200 rounded-2xl bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all resize-y"
                                     rows={2}
-                                    placeholder="123 Main St, City, ST 12345"
+                                    placeholder="Город, улица, дом, индекс"
                                 />
                             </div>
 
@@ -2485,23 +2482,23 @@ export default function RSVPDashboard() {
                                     onChange={(e) => setGuestForm({ ...guestForm, invited: e.target.checked })}
                                     className="h-5 w-5 text-accent border-gray-300 rounded-md focus:ring-accent"
                                 />
-                                <span className="text-sm font-medium text-gray-700">Invited</span>
+                                <span className="text-sm font-medium text-gray-700">Приглашены</span>
                             </label>
 
                             {editingGuest && (
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">RSVP Status (Admin)</label>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Ответ гостя (для администратора)</label>
                                     <select
                                         value={guestForm.rsvp_status}
                                         onChange={(e) => setGuestForm({ ...guestForm, rsvp_status: e.target.value })}
                                         className="w-full px-4 py-3 border border-gray-200 rounded-2xl bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all"
                                     >
-                                        <option value="">No Response</option>
-                                        <option value="attending">Attending</option>
-                                        <option value="declined">Declined</option>
-                                        <option value="likely_not_coming">Likely Not Coming</option>
+                                        <option value="">Нет ответа</option>
+                                        <option value="attending">Придёт</option>
+                                        <option value="declined">Отказались</option>
+                                        <option value="likely_not_coming">Вероятно, не придут</option>
                                     </select>
-                                    <p className="text-xs text-gray-400 mt-1.5">Admin-only. &quot;Likely Not Coming&quot; excludes this guest from expected headcount and seating chart.</p>
+                                    <p className="text-xs text-gray-400 mt-1.5">Только для администратора. «Вероятно, не придёт» исключает гостя из ожидаемого числа и рассадки.</p>
                                 </div>
                             )}
                         </div>
@@ -2515,14 +2512,14 @@ export default function RSVPDashboard() {
                                 }}
                                 className="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-all duration-300 shadow-sm hover:shadow-md"
                             >
-                                Cancel
+                                Отмена
                             </button>
                             <button
                                 onClick={handleSaveGuest}
                                 disabled={!guestForm.guest_name}
                                 className="px-7 py-2.5 text-sm font-semibold text-white bg-accent rounded-full hover:bg-accent/90 disabled:opacity-50 transition-all duration-300 shadow-md hover:shadow-lg"
                             >
-                                {editingGuest ? 'Update' : 'Add'} Guest
+                                {editingGuest ? 'Обновить' : 'Добавить'} Гость
                             </button>
                         </div>
                     </div>
@@ -2534,20 +2531,20 @@ export default function RSVPDashboard() {
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
                         <div className="px-6 sm:px-8 pt-6 pb-4 border-b border-gray-100 sticky top-0 bg-white/95 backdrop-blur rounded-t-3xl">
-                            <h3 className="text-2xl font-bold text-gray-900">Edit {selectedGuests.length} Guest{selectedGuests.length === 1 ? '' : 's'}</h3>
-                            <p className="text-sm text-gray-500 mt-1">Anything left on <span className="font-semibold">Leave unchanged</span> is not touched.</p>
+                            <h3 className="text-2xl font-bold text-gray-900">Изменить {counted(selectedGuests.length, 'гость', 'гостя', 'гостей')}</h3>
+                            <p className="text-sm text-gray-500 mt-1">Поля со значением <span className="font-semibold">Не менять</span> не изменяется.</p>
                         </div>
 
                         <div className="px-6 sm:px-8 py-6 space-y-6">
                             {/* Flag */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Flag</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Отметка</label>
                                 <div className="flex flex-wrap gap-2">
                                     {([
-                                        { v: '', l: 'Leave unchanged', on: 'bg-gray-800 text-white', off: 'bg-gray-100 text-gray-600 hover:bg-gray-200' },
-                                        { v: 'issue', l: '⚠️ Issue', on: 'bg-red-600 text-white', off: 'bg-red-50 text-red-700 hover:bg-red-100' },
-                                        { v: 'need', l: '📌 Need', on: 'bg-amber-500 text-white', off: 'bg-amber-50 text-amber-700 hover:bg-amber-100' },
-                                        { v: 'clear', l: 'Clear flag', on: 'bg-gray-600 text-white', off: 'bg-gray-100 text-gray-600 hover:bg-gray-200' },
+                                        { v: '', l: 'Не менять', on: 'bg-gray-800 text-white', off: 'bg-gray-100 text-gray-600 hover:bg-gray-200' },
+                                        { v: 'issue', l: '⚠️ Проблема', on: 'bg-red-600 text-white', off: 'bg-red-50 text-red-700 hover:bg-red-100' },
+                                        { v: 'need', l: '📌 Требуется', on: 'bg-amber-500 text-white', off: 'bg-amber-50 text-amber-700 hover:bg-amber-100' },
+                                        { v: 'clear', l: 'Снять отметку', on: 'bg-gray-600 text-white', off: 'bg-gray-100 text-gray-600 hover:bg-gray-200' },
                                     ]).map(opt => (
                                         <button
                                             key={opt.v || 'none'}
@@ -2563,12 +2560,12 @@ export default function RSVPDashboard() {
 
                             {/* Note */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Note</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Заметка</label>
                                 <div className="flex flex-wrap gap-2 mb-2">
                                     {([
-                                        { v: 'append', l: 'Add to existing' },
-                                        { v: 'replace', l: 'Replace' },
-                                        { v: 'clear', l: 'Clear notes' },
+                                        { v: 'append', l: 'Дополнить' },
+                                        { v: 'replace', l: 'Заменить' },
+                                        { v: 'clear', l: 'Очистить заметки' },
                                     ] as { v: 'append' | 'replace' | 'clear'; l: string }[]).map(opt => (
                                         <button
                                             key={opt.v}
@@ -2589,49 +2586,49 @@ export default function RSVPDashboard() {
                                             onChange={(e) => setBulkNote(e.target.value)}
                                             className="w-full px-4 py-3 border border-gray-200 rounded-2xl bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all resize-y"
                                             rows={3}
-                                            placeholder={bulkNoteMode === 'append' ? 'Added on its own line to every selected guest…' : 'Overwrites the note on every selected guest…'}
+                                            placeholder={bulkNoteMode === 'append' ? 'Добавится новой строкой каждому выбранному гостю…' : 'Заменит заметку каждого выбранного гостя…'}
                                         />
                                         <p className="text-xs text-gray-400 mt-1.5">
                                             {bulkNoteMode === 'append'
-                                                ? 'Existing notes are kept — this goes on a new line underneath. Leave blank to skip.'
-                                                : '⚠️ Replaces whatever note each selected guest already has. Leave blank to skip.'}
+                                                ? 'Старые заметки сохранятся, новая добавится ниже. Пустое поле не изменит заметки.'
+                                                : '⚠️ Заменит заметки выбранных гостей. Оставьте пустым, чтобы не менять.'}
                                         </p>
                                     </>
                                 ) : (
-                                    <p className="text-xs text-red-600 font-semibold">⚠️ Wipes the note on all {selectedGuests.length} selected guest{selectedGuests.length === 1 ? '' : 's'}.</p>
+                                    <p className="text-xs text-red-600 font-semibold">⚠️ Удалит заметки у всех {selectedGuests.length} выбранных гостей{selectedGuests.length === 1 ? '' : ''}.</p>
                                 )}
                             </div>
 
                             {/* Side */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Side</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Сторона</label>
                                 <select
                                     value={bulkSide}
                                     onChange={(e) => setBulkSide(e.target.value)}
                                     className="w-full px-4 py-3 border border-gray-200 rounded-2xl bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all"
                                 >
-                                    <option value="">Leave unchanged</option>
-                                    <option value="bride">{config?.brideName || 'Bride'}&apos;s Side</option>
-                                    <option value="groom">{config?.groomName || 'Groom'}&apos;s Side</option>
-                                    <option value="clear">Clear side</option>
+                                    <option value="">Не менять</option>
+                                    <option value="bride">{config?.brideName || 'Невеста'} — сторона</option>
+                                    <option value="groom">{config?.groomName || 'Жених'} — сторона</option>
+                                    <option value="clear">Убрать сторону</option>
                                 </select>
                             </div>
 
                             {/* RSVP Status */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">RSVP Status</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Ответ на приглашение</label>
                                 <select
                                     value={bulkRsvp}
                                     onChange={(e) => setBulkRsvp(e.target.value)}
                                     className="w-full px-4 py-3 border border-gray-200 rounded-2xl bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all"
                                 >
-                                    <option value="">Leave unchanged</option>
-                                    <option value="likely_not_coming">Likely Not Coming</option>
-                                    <option value="attending">Attending</option>
-                                    <option value="declined">Declined</option>
-                                    <option value="clear">Clear to No Response</option>
+                                    <option value="">Не менять</option>
+                                    <option value="likely_not_coming">Вероятно, не придут</option>
+                                    <option value="attending">Придёт</option>
+                                    <option value="declined">Отказались</option>
+                                    <option value="clear">Сбросить до «Нет ответа»</option>
                                 </select>
-                                <p className="text-xs text-gray-400 mt-1.5">Admin-only override. This is what guests actually replied, so change it in bulk with care.</p>
+                                <p className="text-xs text-gray-400 mt-1.5">Замена ответов гостей администратором. Проверьте выбранных гостей перед массовым изменением.</p>
                             </div>
 
                             {bulkResult && (
@@ -2644,14 +2641,14 @@ export default function RSVPDashboard() {
                                 onClick={() => setShowBulkModal(false)}
                                 className="px-6 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-all duration-300 shadow-sm hover:shadow-md"
                             >
-                                Cancel
+                                Отмена
                             </button>
                             <button
                                 onClick={handleBulkEdit}
                                 disabled={bulkSaving}
                                 className="px-6 py-2.5 text-sm font-semibold text-white bg-accent rounded-full hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 shadow-md hover:shadow-lg"
                             >
-                                {bulkSaving ? 'Applying…' : `Apply to ${selectedGuests.length}`}
+                                {bulkSaving ? 'Применяем…' : `Применить к ${selectedGuests.length}`}
                             </button>
                         </div>
                     </div>
@@ -2671,13 +2668,13 @@ export default function RSVPDashboard() {
             {showImportModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-6">
-                        <h3 className="text-2xl font-bold text-gray-900 mb-4">Import Guests from CSV</h3>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-4">Импорт гостей из CSV</h3>
 
                         {!importResults ? (
                             <>
                                 <div className="mb-6">
                                     <p className="text-sm text-gray-600 mb-4">
-                                        Upload a CSV file with guest information. The CSV should have a header row with the following columns:
+                                        Загрузите CSV с данными гостей. В первой строке должны быть следующие названия столбцов:
                                     </p>
                                     <div className="bg-gray-50 p-4 rounded-2xl">
                                         <code className="text-sm text-gray-800">
@@ -2685,13 +2682,13 @@ export default function RSVPDashboard() {
                                         </code>
                                     </div>
                                     <p className="text-xs text-gray-500 mt-2">
-                                        Example: John Doe,john@email.com,555-1234,2,bride,Vegan meal,Jane Doe,&quot;123 Main St, Milwaukee, WI 53201&quot;
+                                        Пример: Иван Петров,ivan@example.com,+79991234567,2,bride,Веганское меню,Анна Петрова,&quot;Москва, Садовая 10&quot;
                                     </p>
                                 </div>
 
                                 <div className="mb-6">
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Select CSV File
+                                        Выбрать CSV
                                     </label>
                                     <input
                                         type="file"
@@ -2710,39 +2707,39 @@ export default function RSVPDashboard() {
                                         }}
                                         className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-all duration-300 shadow-md hover:shadow-lg"
                                     >
-                                        Cancel
+                                        Отмена
                                     </button>
                                     <button
                                         onClick={handleImportCSV}
                                         disabled={!csvFile || importing}
                                         className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-full hover:bg-green-700 disabled:opacity-50 transition-all duration-300 shadow-md hover:shadow-lg"
                                     >
-                                        {importing ? 'Importing...' : 'Import'}
+                                        {importing ? 'Импортируем...' : 'Импортировать'}
                                     </button>
                                 </div>
                             </>
                         ) : (
                             <>
                                 <div className="mb-6">
-                                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Import Results</h4>
+                                    <h4 className="text-lg font-semibold text-gray-900 mb-3">Результаты импорта</h4>
                                     <div className="grid grid-cols-3 gap-4 mb-4">
                                         <div className="bg-green-50 p-4 rounded-2xl">
-                                            <p className="text-sm text-gray-600">Added</p>
+                                            <p className="text-sm text-gray-600">Добавлено</p>
                                             <p className="text-2xl font-bold text-green-600">{importResults.added}</p>
                                         </div>
                                         <div className="bg-blue-50 p-4 rounded-2xl">
-                                            <p className="text-sm text-gray-600">Updated</p>
+                                            <p className="text-sm text-gray-600">Обновлено</p>
                                             <p className="text-2xl font-bold text-blue-600">{importResults.updated}</p>
                                         </div>
                                         <div className="bg-red-50 p-4 rounded-2xl">
-                                            <p className="text-sm text-gray-600">Failed</p>
+                                            <p className="text-sm text-gray-600">Ошибка</p>
                                             <p className="text-2xl font-bold text-red-600">{importResults.failed}</p>
                                         </div>
                                     </div>
 
                                     {importResults.errors.length > 0 && (
                                         <div className="bg-red-50 p-4 rounded-2xl max-h-48 overflow-y-auto">
-                                            <p className="text-sm font-semibold text-red-800 mb-2">Errors:</p>
+                                            <p className="text-sm font-semibold text-red-800 mb-2">Ошибки:</p>
                                             <ul className="text-xs text-red-700 space-y-1">
                                                 {importResults.errors.map((error, idx) => (
                                                     <li key={idx}>• {error}</li>
@@ -2761,7 +2758,7 @@ export default function RSVPDashboard() {
                                         }}
                                         className="px-4 py-2 text-sm font-medium text-white bg-accent rounded-full hover:bg-accent/90 transition-all duration-300 shadow-md hover:shadow-lg"
                                     >
-                                        Close
+                                        Закрыть
                                     </button>
                                 </div>
                             </>

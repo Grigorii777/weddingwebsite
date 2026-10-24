@@ -55,7 +55,7 @@ async function create(request: Request, { params }: Params) {
             for (const [key, field] of Object.entries(TRIP_FIELDS)) {
                 if (key in body) { columns.push(key); values.push(coerce(field, body[key])); }
             }
-            if (!columns.length) return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+            if (!columns.length) return NextResponse.json({ error: 'Нет полей для обновления' }, { status: 400 });
             const sets = columns.map((c, i) => `${c} = $${i + 1}`).join(', ');
             const result = await pool.query(
                 `UPDATE honeymoon_trip SET ${sets} WHERE id = 1 RETURNING *`, values,
@@ -64,7 +64,7 @@ async function create(request: Request, { params }: Params) {
         }
 
         const def = resolve(resource);
-        if (!def) return NextResponse.json({ error: 'Unknown resource' }, { status: 404 });
+        if (!def) return NextResponse.json({ error: 'Неизвестный раздел данных' }, { status: 404 });
 
         /*
          * An array inserts many rows in one transaction.
@@ -125,12 +125,12 @@ async function create(request: Request, { params }: Params) {
         for (const key of def.required) {
             const value = body[key];
             if (value == null || value === '') {
-                return NextResponse.json({ error: `${key} is required` }, { status: 400 });
+                return NextResponse.json({ error: `${key} обязательно` }, { status: 400 });
             }
         }
 
         const { columns, values } = collect(def, body);
-        if (!columns.length) return NextResponse.json({ error: 'No fields provided' }, { status: 400 });
+        if (!columns.length) return NextResponse.json({ error: 'Поля не указаны' }, { status: 400 });
         defaultCategory(def, columns, values);
 
         const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
@@ -143,10 +143,10 @@ async function create(request: Request, { params }: Params) {
         // unique_violation: a day number or category key that already exists
         // is the caller's to resolve, not a server fault.
         if ((error as { code?: string })?.code === '23505') {
-            return NextResponse.json({ error: `That ${resource === 'days' ? 'day number' : 'value'} already exists` }, { status: 409 });
+            return NextResponse.json({ error: `Такой ${resource === 'days' ? 'номер дня' : 'значение'} уже существует` }, { status: 409 });
         }
         console.error(`Error creating ${resource}:`, error);
-        return NextResponse.json({ error: `Failed to create ${resource}` }, { status: 500 });
+        return NextResponse.json({ error: `Не удалось создать: ${resource}` }, { status: 500 });
     }
 }
 
@@ -163,7 +163,7 @@ export async function PATCH(request: Request, { params }: Params) {
             for (const [key, field] of Object.entries(TRIP_FIELDS)) {
                 if (key in body) { columns.push(key); values.push(coerce(field, body[key])); }
             }
-            if (!columns.length) return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+            if (!columns.length) return NextResponse.json({ error: 'Нет полей для обновления' }, { status: 400 });
             const sets = columns.map((c, i) => `${c} = $${i + 1}`).join(', ');
             const result = await pool.query(
                 `UPDATE honeymoon_trip SET ${sets} WHERE id = 1 RETURNING *`, values,
@@ -172,7 +172,7 @@ export async function PATCH(request: Request, { params }: Params) {
         }
 
         const def = resolve(resource);
-        if (!def) return NextResponse.json({ error: 'Unknown resource' }, { status: 404 });
+        if (!def) return NextResponse.json({ error: 'Неизвестный раздел данных' }, { status: 404 });
 
         /*
          * `{ rank: [id, id, …] }` writes the shortlist's ranking in one
@@ -301,9 +301,9 @@ export async function PATCH(request: Request, { params }: Params) {
             const ids = body.ids
                 .map((raw: unknown) => Math.trunc(Number(raw)))
                 .filter((n: number) => Number.isFinite(n) && n > 0);
-            if (!ids.length) return NextResponse.json({ error: 'No valid ids' }, { status: 400 });
+            if (!ids.length) return NextResponse.json({ error: 'Нет допустимых идентификаторов' }, { status: 400 });
             const { columns, values } = collect(def, body);
-            if (!columns.length) return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+            if (!columns.length) return NextResponse.json({ error: 'Нет полей для обновления' }, { status: 400 });
             defaultCategory(def, columns, values);
             const sets = columns.map((c, i) => `${c} = $${i + 1}`).join(', ');
             const result = await pool.query(
@@ -315,11 +315,11 @@ export async function PATCH(request: Request, { params }: Params) {
 
         const id = Math.trunc(Number(body.id));
         if (!Number.isFinite(id) || id <= 0) {
-            return NextResponse.json({ error: 'Valid id required' }, { status: 400 });
+            return NextResponse.json({ error: 'Требуется корректный идентификатор' }, { status: 400 });
         }
 
         const { columns, values } = collect(def, body);
-        if (!columns.length) return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+        if (!columns.length) return NextResponse.json({ error: 'Нет полей для обновления' }, { status: 400 });
         defaultCategory(def, columns, values);
 
         const sets = columns.map((c, i) => `${c} = $${i + 1}`).join(', ');
@@ -327,11 +327,11 @@ export async function PATCH(request: Request, { params }: Params) {
             `UPDATE ${def.table} SET ${sets} WHERE id = $${columns.length + 1} RETURNING *`,
             [...values, id],
         );
-        if (!result.rowCount) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        if (!result.rowCount) return NextResponse.json({ error: 'Не найдено' }, { status: 404 });
         return NextResponse.json(result.rows[0]);
     } catch (error) {
         console.error(`Error updating ${resource}:`, error);
-        return NextResponse.json({ error: `Failed to update ${resource}` }, { status: 500 });
+        return NextResponse.json({ error: `Не удалось обновить: ${resource}` }, { status: 500 });
     }
 }
 
@@ -340,7 +340,7 @@ export async function DELETE(request: Request, { params }: Params) {
     try {
         await ensureHoneymoonTables();
         const def = resolve(resource);
-        if (!def) return NextResponse.json({ error: 'Unknown resource' }, { status: 404 });
+        if (!def) return NextResponse.json({ error: 'Неизвестный раздел данных' }, { status: 404 });
 
         const params = new URL(request.url).searchParams;
 
@@ -352,7 +352,7 @@ export async function DELETE(request: Request, { params }: Params) {
             const ids = idsParam.split(',')
                 .map((raw) => Math.trunc(Number(raw.trim())))
                 .filter((n) => Number.isFinite(n) && n > 0);
-            if (!ids.length) return NextResponse.json({ error: 'No valid ids' }, { status: 400 });
+            if (!ids.length) return NextResponse.json({ error: 'Нет допустимых идентификаторов' }, { status: 400 });
             if (def.table === 'honeymoon_categories') {
                 // Same rule as the single delete below: the fallback stays, and
                 // places filed under a deleted category move to it.
@@ -379,7 +379,7 @@ export async function DELETE(request: Request, { params }: Params) {
 
         const id = Math.trunc(Number(params.get('id')));
         if (!Number.isFinite(id) || id <= 0) {
-            return NextResponse.json({ error: 'Valid id required' }, { status: 400 });
+            return NextResponse.json({ error: 'Требуется корректный идентификатор' }, { status: 400 });
         }
 
         // Places keep a category by key, not by id, so deleting a category would
@@ -390,7 +390,7 @@ export async function DELETE(request: Request, { params }: Params) {
             const key = row.rows[0]?.key;
             if (key === 'misc') {
                 return NextResponse.json(
-                    { error: 'Other is the fallback category and cannot be deleted' },
+                    { error: 'Категорию «Другое» нельзя удалить' },
                     { status: 400 },
                 );
             }
@@ -402,11 +402,11 @@ export async function DELETE(request: Request, { params }: Params) {
         }
 
         const result = await pool.query(`DELETE FROM ${def.table} WHERE id = $1`, [id]);
-        if (!result.rowCount) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        if (!result.rowCount) return NextResponse.json({ error: 'Не найдено' }, { status: 404 });
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error(`Error deleting ${resource}:`, error);
-        return NextResponse.json({ error: `Failed to delete ${resource}` }, { status: 500 });
+        return NextResponse.json({ error: `Не удалось удалить: ${resource}` }, { status: 500 });
     }
 }
 

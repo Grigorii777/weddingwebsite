@@ -103,41 +103,41 @@ export default function AdminShell({
     const isWideGutter = pathname?.startsWith('/admin/finances');
 
     const navGroups: { title?: string; items: { href: string; label: string }[] }[] = [
-        { items: [{ href: '/admin/dashboard', label: '⌂ Dashboard' }] },
+        { items: [{ href: '/admin/dashboard', label: '⌂ Обзор' }] },
         {
             // Running the wedding — the live, day-to-day work.
-            title: 'Planning',
+            title: 'Планирование',
             items: [
-                { href: '/admin/rsvps', label: 'RSVPs' },
-                { href: '/admin/finances', label: 'Finances' },
-                { href: '/admin/seating', label: 'Seating Chart' },
-                { href: '/admin/honeymoon', label: 'Honeymoon' },
+                { href: '/admin/rsvps', label: 'Ответы гостей' },
+                { href: '/admin/finances', label: 'Финансы' },
+                { href: '/admin/seating', label: 'Рассадка' },
+                { href: '/admin/honeymoon', label: 'Свадебное путешествие' },
             ],
         },
         {
             // Page editors, in the order the pages appear in the public nav bar.
             // Nav Cards and Q&A sit under Home Page and About Page because
             // that's where those sections render.
-            title: 'Pages',
+            title: 'Страницы',
             items: [
-                { href: '/admin/home', label: 'Home Page' },
-                { href: '/admin/nav-cards', label: 'Nav Cards' },
-                { href: '/admin/about', label: 'About Page' },
-                { href: '/admin/faqs', label: 'Q&A' },
-                { href: '/admin/timeline', label: 'Our Story' },
-                { href: '/admin/wedding-party', label: 'Wedding Party' },
-                { href: '/admin/schedule', label: 'Schedule' },
-                { href: '/admin/photos', label: 'Photos' },
-                { href: '/admin/registry', label: 'Registry' },
+                { href: '/admin/home', label: 'Главная страница' },
+                { href: '/admin/nav-cards', label: 'Карточки разделов' },
+                { href: '/admin/about', label: 'О нас' },
+                { href: '/admin/faqs', label: 'Вопросы и ответы' },
+                { href: '/admin/timeline', label: 'Наша история' },
+                { href: '/admin/wedding-party', label: 'Наши близкие' },
+                { href: '/admin/schedule', label: 'Программа' },
+                { href: '/admin/photos', label: 'Фотографии' },
+                { href: '/admin/registry', label: 'Подарки' },
             ],
         },
         {
             // Set once, rarely touched again.
-            title: 'Settings',
+            title: 'Настройки',
             items: [
-                { href: '/admin/settings', label: 'General Settings' },
-                { href: '/admin/color', label: 'Color' },
-                { href: '/admin/wip-control', label: 'Work in Progress' },
+                { href: '/admin/settings', label: 'Общие настройки' },
+                { href: '/admin/color', label: 'Цвета' },
+                { href: '/admin/wip-control', label: 'Страницы в разработке' },
             ],
         },
     ];
@@ -167,7 +167,7 @@ export default function AdminShell({
                     className="md:hidden h-14 shrink-0 bg-white border-b border-gray-200 flex items-center justify-between px-4"
                 >
                     <span className="flex items-center gap-2">
-                        <span className="text-base font-serif font-bold text-gray-800">Admin Panel</span>
+                        <span className="text-base font-serif font-bold text-gray-800">Панель управления</span>
                         {/* Also here: on a phone the sidebar's own header sits
                             behind the site's floating nav and can't be tapped. */}
                         <Changelog />
@@ -175,7 +175,7 @@ export default function AdminShell({
                     <button
                         onClick={() => setSidebarOpen(o => !o)}
                         className="p-2 rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
-                        aria-label="Toggle navigation"
+                        aria-label="Открыть или скрыть меню"
                     >
                         {sidebarOpen ? (
                             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -208,7 +208,7 @@ export default function AdminShell({
                         <div className="h-16 flex items-center justify-center gap-2 border-b
                             border-gray-200 px-4 shrink-0">
                             <span className="text-lg font-serif font-bold text-gray-800 text-center">
-                                Admin Panel
+                                Панель управления
                             </span>
                             {/* The release notes belong where the panel is named,
                                 not only in the repository. */}
@@ -246,7 +246,7 @@ export default function AdminShell({
                                 onClick={handleLogout}
                                 className="w-full text-left px-4 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 transition-colors mt-2"
                             >
-                                Logout
+                                Выйти
                             </button>
                         </nav>
                     </aside>

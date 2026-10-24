@@ -73,7 +73,7 @@ export function mailName(guest: MailGuest): string {
 
     if (size === 2) {
         const second = names[1];
-        if (!second) return `${primary} & Guest`;
+        if (!second) return `${primary} и гость`;
         const a = splitName(primary);
         const b = splitName(second);
         if (a.last && b.last && a.last.toLowerCase() === b.last.toLowerCase()) {
@@ -96,7 +96,7 @@ export function mailName(guest: MailGuest): string {
             bestCount = count;
         }
     });
-    return best ? `${best} Family` : primary;
+    return best ? `${best} — семья` : primary;
 }
 
 export interface ParsedAddress {
@@ -127,7 +127,7 @@ const US_STATES = new Set([
 /** Split a free-text address into mailing-label lines. */
 export function parseAddress(raw: string | null | undefined): ParsedAddress {
     const blank: ParsedAddress = { street: '', city: '', state: '', zip: '', cityStateZip: '', warning: '' };
-    if (!(raw || '').trim()) return { ...blank, warning: 'No address' };
+    if (!(raw || '').trim()) return { ...blank, warning: 'Нет адреса' };
 
     const parts = (raw as string)
         // Line breaks act as separators, including a literal "\n" from a paste.
@@ -136,7 +136,7 @@ export function parseAddress(raw: string | null | undefined): ParsedAddress {
         .filter(Boolean);
 
     if (parts.length === 1) {
-        return { ...blank, street: parts[0], warning: 'Could not split city / state / zip' };
+        return { ...blank, street: parts[0], warning: 'Не удалось определить город, регион и индекс' };
     }
 
     let state = '';
@@ -191,7 +191,7 @@ export function parseAddress(raw: string | null | undefined): ParsedAddress {
         state,
         zip,
         cityStateZip: [city, [state, zip].filter(Boolean).join(' ')].filter(Boolean).join(', '),
-        warning: missing.length ? `missing ${missing.join(', ')}` : '',
+        warning: missing.length ? `не указано: ${missing.join(', ')}` : '',
     };
 }
 
@@ -218,32 +218,32 @@ export function toCsv(headers: string[], rows: unknown[][]): string {
 }
 
 export const MAILING_HEADERS = [
-    'Mail Name',
-    'Street',
-    'City State Zip',
-    'City',
-    'State',
-    'Zip',
-    'Address Issue',
-    'Shares Address With',
-    'Full Address',
-    'Party Size',
-    'Guest Name',
-    'Party Members',
-    'Email',
-    'Phone',
-    'Side',
-    'Relationship',
-    'Invited',
-    'RSVP Status',
-    'Flag',
-    'Notes',
+    'Получатель',
+    'Улица',
+    'Город, регион, индекс',
+    'Город',
+    'Регион',
+    'Индекс',
+    'Проблема с адресом',
+    'Общий адрес с',
+    'Полный адрес',
+    'Размер компании',
+    'Имя гостя',
+    'Участники компании',
+    'Электронная почта',
+    'Телефон',
+    'Сторона',
+    'Кем приходится',
+    'Приглашены',
+    'Ответ на приглашение',
+    'Отметка',
+    'Заметки',
 ];
 
 const RSVP_LABELS: Record<string, string> = {
-    attending: 'Attending',
-    declined: 'Declined',
-    likely_not_coming: 'Likely Not Coming',
+    attending: 'Придёт',
+    declined: 'Отказались',
+    likely_not_coming: 'Вероятно, не придут',
 };
 
 export interface ExportGuest extends MailGuest {
@@ -291,13 +291,13 @@ export function mailingRows(guests: ExportGuest[]): unknown[][] {
             (guest.address || '').replace(/\s*\n\s*/g, ', ').trim(),
             guest.party_size || 1,
             guest.guest_name,
-            [...members, ...Array(unnamed).fill('Guest')].join('; '),
+            [...members, ...Array(unnamed).fill('Гость')].join('; '),
             guest.email || '',
             guest.phone || '',
             guest.side || '',
             guest.relationship || '',
-            guest.invited ? 'Yes' : 'No',
-            RSVP_LABELS[guest.rsvp_status || ''] || 'No Response',
+            guest.invited ? 'Да' : 'Нет',
+            RSVP_LABELS[guest.rsvp_status || ''] || 'Нет ответа',
             guest.flag || '',
             guest.notes || '',
         ];

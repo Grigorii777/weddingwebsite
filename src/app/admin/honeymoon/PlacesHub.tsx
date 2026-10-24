@@ -42,13 +42,13 @@ export default function PlacesHub({ segment }: { segment: PlacesSegment }) {
 
     const segmentSwitch = (
         <Segmented<PlacesSegment>
-            ariaLabel="Which places"
+            ariaLabel="Какие места"
             value={segment}
             onChange={(next) => { if (!goTab(HREF[next])) router.push(HREF[next]); }}
             options={[
-                { key: 'all', label: 'All', count: counts.all },
-                { key: 'stays', label: 'Stays', count: counts.stays },
-                { key: 'excursions', label: 'Excursions', count: counts.excursions },
+                { key: 'all', label: 'Все', count: counts.all },
+                { key: 'stays', label: 'Проживание', count: counts.stays },
+                { key: 'excursions', label: 'Экскурсии', count: counts.excursions },
             ]}
         />
     );

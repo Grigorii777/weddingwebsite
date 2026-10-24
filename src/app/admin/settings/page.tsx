@@ -6,9 +6,9 @@ import { DEFAULT_ROOM_BLOCK_MESSAGE } from '@/lib/roomBlock';
 import { effectiveRsvpMode, type RsvpModeSetting } from '@/lib/rsvpMode';
 
 const RSVP_MODE_LABEL: Record<'link' | 'verify' | 'simple', string> = {
-    link: 'Email link',
-    verify: 'Verify by email',
-    simple: 'Simple (no verification)',
+    link: 'Ссылка по почте',
+    verify: 'Проверка по email',
+    simple: 'Без проверки',
 };
 
 export default function AdminSettings() {
@@ -66,7 +66,7 @@ export default function AdminSettings() {
             }
         } catch {
             setTestState('error');
-            setTestMessage('The test mail request could not be sent.');
+            setTestMessage('Не удалось отправить запрос на тестовое письмо.');
         }
     }, []);
 
@@ -104,8 +104,8 @@ export default function AdminSettings() {
     return (
         <div className="max-w-2xl">
             <AutosaveHeader
-                title="General Settings"
-                subtitle="Configure your wedding website details and appearance. Changes save themselves."
+                title="Общие настройки"
+                subtitle="Настройте сведения о свадьбе и оформление сайта. Изменения сохраняются автоматически."
                 state={state}
                 onRetry={retry}
             />
@@ -113,7 +113,7 @@ export default function AdminSettings() {
             <div className="space-y-6 bg-white p-8 rounded-2xl border border-gray-200 shadow-lg">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Bride&apos;s Name</label>
+                        <label className="block text-sm font-medium text-gray-700">Имя невесты</label>
                         <input
                             type="text"
                             value={config.brideName}
@@ -122,7 +122,7 @@ export default function AdminSettings() {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Groom&apos;s Name</label>
+                        <label className="block text-sm font-medium text-gray-700">Имя жениха</label>
                         <input
                             type="text"
                             value={config.groomName}
@@ -133,56 +133,56 @@ export default function AdminSettings() {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Wedding Date</label>
+                    <label className="block text-sm font-medium text-gray-700">Дата свадьбы</label>
                     <input
                         type="text"
                         value={config.weddingDate}
                         onChange={(e) => setConfig({ ...config, weddingDate: e.target.value })}
                         className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
-                        placeholder="e.g. June 15, 2024"
+                        placeholder="Например: 15 июня 2027"
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Wedding Time</label>
+                    <label className="block text-sm font-medium text-gray-700">Время свадьбы</label>
                     <input
                         type="text"
                         value={config.weddingTime}
                         onChange={(e) => setConfig({ ...config, weddingTime: e.target.value })}
                         className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
-                        placeholder="e.g. 4:00 PM"
+                        placeholder="Например: 16:00"
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Countdown Display Mode</label>
+                    <label className="block text-sm font-medium text-gray-700">Вид обратного отсчёта</label>
                     <select
                         value={config.countdownMode || 'full'}
                         onChange={(e) => setConfig({ ...config, countdownMode: e.target.value })}
                         className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border text-gray-900"
                     >
-                        <option value="full">Full (Days, Hours, Minutes, Seconds)</option>
-                        <option value="simple">Simple (Days, Hours only)</option>
-                        <option value="days-only">Days Only (Large Display)</option>
+                        <option value="full">Полный: дни, часы, минуты, секунды</option>
+                        <option value="simple">Краткий: дни и часы</option>
+                        <option value="days-only">Только дни крупным шрифтом</option>
                     </select>
                     <p className="mt-1 text-sm text-gray-500">
-                        Choose the countdown display style - Days Only shows a larger, more prominent display
+                        Выберите вид счётчика. В режиме «Только дни» число отображается крупнее.
                     </p>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Venue Name</label>
+                    <label className="block text-sm font-medium text-gray-700">Название места торжества</label>
                     <input
                         type="text"
                         value={config.weddingVenue || ''}
                         onChange={(e) => setConfig({ ...config, weddingVenue: e.target.value })}
                         className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border"
-                        placeholder="e.g. The Grand Hotel"
+                        placeholder="Например: Усадьба"
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Location (City, State)</label>
+                    <label className="block text-sm font-medium text-gray-700">Город, регион</label>
                     <input
                         type="text"
                         value={config.weddingLocation}
@@ -193,12 +193,12 @@ export default function AdminSettings() {
 
                 <div className="pt-6 border-t border-gray-100">
                     <div className="bg-gradient-to-br from-accent/10 to-accent-light/20 rounded-xl p-6 mb-6 border border-accent/20">
-                        <h2 className="text-xl font-semibold text-gray-900 mb-4">Navigation Display</h2>
+                        <h2 className="text-xl font-semibold text-gray-900 mb-4">Оформление меню</h2>
                         <div className="flex items-center justify-between">
                             <div>
-                                <h3 className="font-semibold text-gray-900">Logo Mode</h3>
+                                <h3 className="font-semibold text-gray-900">Использовать логотип</h3>
                                 <p className="text-sm text-gray-600 mt-1">
-                                    Use a wedding logo image in the navigation bar instead of names
+                                    Показывать свадебный логотип в меню вместо имён
                                 </p>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
@@ -213,19 +213,19 @@ export default function AdminSettings() {
                         </div>
                         <div className="mt-4 p-4 bg-white/50 rounded-lg border border-accent/30">
                             <p className="text-sm text-gray-700">
-                                <strong>Name Mode (Default):</strong> Displays bride and groom names in the navigation bar
+                                <strong>Имена по умолчанию:</strong> В меню показаны имена невесты и жениха
                             </p>
                             <p className="text-sm text-gray-700 mt-2">
-                                <strong>Logo Mode:</strong> Displays your wedding logo image. Set the logo in Admin → Photos → &quot;Set Wedding Logo&quot;
+                                <strong>Логотип:</strong> В меню показан логотип. Выберите его в разделе «Фотографии» → «Сделать логотипом».
                             </p>
                         </div>
                     </div>
                 </div>
 
                 <div className="pt-6 border-t border-gray-100">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">RSVP Data</h2>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Настройки ответов</h2>
                     <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700">Contact Email</label>
+                        <label className="block text-sm font-medium text-gray-700">Email для связи</label>
                         <input
                             type="email"
                             value={config.contactEmail || ''}
@@ -233,38 +233,38 @@ export default function AdminSettings() {
                             className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border text-gray-900"
                             placeholder="you@example.com"
                         />
-                        <p className="mt-1 text-xs text-gray-500">Shown on the RSVP page for guests having trouble.</p>
+                        <p className="mt-1 text-xs text-gray-500">Для связи с гостями, у которых возникли сложности с ответом.</p>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">RSVP Deadline</label>
+                        <label className="block text-sm font-medium text-gray-700">Ответить до</label>
                         <input
                             type="date"
                             value={config.rsvpDeadline || ''}
                             onChange={(e) => setConfig({ ...config, rsvpDeadline: e.target.value })}
                             className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border text-gray-900"
                         />
-                        <p className="mt-1 text-xs text-gray-500">The public RSVP page shows this date and counts down the days remaining.</p>
+                        <p className="mt-1 text-xs text-gray-500">Гости увидят эту дату и оставшееся число дней на странице ответа.</p>
                     </div>
                 </div>
 
                 <div className="pt-6 border-t border-gray-100">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Accommodations / Room Block</h2>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Проживание и номера для гостей</h2>
                     <p className="text-sm text-gray-500 mb-4">
-                        Shown to guests on the RSVP confirmation screen. Leave the hotel name blank to hide the room-block card entirely.
+                        Показывается после ответа на приглашение. Без названия отеля карточка скрыта.
                     </p>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Hotel / Room Block Name</label>
+                            <label className="block text-sm font-medium text-gray-700">Название отеля или блока номеров</label>
                             <input
                                 type="text"
                                 value={config.roomBlockHotel || ''}
                                 onChange={(e) => setConfig({ ...config, roomBlockHotel: e.target.value })}
                                 className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border text-gray-900"
-                                placeholder="e.g. The Harbor View"
+                                placeholder="Например: Гостиница у парка"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Booking URL</label>
+                            <label className="block text-sm font-medium text-gray-700">Ссылка на бронирование</label>
                             <input
                                 type="url"
                                 value={config.roomBlockUrl || ''}
@@ -274,20 +274,20 @@ export default function AdminSettings() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Room Block Message</label>
+                            <label className="block text-sm font-medium text-gray-700">Текст о проживании</label>
                             <textarea
                                 rows={5}
                                 value={config.roomBlockMessage || ''}
                                 onChange={(e) => setConfig({ ...config, roomBlockMessage: e.target.value })}
                                 className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border text-gray-900"
-                                placeholder="Leave blank to use the default wording."
+                                placeholder="Оставьте пустым для стандартного текста."
                             />
                             <div className="mt-2 text-xs text-gray-500 space-y-1">
-                                <p>Shown on the RSVP confirmation card. Leave blank to use the default wording. You can use these tokens:</p>
+                                <p>Текст после отправки ответа. Пустое поле использует стандартный текст. Доступные подстановки:</p>
                                 <ul className="list-disc list-inside space-y-0.5">
-                                    <li><code className="text-accent font-mono">{'{names}'}</code> — the couple&apos;s names (e.g. Heaven &amp; Austin)</li>
-                                    <li><code className="text-accent font-mono">{'{hotel}'}</code> — the hotel / room block name above</li>
-                                    <li><code className="text-accent font-mono">{'{book}'}</code> — a clickable &quot;Book Your Room&quot; link. Its address comes from the Booking URL above, so editing this message can never break the link.</li>
+                                    <li><code className="text-accent font-mono">{'{names}'}</code> — имена молодожёнов</li>
+                                    <li><code className="text-accent font-mono">{'{hotel}'}</code> — название отеля выше</li>
+                                    <li><code className="text-accent font-mono">{'{book}'}</code> — ссылка «Забронировать номер». Адрес берётся из поля ссылки на бронирование выше.</li>
                                 </ul>
                             </div>
                         </div>
@@ -295,25 +295,23 @@ export default function AdminSettings() {
                 </div>
 
                 <div className="pt-6 border-t border-gray-100">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Email (SMTP)</h2>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Почта (SMTP)</h2>
                     <p className="text-sm text-gray-500 mb-4">
-                        The RSVP confirmation and the notification to you go out over SMTP. The credentials live
-                        in the stack&apos;s environment, not in this page — here you can see their state and send a
-                        test mail.
+                        Подтверждения гостям и уведомления вам отправляются через SMTP. Реквизиты задаются в переменных окружения. Здесь можно проверить настройку и отправить тестовое письмо.
                     </p>
                     {emailStatus === null ? (
-                        <p className="text-sm text-gray-500">Checking the mail settings…</p>
+                        <p className="text-sm text-gray-500">Проверяем настройки почты…</p>
                     ) : (
                         <div className="p-4 bg-white/50 rounded-lg border border-accent/30">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div>
                                     <h3 className="font-semibold text-gray-900">
-                                        {emailStatus.configured ? `Configured — ${emailStatus.host}` : 'Not configured'}
+                                        {emailStatus.configured ? `Настроено — ${emailStatus.host}` : 'Не настроено'}
                                     </h3>
                                     <p className="text-sm text-gray-600 mt-1">
                                         {emailStatus.configured
-                                            ? 'Guests get a confirmation and you get a notification when an RSVP arrives.'
-                                            : 'Set SMTP_HOST and SMTP_USER (and NOTIFICATION_EMAIL for the test recipient) in the stack environment to switch it on.'}
+                                            ? 'После ответа гость получит подтверждение, а вы — уведомление.'
+                                            : 'Задайте SMTP_HOST и SMTP_USER в окружении. NOTIFICATION_EMAIL указывает получателя тестового письма.'}
                                     </p>
                                 </div>
                                 <button
@@ -322,14 +320,14 @@ export default function AdminSettings() {
                                     disabled={testState === 'sending'}
                                     className="relative py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-accent hover:bg-accent-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    {testState === 'sending' ? 'Sending…' : 'Send test email'}
+                                    {testState === 'sending' ? 'Отправляем…' : 'Отправить тестовое письмо'}
                                 </button>
                             </div>
                             <p className="mt-3 text-sm text-gray-500">
-                                Test recipient (NOTIFICATION_EMAIL): {emailStatus.notificationEmailSet ? 'set' : 'not set'}
+                                Получатель теста (NOTIFICATION_EMAIL): {emailStatus.notificationEmailSet ? 'указан' : 'не указан'}
                             </p>
                             {testState === 'ok' && (
-                                <p className="mt-2 text-sm text-green-600">Test mail sent — it went to the notification address.</p>
+                                <p className="mt-2 text-sm text-green-600">Тестовое письмо отправлено на адрес уведомлений.</p>
                             )}
                             {testState === 'error' && (
                                 <p className="mt-2 text-sm text-red-600">{testMessage}</p>
@@ -339,16 +337,16 @@ export default function AdminSettings() {
                 </div>
 
                 <div className="pt-6 border-t border-gray-100">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">RSVP Verification</h2>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Проверка ответа гостя</h2>
                     <p className="text-sm text-gray-500 mb-4">
-                        How an RSVP proves it belongs to the household it edits.
+                        Как подтверждается право изменить ответ приглашения.
                     </p>
                     <div className="space-y-3">
                         {([
-                            { value: 'auto', label: 'Automatic (recommended)', help: 'Email link when SMTP is set up, otherwise Verify by email.' },
-                            { value: 'link', label: 'Email link', help: "Strongest. A guest gets a link by email for every RSVP, first one or an update. Needs SMTP — with none set up, guests can't get in." },
-                            { value: 'verify', label: 'Verify by email', help: "No email needed to send. A first RSVP opens right away; changing one already on file needs the email it was sent with — a knowledge check, not proof of that inbox." },
-                            { value: 'simple', label: 'Simple (not recommended)', help: 'No check at all, even on an update — the way the form worked before either mode existed. Anyone who knows a name can see and change that RSVP.' },
+                            { value: 'auto', label: 'Автоматически (рекомендуется)', help: 'Ссылка по почте при настроенном SMTP, иначе проверка по email.' },
+                            { value: 'link', label: 'Ссылка по почте', help: "Самый надёжный вариант. Гость получает ссылку для каждого ответа или изменения. Требуется настроенный SMTP." },
+                            { value: 'verify', label: 'Проверка по email', help: "Первый ответ доступен сразу. Для изменения нужно назвать ранее указанный email. Письмо не отправляется, владение почтой не проверяется." },
+                            { value: 'simple', label: 'Без проверки (не рекомендуется)', help: 'Ответы доступны без проверки. Любой, кто знает имя, может просмотреть и изменить ответ.' },
                         ] as { value: RsvpModeSetting; label: string; help: string }[]).map((opt) => (
                             <label
                                 key={opt.value}
@@ -373,9 +371,9 @@ export default function AdminSettings() {
                     </div>
                     {config.rsvpMode === 'auto' && (
                         <p className="mt-3 text-sm text-gray-600">
-                            Currently using: <span className="font-medium">
+                            Сейчас используется: <span className="font-medium">
                                 {RSVP_MODE_LABEL[effectiveRsvpMode('auto', emailStatus?.configured ?? false)]}
-                            </span>{emailStatus === null ? ' (checking mail settings…)' : !emailStatus.configured ? " — SMTP isn't set up yet" : ''}
+                            </span>{emailStatus === null ? ' (проверяем настройки почты…)' : !emailStatus.configured ? " — SMTP ещё не настроен" : ''}
                         </p>
                     )}
                 </div>

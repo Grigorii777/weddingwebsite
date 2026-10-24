@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import { useMemo, useState } from 'react';
 import type { FinanceApi, FinancePayload } from './useFinances';
@@ -123,7 +124,7 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
         if (!section) return;
         const created = await api.create('items', {
             category_id: section.id,
-            name: row.label || 'Unnamed',
+            name: row.label || 'Без названия',
             unit_cost: row.amount,
             quantity: 1,
             qty_source: 'manual',
@@ -134,7 +135,7 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
         const fresh = await fetch('/api/admin/finances', { cache: 'no-store' }).then((r) => r.json());
         const match = (fresh.categories as typeof categories)
             .flatMap((c) => c.items)
-            .filter((i) => i.name === (row.label || 'Unnamed'))
+            .filter((i) => i.name === (row.label || 'Без названия'))
             .pop();
         if (match) {
             await api.update(row.kind === 'gift' ? 'receipts' : 'purchases',
@@ -144,7 +145,7 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
 
     const addPurchase = () =>
         api.create('purchases', {
-            description: 'New purchase',
+            description: 'Новая покупка',
             amount: 0,
             payer_id: typeof payerFilter === 'number' ? payerFilter : payers[0]?.id ?? null,
             purchased_on: todayLocal(),
@@ -153,29 +154,28 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                <StatTile label="Counted toward budget" value={formatMoney(summary.paidTotal)}
-                    hint={`${rows.length} payment${rows.length === 1 ? '' : 's'} logged`} />
+                <StatTile label="Учтено в бюджете" value={formatMoney(summary.paidTotal)}
+                    hint={`${counted(rows.length, 'платёж', 'платежа', 'платежей')} записано`} />
                 {summary.payers.map((p) => (
-                    <StatTile key={p.id} label={`${p.name} paid`} value={formatMoney(p.spent)} />
+                    <StatTile key={p.id} label={`${p.name} оплаченным`} value={formatMoney(p.spent)} />
                 ))}
-                <StatTile label="From gift money" value={formatMoney(summary.giftAppliedTotal)} tone="good"
+                <StatTile label="Из подаренных денег" value={formatMoney(summary.giftAppliedTotal)} tone="good"
                     hint={summary.giftUnapplied > 0
-                        ? `${formatMoney(summary.giftUnapplied)} received, not applied`
+                        ? `${formatMoney(summary.giftUnapplied)} получено, не распределено`
                         : undefined} />
                 {summary.unlinkedSpend > 0 && (
-                    <StatTile label="Not in the budget" value={formatMoney(summary.unlinkedSpend)}
-                        tone="warn" hint="Doesn't count toward any total" />
+                    <StatTile label="Вне бюджета" value={formatMoney(summary.unlinkedSpend)}
+                        tone="warn" hint="Не учитывается в итогах" />
                 )}
             </div>
 
             {untracked.length > 0 && (
                 <Card className="border-amber-200 bg-amber-50/40 p-4">
                     <h3 className="text-sm font-semibold text-amber-900">
-                        {untracked.length} payment{untracked.length === 1 ? '' : 's'} not in the budget
+                        {counted(untracked.length, 'платёж', 'платежа', 'платежей')} вне бюджета
                     </h3>
                     <p className="mt-0.5 mb-3 text-xs text-amber-700">
-                        These don&apos;t count toward any section, so they&apos;re missing from every
-                        total. Add a budget line for each and it will.
+                        Эти платежи не относятся ни к одному разделу и не учтены в итогах. Назначьте каждому статью бюджета.
                     </p>
                     <div className="space-y-1.5">
                         {untracked.map((row) => (
@@ -189,7 +189,7 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
                                     className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-white
                                         transition-opacity hover:opacity-90"
                                 >
-                                    + Add to budget
+                                    + Добавить в бюджет
                                 </button>
                             </div>
                         ))}
@@ -201,7 +201,7 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
                 <div className="flex flex-wrap items-center gap-2">
                     <div className="flex flex-wrap gap-1.5">
                         <FilterPill active={payerFilter === 'all'} onClick={() => setPayerFilter('all')}>
-                            Everyone
+                            Все
                         </FilterPill>
                         {payers.map((p) => (
                             <FilterPill key={p.id} active={payerFilter === p.id} onClick={() => setPayerFilter(p.id)}>
@@ -209,18 +209,18 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
                             </FilterPill>
                         ))}
                         <FilterPill active={payerFilter === 'gift'} onClick={() => setPayerFilter('gift')}>
-                            🎁 Gift money
+                            🎁 Денежные подарки
                         </FilterPill>
                     </div>
                     <input
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search payments…"
+                        placeholder="Поиск платежей…"
                         className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3 py-2
                             text-base md:w-auto md:flex-1 md:min-w-[10rem] md:py-1.5 md:text-sm
                             focus:outline-none focus:ring-2 focus:ring-accent/30"
                     />
-                    <PillButton tone="accent" onClick={addPurchase}>+ Log purchase</PillButton>
+                    <PillButton tone="accent" onClick={addPurchase}>+ Добавить покупку</PillButton>
                 </div>
 
                 {selectableIds.length > 0 && (
@@ -233,17 +233,17 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
                                     ? new Set(selectableIds) : new Set())}
                                 className="h-4 w-4 rounded border-gray-300"
                             />
-                            Select all {selectableIds.length}
+                            Выбрать всё {selectableIds.length}
                         </label>
                         {selected.size > 0 && (
                             <>
-                                <span className="text-xs text-gray-400">{selected.size} selected</span>
-                                <PillButton onClick={() => setBulkOpen(true)}>Edit selected…</PillButton>
+                                <span className="text-xs text-gray-400">{selected.size} выбрано</span>
+                                <PillButton onClick={() => setBulkOpen(true)}>Изменить выбранное…</PillButton>
                                 <PillButton tone="danger" onClick={async () => {
-                                    if (!confirm(`Archive ${selected.size} payment${selected.size === 1 ? '' : 's'}? They stop counting toward your totals but stay recoverable.`)) return;
+                                    if (!confirm(`В архив: ${counted(selected.size, 'платёж', 'платежа', 'платежей')}? Записи перестанут учитываться в итогах, но их можно будет восстановить.`)) return;
                                     await api.updateMany('purchases', [...selected], { archived: true });
                                     setSelected(new Set());
-                                }}>Archive</PillButton>
+                                }}>В архив</PillButton>
                             </>
                         )}
                     </div>
@@ -255,13 +255,13 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
                     uppercase tracking-wide text-gray-400
                     md:grid md:grid-cols-[1.25rem_minmax(0,1.6fr)_6.75rem_6.5rem_minmax(0,1.5fr)_4.5rem_minmax(0,1.1fr)_6.5rem_1.5rem]">
                     <div />
-                    <div>What</div>
-                    <div>Date</div>
-                    <div>Paid by</div>
-                    <div>Counts toward</div>
-                    <div>Receipt</div>
-                    <div>Note</div>
-                    <div className="text-right">Amount</div>
+                    <div>Назначение</div>
+                    <div>Дата</div>
+                    <div>Кто оплатил</div>
+                    <div>Статья бюджета</div>
+                    <div>Чек</div>
+                    <div>Заметка</div>
+                    <div className="text-right">Сумма</div>
                     <div />
                 </div>
 
@@ -285,13 +285,13 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
                                         type="checkbox"
                                         checked={selected.has(row.id)}
                                         onChange={() => toggleSelected(row.id)}
-                                        aria-label={`Select ${row.label}`}
+                                        aria-label={`Выбрать ${row.label}`}
                                         className="h-4 w-4 shrink-0 rounded border-gray-300 md:justify-self-center"
                                     />
                                 )}
                                 <GlyphButton
                                     onClick={() => toggleExpanded(row.key)}
-                                    label={`${isOpen ? 'Collapse' : 'Expand'} ${row.label}`}
+                                    label={`${isOpen ? 'Свернуть' : 'Развернуть'} ${row.label}`}
                                     className={`text-xs text-gray-400 transition-transform md:hidden
                                         ${isOpen ? 'rotate-90' : ''}`}
                                 >
@@ -299,7 +299,7 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
                                 </GlyphButton>
                                 <InlineText
                                     value={row.label}
-                                    placeholder={row.kind === 'gift' ? "What it's for…" : 'What was bought'}
+                                    placeholder={row.kind === 'gift' ? "Назначение…" : 'Что куплено'}
                                     onCommit={(v) => patch({ [labelField]: v })}
                                     className="text-gray-800"
                                 />
@@ -312,42 +312,42 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
                                 </div>
                             </div>
                             <div className={`${isOpen ? 'grid grid-cols-1 gap-2 pb-1 pl-7' : 'hidden'} md:contents`}>
-                            <RowField label="Date">
+                            <RowField label="Дата">
                                 <RowDate
                                     value={(row.date ?? '').slice(0, 10)}
-                                    aria-label={`Date for ${row.label}`}
+                                    aria-label={`Дата: ${row.label}`}
                                     onChange={(e) => patch({ [dateField]: e.target.value })}
                                 />
                             </RowField>
-                            <RowField label={row.kind === 'gift' ? 'Gift from' : 'Paid by'}>
+                            <RowField label={row.kind === 'gift' ? 'Подарок от' : 'Кто оплатил'}>
                                 {row.kind === 'gift' ? (
                                     <span className="block truncate px-1 text-right text-xs font-medium
                                         text-emerald-700 md:text-left"
-                                        title={`Gift money from ${row.who}`}>
+                                        title={`Денежный подарок от ${row.who}`}>
                                         🎁 {row.who}
                                     </span>
                                 ) : (
                                     <RowSelect
                                         value={row.payerId ?? ''}
-                                        aria-label={`Who paid for ${row.label}`}
+                                        aria-label={`Кто оплатил: ${row.label}`}
                                         onChange={(e) => patch({ payer_id: e.target.value || null })}
                                     >
-                                        <option value="">Unassigned</option>
+                                        <option value="">Без места</option>
                                         {payers.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                                     </RowSelect>
                                 )}
                             </RowField>
-                            <RowField label="Counts toward">
+                            <RowField label="Статья бюджета">
                                 <RowSelect
                                     value={targetValue(row)}
-                                    aria-label={`What ${row.label} counts toward`}
+                                    aria-label={`Что ${row.label} учитывается в`}
                                     onChange={(e) => patch(targetPatch(e.target.value))}
                                 >
-                                    <option value="">— nothing —</option>
+                                    <option value="">— не назначено —</option>
                                     {targetGroups.map((group) => (
                                         <optgroup key={group.name} label={group.name}>
                                             <option value={group.sectionValue}>
-                                                {group.name} — whole section
+                                                {group.name} — весь раздел
                                             </option>
                                             {group.items.map((i) => (
                                                 <option key={i.value} value={i.value}>{i.name}</option>
@@ -357,49 +357,49 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
                                 </RowSelect>
                             </RowField>
                             {row.kind === 'purchase' && (
-                                <RowField label="Receipt">
+                                <RowField label="Чек">
                                     <div className="flex items-center justify-end gap-2 md:justify-start">
                                         {row.receiptPath ? (
                                             <>
                                                 <a href={`/api/photos/${row.receiptPath}`} target="_blank"
                                                     rel="noreferrer"
                                                     className="text-xs font-medium text-accent underline">
-                                                    View
+                                                    Просмотр
                                                 </a>
                                                 <button onClick={() => api.removeReceipt(row.id)}
-                                                    aria-label={`Remove receipt for ${row.label}`}
+                                                    aria-label={`Удалить чек: ${row.label}`}
                                                     className="text-[11px] text-gray-400 hover:text-rose-500">
-                                                    remove
+                                                    удалить
                                                 </button>
                                             </>
                                         ) : (
                                             <button onClick={() => setReceiptFor(row)}
                                                 className="text-xs text-gray-400 hover:text-gray-700">
-                                                📎 Attach
+                                                📎 Прикрепить
                                             </button>
                                         )}
                                     </div>
                                 </RowField>
                             )}
-                            <RowField label="Note">
+                            <RowField label="Заметка">
                                 <InlineText
                                     value={row.notes ?? ''}
-                                    placeholder="Note…"
+                                    placeholder="Заметка…"
                                     onCommit={(notes) => patch({ notes })}
                                     className="md:text-xs"
                                 />
                             </RowField>
-                            <RowField label="Amount" className="hidden md:flex">
+                            <RowField label="Сумма" className="hidden md:flex">
                                 <InlineNumber
                                     value={row.amount} prefix="$"
                                     onCommit={(amount) => patch({ amount })}
                                 />
                             </RowField>
                             <DeleteButton
-                                label={`Delete ${row.label}`}
+                                label={`Удалить ${row.label}`}
                                 onClick={() => api.removeWithUndo(
                                     resource, row.id,
-                                    row.kind === 'gift' ? `${row.who}'s ${row.label}` : `"${row.label}"`,
+                                    row.kind === 'gift' ? `${row.who} — ${row.label}` : `"${row.label}"`,
                                     row.kind === 'gift'
                                         ? {
                                             contributor_id: row.contributorId, amount: row.amount,
@@ -421,15 +421,15 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
 
                 {!visible.length && (
                     <EmptyState>
-                        {rows.length ? 'No payments match this filter.' : 'No payments logged yet.'}
+                        {rows.length ? 'Платежей по выбранному фильтру нет.' : 'Платежей пока нет.'}
                     </EmptyState>
                 )}
 
                 {visible.length > 0 && (
                     <div className="flex items-center justify-between px-4 py-3 bg-gray-50/60 border-t border-gray-100">
                         <span className="text-xs text-gray-500">
-                            {visible.length} shown
-                            {visible.length !== rows.length && ` of ${rows.length}`}
+                            {visible.length} показано
+                            {visible.length !== rows.length && ` из ${rows.length}`}
                         </span>
                         <span className="font-semibold tabular-nums text-sm">{formatMoney(visibleTotal)}</span>
                     </div>
@@ -450,9 +450,7 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
             )}
 
             <p className="text-[11px] text-gray-400 px-1">
-                Green rows are gift money earmarked to a bill — it counts toward the budget but not
-                toward either of your out-of-pocket totals. Gift money with no earmark is cash still in
-                hand and isn&apos;t listed here.
+                Зелёные строки — подаренные деньги с назначением. Они учитываются в бюджете, но не в личных расходах. Нераспределённые подарки здесь не показаны.
             </p>
         </div>
     );
@@ -490,40 +488,40 @@ function BulkEdit({ data, api, ids, onClose, onDone }: {
     };
 
     return (
-        <Modal title={`Edit ${ids.length} payment${ids.length === 1 ? '' : 's'}`} onClose={onClose}>
+        <Modal title={`Изменить ${counted(ids.length, 'платёж', 'платежа', 'платежей')}`} onClose={onClose}>
             <div className="space-y-4">
                 <p className="text-xs text-gray-400">
-                    Anything left on <em>Leave unchanged</em> stays as it is.
+                    Поля со значением <em>Не менять</em> останутся без изменений.
                 </p>
                 <label className="block">
-                    <span className="mb-1 block text-xs font-semibold text-gray-500">Paid by</span>
+                    <span className="mb-1 block text-xs font-semibold text-gray-500">Кто оплатил</span>
                     <SelectField value={payer} onChange={(e) => setPayer(e.target.value)}>
-                        <option value="">Leave unchanged</option>
-                        <option value="none">Unassigned</option>
+                        <option value="">Не менять</option>
+                        <option value="none">Без места</option>
                         {data.payers.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </SelectField>
                 </label>
                 <label className="block">
-                    <span className="mb-1 block text-xs font-semibold text-gray-500">Counts toward</span>
+                    <span className="mb-1 block text-xs font-semibold text-gray-500">Статья бюджета</span>
                     <SelectField value={target} onChange={(e) => setTarget(e.target.value)}>
-                        <option value="">Leave unchanged</option>
-                        <option value="none">— nothing —</option>
+                        <option value="">Не менять</option>
+                        <option value="none">— не назначено —</option>
                         {data.categories.map((c) => (
                             <optgroup key={c.id} label={c.name}>
-                                <option value={`c:${c.id}`}>{c.name} — whole section</option>
+                                <option value={`c:${c.id}`}>{c.name} — весь раздел</option>
                                 {c.items.map((i) => <option key={i.id} value={`i:${i.id}`}>{i.name}</option>)}
                             </optgroup>
                         ))}
                     </SelectField>
                 </label>
                 <label className="block">
-                    <span className="mb-1 block text-xs font-semibold text-gray-500">Date</span>
+                    <span className="mb-1 block text-xs font-semibold text-gray-500">Дата</span>
                     <TextField type="date" value={date} onChange={(e) => setDate(e.target.value)} />
                 </label>
                 <div className="flex justify-end gap-2">
-                    <PillButton onClick={onClose}>Cancel</PillButton>
+                    <PillButton onClick={onClose}>Отмена</PillButton>
                     <PillButton tone="accent" onClick={apply} disabled={busy}>
-                        {busy ? 'Saving…' : 'Apply'}
+                        {busy ? 'Сохраняем…' : 'Применить'}
                     </PillButton>
                 </div>
             </div>
@@ -547,14 +545,14 @@ function ReceiptUpload({ api, row, onClose }: {
         const ok = await api.uploadReceipt(row.id, file);
         setBusy(false);
         if (ok) onClose();
-        else setProblem('That upload failed — try a JPG, PNG or PDF under 12MB.');
+        else setProblem('Не удалось загрузить. Выберите JPG, PNG или PDF до 12 МБ.');
     };
 
     return (
-        <Modal title={`Receipt for ${row.label}`} onClose={onClose}>
+        <Modal title={`Чек: ${row.label}`} onClose={onClose}>
             <div className="space-y-4">
                 <p className="text-xs text-gray-400">
-                    Photograph the receipt or pick a PDF. On a phone this opens the camera.
+                    Сфотографируйте чек или выберите PDF. На телефоне откроется камера.
                 </p>
                 <input
                     type="file"
@@ -563,10 +561,10 @@ function ReceiptUpload({ api, row, onClose }: {
                     onChange={(e) => pick(e.target.files?.[0] ?? null)}
                     className="w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-sm"
                 />
-                {busy && <p className="text-xs text-gray-500">Uploading…</p>}
+                {busy && <p className="text-xs text-gray-500">Загружаем…</p>}
                 {problem && <p className="text-xs text-rose-600">{problem}</p>}
                 <div className="flex justify-end">
-                    <PillButton onClick={onClose}>Done</PillButton>
+                    <PillButton onClick={onClose}>Готово</PillButton>
                 </div>
             </div>
         </Modal>

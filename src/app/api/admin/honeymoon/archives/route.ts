@@ -28,7 +28,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, archive: row.rows[0] });
     } catch (error) {
         console.error('Error archiving the trip:', error);
-        return NextResponse.json({ error: 'Could not archive the trip' }, { status: 500 });
+        return NextResponse.json({ error: 'Не удалось сохранить поездку в архив' }, { status: 500 });
     }
 }
 
@@ -46,18 +46,18 @@ export async function PUT(request: Request) {
         const body = await request.json().catch(() => ({}));
         const id = Math.trunc(Number(body.id));
         if (!Number.isFinite(id) || id <= 0) {
-            return NextResponse.json({ error: 'Valid id required' }, { status: 400 });
+            return NextResponse.json({ error: 'Требуется корректный идентификатор' }, { status: 400 });
         }
         if (body.confirm !== true) {
             return NextResponse.json(
-                { error: 'This replaces the current trip; send confirm: true.' },
+                { error: 'Текущая поездка будет заменена. Подтвердите: confirm: true.' },
                 { status: 400 },
             );
         }
 
         const stored = await client.query('SELECT name, payload FROM honeymoon_archives WHERE id = $1', [id]);
         const archive = stored.rows[0];
-        if (!archive) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        if (!archive) return NextResponse.json({ error: 'Не найдено' }, { status: 404 });
         const data = archive.payload;
 
         // Snapshot what is about to be replaced, outside the transaction that
@@ -258,7 +258,7 @@ export async function PUT(request: Request) {
     } catch (error) {
         await client.query('ROLLBACK').catch(() => undefined);
         console.error('Error restoring the trip:', error);
-        return NextResponse.json({ error: 'Could not restore that snapshot' }, { status: 500 });
+        return NextResponse.json({ error: 'Не удалось восстановить снимок' }, { status: 500 });
     } finally {
         client.release();
     }
@@ -269,13 +269,13 @@ export async function DELETE(request: Request) {
         await ensureHoneymoonTables();
         const id = Math.trunc(Number(new URL(request.url).searchParams.get('id')));
         if (!Number.isFinite(id) || id <= 0) {
-            return NextResponse.json({ error: 'Valid id required' }, { status: 400 });
+            return NextResponse.json({ error: 'Требуется корректный идентификатор' }, { status: 400 });
         }
         const result = await pool.query('DELETE FROM honeymoon_archives WHERE id = $1', [id]);
-        if (!result.rowCount) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        if (!result.rowCount) return NextResponse.json({ error: 'Не найдено' }, { status: 404 });
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Error deleting an archive:', error);
-        return NextResponse.json({ error: 'Could not delete that snapshot' }, { status: 500 });
+        return NextResponse.json({ error: 'Не удалось удалить снимок' }, { status: 500 });
     }
 }

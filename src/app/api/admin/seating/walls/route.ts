@@ -39,7 +39,7 @@ async function create(request: Request) {
     return NextResponse.json({ success: true, wall: result.rows[0] });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Failed to save wall' }, { status: 500 });
+    return NextResponse.json({ error: 'Не удалось сохранить стену' }, { status: 500 });
   } finally {
     client.release();
   }
@@ -53,7 +53,7 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Failed to delete wall' }, { status: 500 });
+    return NextResponse.json({ error: 'Не удалось удалить стену' }, { status: 500 });
   } finally {
     client.release();
   }

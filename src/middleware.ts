@@ -126,7 +126,7 @@ export async function middleware(request: NextRequest) {
         const verdict = rateLimit(`${pathname}:${clientIp(request.headers)}`, limitRule.limit, limitRule.windowMs);
         if (!verdict.ok) {
             return NextResponse.json(
-                { error: 'Too many requests — please wait a moment and try again.' },
+                { error: 'Слишком много запросов. Подождите немного и попробуйте ещё раз.' },
                 { status: 429, headers: { 'Retry-After': String(verdict.retryAfterSeconds) } },
             );
         }
@@ -157,7 +157,7 @@ export async function middleware(request: NextRequest) {
             // JSON, not a redirect: the caller is fetch(), not a browser
             // following links, and a 307 to a login page would arrive as an
             // unparseable HTML body.
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return NextResponse.json({ error: 'Требуется вход' }, { status: 401 });
         }
         return withRefreshedSession(request, session, NextResponse.next());
     }

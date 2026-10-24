@@ -1,3 +1,4 @@
+import { counted } from './locale';
 /**
  * What the trip costs, and what still needs doing.
  *
@@ -52,7 +53,7 @@ export function describeRate(rate: CurrencyRate): string {
     const from = rate.pair.slice(0, 3);
     const to = rate.pair.slice(3, 6);
     const shown = rate.rate >= 100
-        ? Math.round(rate.rate).toLocaleString('en-US')
+        ? Math.round(rate.rate).toLocaleString('ru-RU')
         : rate.rate.toFixed(4).replace(/0+$/, '').replace(/\.$/, '');
     return `1 ${from} = ${shown} ${to}`;
 }
@@ -147,7 +148,7 @@ export function buildBudget(
             label: place.name,
             amount: amount.value,
             detail: place.cost_per === 'night'
-                ? `${nights} night${nights === 1 ? '' : 's'} × ${place.cost}`
+                ? `${counted(nights, 'ночь', 'ночи', 'ночей')} × ${place.cost}`
                 : place.cost_per === 'person'
                     ? `${travellers} × ${place.cost}`
                     : `${place.cost}`,
@@ -161,9 +162,9 @@ export function buildBudget(
             const amount = money(leg.cost, leg.cost_currency);
             if (!amount) continue;
             lines.push({
-                label: [leg.from_text, leg.to_text].filter(Boolean).join(' → ') || 'Travel',
+                label: [leg.from_text, leg.to_text].filter(Boolean).join(' → ') || 'Переезды',
                 amount: amount.value,
-                detail: `Day ${day.day_number}`,
+                detail: `День ${day.day_number}`,
                 kind: 'travel',
                 assumed: amount.assumed,
             });
@@ -189,16 +190,16 @@ export function buildBudget(
                 lines[at] = {
                     ...lines[at],
                     amount: amount.value,
-                    detail: `booked${booking.confirmation ? ` · ${booking.confirmation}` : ''}`,
+                    detail: `забронировано${booking.confirmation ? ` · ${booking.confirmation}` : ''}`,
                     assumed: amount.assumed,
                 };
                 continue;
             }
         }
         lines.push({
-            label: place?.name ?? booking.provider ?? 'Booking',
+            label: place?.name ?? booking.provider ?? 'Бронирование',
             amount: amount.value,
-            detail: booking.confirmation ?? 'booked',
+            detail: booking.confirmation ?? 'забронировано',
             kind: 'booking',
             assumed: amount.assumed,
         });
@@ -274,12 +275,12 @@ export interface Deadline {
 export function deadlinesOf(bookings: Booking[], today: string, placeName: (id: number | null) => string): Deadline[] {
     const out: Deadline[] = [];
     for (const booking of bookings) {
-        const name = placeName(booking.place_id) || booking.provider || 'A booking';
+        const name = placeName(booking.place_id) || booking.provider || 'Бронирование';
         if (booking.cancel_by) {
             const away = daysBetween(today, booking.cancel_by);
             if (away != null && away >= 0) {
                 out.push({
-                    label: `${name} — free cancellation ends`,
+                    label: `${name} — конец бесплатной отмены`,
                     date: booking.cancel_by,
                     daysAway: away,
                     kind: 'cancel',
@@ -291,7 +292,7 @@ export function deadlinesOf(bookings: Booking[], today: string, placeName: (id: 
             const away = daysBetween(today, booking.deposit_due_on);
             if (away != null && away >= 0) {
                 out.push({
-                    label: `${name} — deposit due`,
+                    label: `${name} — срок аванса`,
                     date: booking.deposit_due_on,
                     daysAway: away,
                     kind: 'deposit',
@@ -482,7 +483,7 @@ export function bookingTotal(
     return {
         amount: place.cost * nights,
         currency: place.cost_currency,
-        detail: `${nights} night${nights === 1 ? '' : 's'} × ${place.cost}`,
+        detail: `${counted(nights, 'ночь', 'ночи', 'ночей')} × ${place.cost}`,
     };
 }
 
@@ -512,14 +513,14 @@ export function perPerson(total: number, travellers = 2): number {
 /** Money as text, without a currency library. */
 export function formatMoney(amount: number, currency: string): string {
     try {
-        return new Intl.NumberFormat('en-US', {
+        return new Intl.NumberFormat('ru-RU', {
             style: 'currency',
             currency,
             maximumFractionDigits: amount >= 1000 || Number.isInteger(amount) ? 0 : 2,
         }).format(amount);
     } catch {
         // An unknown code is the user's own three letters; show them.
-        return `${currency} ${Math.round(amount).toLocaleString('en-US')}`;
+        return `${currency} ${Math.round(amount).toLocaleString('ru-RU')}`;
     }
 }
 
@@ -529,6 +530,6 @@ export function phaseHint(trip: Pick<Trip, 'phase' | 'start_date'>, today: strin
     const away = daysBetween(today, trip.start_date);
     if (away == null || away > 3 || away < 0) return null;
     return away === 0
-        ? 'You leave today — switch the trip to Travelling to put Today first.'
-        : `You leave in ${away} day${away === 1 ? '' : 's'} — switch the trip to Travelling.`;
+        ? 'Отъезд сегодня — переключите поездку в режим «В пути», чтобы первой открывалась вкладка «Сегодня».'
+        : `До отъезда ${counted(away, 'день', 'дня', 'дней')} — включите режим «В пути».`;
 }

@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -17,13 +18,13 @@ import { Button, Card, SelectField, TextArea, TextField, MiniSelect } from './ui
 
 /** The handful anyone planning from the US actually prices in. */
 const CURRENCIES = [
-    { key: 'USD', label: 'US dollar ($)' },
-    { key: 'EUR', label: 'Euro (€)' },
-    { key: 'GBP', label: 'Pound (£)' },
-    { key: 'AUD', label: 'Australian dollar (A$)' },
-    { key: 'CAD', label: 'Canadian dollar (C$)' },
-    { key: 'SGD', label: 'Singapore dollar (S$)' },
-    { key: 'IDR', label: 'Rupiah (Rp)' },
+    { key: 'USD', label: 'Доллар США ($)' },
+    { key: 'EUR', label: 'Евро (€)' },
+    { key: 'GBP', label: 'Фунт стерлингов (£)' },
+    { key: 'AUD', label: 'Австралийский доллар (A$)' },
+    { key: 'CAD', label: 'Канадский доллар (C$)' },
+    { key: 'SGD', label: 'Сингапурский доллар (S$)' },
+    { key: 'IDR', label: 'Индонезийская рупия (Rp)' },
 ];
 
 export default function SettingsTab({ api }: { api: HoneymoonApi }) {
@@ -88,7 +89,7 @@ export default function SettingsTab({ api }: { api: HoneymoonApi }) {
     };
 
     const clearDates = async () => {
-        if (!confirm('Clear the dates? The days stay — they go back to being numbered.')) return;
+        if (!confirm('Очистить даты? Дни сохранятся с номерами вместо дат.')) return;
         await api.update('trip', { start_date: '', end_date: '' });
     };
 
@@ -119,17 +120,17 @@ export default function SettingsTab({ api }: { api: HoneymoonApi }) {
             left={(
                 <MiniSelect
                     value=""
-                    aria-label="Jump to a section"
+                    aria-label="Перейти к разделу"
                     onChange={(e) => document.getElementById(e.target.value)
                         ?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                 >
-                    <option value="">Jump to…</option>
-                                <option key="set-when-you-re-away" value="set-when-you-re-away">When you&apos;re away</option>
-                                <option key="set-money" value="set-money">Money</option>
-                                <option key="set-take-it-with-you" value="set-take-it-with-you">Take it with you</option>
-                                <option key="set-emergency-amp-practical-details" value="set-emergency-amp-practical-details">Emergency &amp; practical details</option>
-                                <option key="set-share-it-with-someone" value="set-share-it-with-someone">Share it with someone</option>
-                                <option key="set-snapshots" value="set-snapshots">Snapshots</option>
+                    <option value="">Перейти…</option>
+                                <option key="set-when-you-re-away" value="set-when-you-re-away">Даты поездки</option>
+                                <option key="set-money" value="set-money">Деньги</option>
+                                <option key="set-take-it-with-you" value="set-take-it-with-you">Взять с собой</option>
+                                <option key="set-emergency-amp-practical-details" value="set-emergency-amp-practical-details">Экстренные контакты и полезные сведения</option>
+                                <option key="set-share-it-with-someone" value="set-share-it-with-someone">Поделиться доступом</option>
+                                <option key="set-snapshots" value="set-snapshots">Снимки поездки</option>
                 </MiniSelect>
             )}
         />
@@ -137,8 +138,8 @@ export default function SettingsTab({ api }: { api: HoneymoonApi }) {
             {/* ---- Dates ---- */}
             <Card id="set-when-you-re-away" className="p-4 space-y-3 xl:row-span-2">
                 <div className="flex items-baseline justify-between gap-2">
-                    <h3 className="text-sm font-semibold text-gray-900">When you&apos;re away</h3>
-                    {working && <span className="text-xs text-gray-400">Updating days…</span>}
+                    <h3 className="text-sm font-semibold text-gray-900">Даты поездки</h3>
+                    {working && <span className="text-xs text-gray-400">Обновляем дни…</span>}
                 </div>
 
                 {/* A trip planned before end_date existed has a start and a
@@ -156,37 +157,34 @@ export default function SettingsTab({ api }: { api: HoneymoonApi }) {
                     {trip.start_date ? (
                         <>
                             <p className="text-xs text-gray-700">
-                                Day 1 is {formatDayDate(trip.start_date, 1)}
-                                {lastDay > 1 && <> · day {lastDay} is {formatDayDate(trip.start_date, lastDay)}</>}
-                                {nights != null && <> · {nights} night{nights === 1 ? '' : 's'} away</>}
+                                Первый день: {formatDayDate(trip.start_date, 1)}
+                                {lastDay > 1 && <> · день {lastDay}  {formatDayDate(trip.start_date, lastDay)}</>}
+                                {nights != null && <> · {counted(nights, 'ночь', 'ночи', 'ночей')} в поездке</>}
                             </p>
                             {beyond.length > 0 ? (
                                 <p className="text-[11px] text-rose-700 bg-rose-50 border border-rose-200
                                     rounded-xl px-2.5 py-1.5 mt-1.5">
                                     {beyond.length === 1
-                                        ? `Day ${beyond[0]} now falls`
-                                        : `Days ${beyond[0]}–${beyond[beyond.length - 1]} now fall`}
-                                    {' '}past {formatDate(trip.end_date)}, the end of the trip.{' '}
-                                    <strong className="font-semibold">Nothing was deleted</strong> — they
-                                    keep their stops and travel legs, and are flagged in red on the{' '}
+                                        ? `День ${beyond[0]} теперь выпадает`
+                                        : `Дни ${beyond[0]}–${beyond[beyond.length - 1]} теперь выпадают`}
+                                    {' '}после {formatDate(trip.end_date)}, конца поездки.{' '}
+                                    <strong className="font-semibold">Ничего не удалено</strong> — остановки и переезды сохранены, дни отмечены красным в разделе{' '}
                                     <Link href="/admin/honeymoon/itinerary" className="underline">
-                                        Itinerary
-                                    </Link>. Move their stops onto earlier days, delete the days you
-                                    don&apos;t need, or drag the range back out.
+                                        Маршрут
+                                    </Link>. Перенесите планы на ранние дни, удалите лишние или измените период поездки.
                                 </p>
                             ) : trip.end_date
                                 && lastDay < (daysBetween(trip.start_date, trip.end_date) ?? 0) + 1 ? (
                                     <p className="text-[11px] text-amber-700 mt-1">
-                                        The dates cover {(nights ?? 0) + 1} days and you have {lastDay}{' '}
-                                        planned. Drag the range again to fill in the rest.
+                                        Выбранный период: {(nights ?? 0) + 1} дней, запланировано: {lastDay}{' '}
+                                        . Выделите период заново, чтобы добавить остальные дни.
                                     </p>
                                 ) : null}
-                            <Button className="mt-2" onClick={clearDates}>Clear dates</Button>
+                            <Button className="mt-2" onClick={clearDates}>Очистить даты</Button>
                         </>
                     ) : (
                         <p className="text-xs text-gray-500">
-                            No dates yet — the days stay numbered until you set some. Drag a range above
-                            and the day rows are created to match it.
+                            Даты не заданы, дни пронумерованы. Выделите период выше, чтобы создать дни на эти даты.
                         </p>
                     )}
                 </div>
@@ -195,7 +193,7 @@ export default function SettingsTab({ api }: { api: HoneymoonApi }) {
             {/* ---- Trip ---- */}
             <Card className="p-4 space-y-4">
                 <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1">Trip name</label>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">Название поездки</label>
                     <TextField
                         key={trip.title}
                         defaultValue={trip.title}
@@ -208,7 +206,7 @@ export default function SettingsTab({ api }: { api: HoneymoonApi }) {
                 </div>
 
                 <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1">Currency</label>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">Валюта</label>
                     <SelectField
                         value={trip.home_currency || 'USD'}
                         onChange={(e) => api.update('trip', { home_currency: e.target.value })}
@@ -216,60 +214,57 @@ export default function SettingsTab({ api }: { api: HoneymoonApi }) {
                         {CURRENCIES.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
                     </SelectField>
                     <p className="text-xs text-gray-400 mt-1.5">
-                        Used for the symbol on prices you type as a bare number, and for the
-                        dashboard&apos;s rough costs. Nothing is converted.
+                        Символ для цен без указанной валюты и примерной стоимости в обзоре. Конвертация не выполняется.
                     </p>
                 </div>
 
                 <div>
                     <label className="block text-xs font-semibold text-gray-500 mb-1">
-                        Where the trip is up to
+                        Этап поездки
                     </label>
                     <SelectField
                         value={trip.phase}
                         onChange={(e) => api.update('trip', { phase: e.target.value })}
                     >
-                        <option value="planning">Planning — shortlists and the map</option>
-                        <option value="travelling">Travelling — Today comes first</option>
-                        <option value="after">After — the itinerary becomes a journal</option>
+                        <option value="planning">Подготовка — избранное и карта</option>
+                        <option value="travelling">В пути — сначала вкладка «Сегодня»</option>
+                        <option value="after">После поездки — маршрут становится дневником</option>
                     </SelectField>
                     <p className="text-xs text-gray-400 mt-1.5">
-                        Yours to set rather than worked out from the dates: a trip is not over
-                        because a date passed. <strong>After</strong> turns each stop into something
-                        you can mark as done or skipped, star, and write about.
+                        Вы задаёте этап сами, независимо от календарных дат. <strong>После поездки</strong> позволяет отмечать посещения, пропуски, любимые места и впечатления.
                     </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                     <div>
                         <label className="block text-xs font-semibold text-gray-500 mb-1">
-                            Clock
+                            Формат времени
                         </label>
                         <SelectField
                             value={trip.time_format}
                             onChange={(e) => api.update('trip', { time_format: e.target.value })}
                         >
-                            <option value="24h">24-hour (14:05)</option>
-                            <option value="12h">12-hour (2:05 PM)</option>
+                            <option value="24h">24 часа (14:05)</option>
+                            <option value="12h">12 часов (2:05 PM)</option>
                         </SelectField>
                     </div>
                     <div>
                         <label className="block text-xs font-semibold text-gray-500 mb-1">
-                            Distances
+                            Расстояния
                         </label>
                         <SelectField
                             value={trip.distance_unit}
                             onChange={(e) => api.update('trip', { distance_unit: e.target.value })}
                         >
-                            <option value="km">Kilometres</option>
-                            <option value="mi">Miles</option>
+                            <option value="km">Километры</option>
+                            <option value="mi">Мили</option>
                         </SelectField>
                     </div>
                 </div>
 
                 <div>
                     <label className="block text-xs font-semibold text-gray-500 mb-1">
-                        The two of you
+                        Вы вдвоём
                     </label>
                     <TextField
                         key={trip.partner_names}
@@ -282,16 +277,16 @@ export default function SettingsTab({ api }: { api: HoneymoonApi }) {
                         }}
                     />
                     <p className="text-xs text-gray-400 mt-1.5">
-                        Used for per-person ratings, packing lists and who a shared link is for.
+                        Для личных оценок, списков багажа и подписей доступа.
                     </p>
                 </div>
 
                 <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1">Notes</label>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">Заметки</label>
                     <TextField
                         key={trip.notes ?? ''}
                         defaultValue={trip.notes ?? ''}
-                        placeholder="Anything trip-wide"
+                        placeholder="Общие заметки о поездке"
                         onBlur={(e) => {
                             if (e.target.value !== (trip.notes ?? '')) api.update('trip', { notes: e.target.value });
                         }}
@@ -302,9 +297,9 @@ export default function SettingsTab({ api }: { api: HoneymoonApi }) {
             {/* ---- Money ---- */}
             <Card id="set-money" className="p-4 space-y-3">
                 <div>
-                    <h3 className="text-sm font-semibold text-gray-900">Money</h3>
+                    <h3 className="text-sm font-semibold text-gray-900">Деньги</h3>
                     <p className="text-xs text-gray-500 mt-0.5">
-                        The budget, and exchange rates so every price adds up in one currency.
+                        Бюджет и курсы для подсчёта всех расходов в одной валюте.
                     </p>
                 </div>
                 <MoneySettings api={api} />
@@ -312,7 +307,7 @@ export default function SettingsTab({ api }: { api: HoneymoonApi }) {
 
             {/* ---- Take it with you ---- */}
             <Card id="set-take-it-with-you" className="p-4 space-y-3">
-                <h3 className="text-sm font-semibold text-gray-900">Take it with you</h3>
+                <h3 className="text-sm font-semibold text-gray-900">Взять с собой</h3>
                 <div className="flex flex-wrap gap-2">
                     {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
                     <a
@@ -320,17 +315,14 @@ export default function SettingsTab({ api }: { api: HoneymoonApi }) {
                         className="inline-flex min-h-11 md:min-h-0 items-center rounded-full bg-accent text-white px-4 py-1.5
                             text-sm font-medium hover:opacity-90"
                     >
-                        Add to calendar (.ics)
+                        Добавить в календарь (.ics)
                     </a>
-                    <Button onClick={download}>Download a backup (JSON)</Button>
+                    <Button onClick={download}>Скачать резервную копию (JSON)</Button>
                 </div>
                 <p className="flex items-center gap-1 text-xs text-gray-500">
-                    The trip in your phone&apos;s calendar, and a backup of everything.
-                    <Hint label="About the calendar file and the backup">
-                        The calendar file puts every day, travel leg and timed stop into your phone,
-                        with the right time zone, a map pin on each stop, a link to the booking and a
-                        reminder before anything timed. It needs the trip dates to be set. The backup
-                        is the whole portal in one file.
+                    Поездка в календаре телефона и резервная копия всех данных.
+                    <Hint label="О календаре и резервной копии">
+                        Календарь включает дни, переезды и остановки с часовыми поясами, координатами, ссылками на брони и напоминаниями. Нужно задать даты поездки. Резервная копия содержит все данные в одном файле.
                     </Hint>
                 </p>
 
@@ -340,7 +332,7 @@ export default function SettingsTab({ api }: { api: HoneymoonApi }) {
                 {subscribeUrl ? (
                     <div className="rounded-2xl bg-gray-50 p-3">
                         <p className="text-xs font-semibold text-gray-700">
-                            Subscribe instead, and it stays up to date
+                            Подпишитесь, чтобы календарь обновлялся
                         </p>
                         <code className="mt-1 block truncate rounded-xl bg-white px-2 py-1.5
                             text-[11px] text-gray-600">
@@ -348,24 +340,23 @@ export default function SettingsTab({ api }: { api: HoneymoonApi }) {
                         </code>
                         <div className="mt-2 flex flex-wrap gap-2">
                             <Button onClick={() => navigator.clipboard?.writeText(subscribeUrl)}>
-                                Copy the feed URL
+                                Скопировать ссылку подписки
                             </Button>
                             <a
                                 href={subscribeUrl.replace(/^https?:/, 'webcal:')}
                                 className="rounded-full border border-gray-200 bg-white px-4 py-1.5
                                     text-sm font-medium text-gray-700 hover:bg-gray-50"
                             >
-                                Add to this device
+                                Добавить на это устройство
                             </a>
                         </div>
                         <p className="mt-1.5 text-[11px] text-gray-400">
-                            It uses your first share link&apos;s token — revoking that link turns the
-                            feed off too.
+                            Используется токен первой ссылки доступа. Её отзыв отключит и подписку.
                         </p>
                     </div>
                 ) : (
                     <p className="text-[11px] text-gray-400">
-                        Create a share link below and a subscribe-able calendar feed appears here.
+                        Создайте ссылку доступа ниже — здесь появится подписка на календарь.
                     </p>
                 )}
             </Card>
@@ -374,13 +365,12 @@ export default function SettingsTab({ api }: { api: HoneymoonApi }) {
             <Card id="set-emergency-amp-practical-details" className="p-4 space-y-3 xl:col-span-2">
                 <div>
                     <h3 className="text-sm font-semibold text-gray-900">
-                        Emergency &amp; practical details
+                        Экстренные контакты и полезные сведения
                     </h3>
                     <p className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
-                        One tap away on the Today view, for when the phone is at 4% in a taxi.
-                        <Hint label="About these details">
-                            These show on the Today view behind one tap. The trip notes are for planning
-                            thoughts; this is for facts — numbers, policy references, addresses.
+                        Под рукой во вкладке «Сегодня», даже когда заряд почти закончился.
+                        <Hint label="Об этих сведениях">
+                            Доступны одним нажатием во вкладке «Сегодня». Здесь хранятся телефоны, номера полисов и адреса.
                         </Hint>
                     </p>
                 </div>
@@ -415,12 +405,11 @@ export default function SettingsTab({ api }: { api: HoneymoonApi }) {
             {/* ---- Sharing ---- */}
             <Card id="set-share-it-with-someone" className="p-4 space-y-3 xl:col-span-2">
                 <div>
-                    <h3 className="text-sm font-semibold text-gray-900">Share it with someone</h3>
+                    <h3 className="text-sm font-semibold text-gray-900">Поделиться доступом</h3>
                     <p className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
-                        A read-only link to the trip for someone who isn&apos;t you two.
-                        <Hint label="About share links">
-                            No login, nothing editable, no shortlists, no budget and no documents. The
-                            link itself is the password, so treat it like one: revoke it rather than hoping.
+                        Ссылка для просмотра поездки вашими близкими.
+                        <Hint label="О ссылках доступа">
+                            Без входа и редактирования, без избранного, бюджета и документов. Доступ есть у каждого, кто знает ссылку. Отзовите её, если доступ больше не нужен.
                         </Hint>
                     </p>
                 </div>
@@ -432,9 +421,9 @@ export default function SettingsTab({ api }: { api: HoneymoonApi }) {
             {/* ---- Snapshots ---- */}
             <Card id="set-snapshots" className="p-4 space-y-3">
                 <div>
-                    <h3 className="text-sm font-semibold text-gray-900">Snapshots</h3>
+                    <h3 className="text-sm font-semibold text-gray-900">Снимки поездки</h3>
                     <p className="text-xs text-gray-500 mt-0.5">
-                        The whole trip, frozen — to keep after you fly home, or to start the next one from.
+                        Снимок всей поездки: сохранить на память или использовать для следующей.
                     </p>
                 </div>
                 <TripArchives api={api} />

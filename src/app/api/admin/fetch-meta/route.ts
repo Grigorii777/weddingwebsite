@@ -252,7 +252,7 @@ function extractMeta(html: string, url: string) {
 export async function POST(req: Request) {
     try {
         const { url } = await req.json();
-        if (!url || typeof url !== 'string') return NextResponse.json({ error: 'URL required' }, { status: 400 });
+        if (!url || typeof url !== 'string') return NextResponse.json({ error: 'Укажите ссылку' }, { status: 400 });
 
         const store = detectStore(url);
 
@@ -294,8 +294,8 @@ export async function POST(req: Request) {
             success: false,
             store,
             error: lastStatus && lastStatus !== 200
-                ? `Site returned ${lastStatus}`
-                : 'No preview data on that page',
+                ? `Сайт ответил: ${lastStatus}`
+                : 'На странице нет данных для предпросмотра',
             title: '',
             description: '',
             image: '',

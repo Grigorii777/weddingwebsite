@@ -28,7 +28,7 @@ export async function POST(request: Request) {
         const file = formData.get('file');
         const kind = String(formData.get('kind') ?? 'photo');
         if (!(file instanceof File)) {
-            return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
+            return NextResponse.json({ error: 'Файл не загружен' }, { status: 400 });
         }
 
         const extension = path.extname(file.name).toLowerCase();
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
         if (kind === 'document' && DOC_EXTENSIONS.has(extension)) {
             if (file.size > MAX_DOC_BYTES) {
-                return NextResponse.json({ error: 'That file is over 25 MB' }, { status: 400 });
+                return NextResponse.json({ error: 'Размер файла больше 25 МБ' }, { status: 400 });
             }
             // Same shape as safeImageFilename: basename only, timestamped, so
             // nothing can escape the directory or overwrite an existing file.
@@ -51,10 +51,10 @@ export async function POST(request: Request) {
         }
 
         if (!filename) {
-            return NextResponse.json({ error: 'Unsupported file type' }, { status: 400 });
+            return NextResponse.json({ error: 'Неподдерживаемый тип файла' }, { status: 400 });
         }
         const target = resolveInPhotos(filename);
-        if (!target) return NextResponse.json({ error: 'Bad filename' }, { status: 400 });
+        if (!target) return NextResponse.json({ error: 'Недопустимое имя файла' }, { status: 400 });
 
         if (!fs.existsSync(PHOTOS_DIR)) fs.mkdirSync(PHOTOS_DIR, { recursive: true });
         fs.writeFileSync(target, Buffer.from(await file.arrayBuffer()));
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, filename });
     } catch (error) {
         console.error('Honeymoon upload failed:', error);
-        return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+        return NextResponse.json({ error: 'Не удалось загрузить' }, { status: 500 });
     }
 }
 
@@ -71,11 +71,11 @@ export async function DELETE(request: Request) {
     try {
         const filename = new URL(request.url).searchParams.get('filename') ?? '';
         const target = resolveInPhotos(filename);
-        if (!target) return NextResponse.json({ error: 'Bad filename' }, { status: 400 });
+        if (!target) return NextResponse.json({ error: 'Недопустимое имя файла' }, { status: 400 });
         if (fs.existsSync(target)) fs.unlinkSync(target);
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Honeymoon delete failed:', error);
-        return NextResponse.json({ error: 'Delete failed' }, { status: 500 });
+        return NextResponse.json({ error: 'Не удалось удалить' }, { status: 500 });
     }
 }

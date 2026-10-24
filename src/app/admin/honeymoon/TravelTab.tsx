@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import { useMemo, useState } from 'react';
 import {
@@ -155,21 +156,21 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
 
         if (!entries.length) {
             setPasteNote(
-                'Nothing there looked like a flight number or a date. Try '
+                'Не найдены номера рейсов и даты. Пример: '
                 + '"SQ938 2026-09-14, SQ27 2026-09-12".',
             );
             return;
         }
 
         setPasting(true);
-        setPasteNote(`Looking up ${entries.length} flight${entries.length === 1 ? '' : 's'}…`);
+        setPasteNote(`Ищем ${counted(entries.length, 'рейс', 'рейса', 'рейсов')}…`);
         try {
             const journey = await api.createRow('journeys', {
                 kind: 'flight',
                 title: '',
                 sort_order: groups.length,
             });
-            if (journey?.id == null) { setPasteNote('Could not start the journey.'); return; }
+            if (journey?.id == null) { setPasteNote('Не удалось создать поездку.'); return; }
 
             let previousDate = trip?.start_date ?? todayIso();
             const built: string[] = [];
@@ -191,9 +192,9 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
                         flight = body?.flight ?? null;
                         if (!body?.configured) {
                             setPasteNote(
-                                'Flight lookup needs FLIGHT_API_KEY on the stack. The legs were '
-                                + 'created — fill in the times by hand, or add the key and use '
-                                + '"Fill in from schedule".',
+                                'Для поиска рейсов нужен FLIGHT_API_KEY в окружении. Участки '
+                                + 'созданы — заполните время вручную или задайте ключ и используйте '
+                                + '«Заполнить по расписанию».',
                             );
                         }
                     } catch { /* handled below */ }
@@ -246,15 +247,15 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
             await api.refresh();
             setPaste('');
             setPasteNote([
-                built.length ? `Filled in ${built.join(', ')}.` : '',
+                built.length ? `Заполнено: ${built.join(', ')}.` : '',
                 failed.length
-                    ? `No schedule found for ${failed.join(', ')} — those legs are there but empty.`
+                    ? `Расписание не найдено для ${failed.join(', ')} — участки созданы без расписания.`
                     : '',
                 blank.length
-                    ? `${blank.length} line${blank.length === 1 ? '' : 's'} had no flight number `
-                        + '— those legs are on their date, waiting for the rest.'
+                    ? `${counted(blank.length, 'статья', 'статьи', 'статей')} без номера рейса `
+                        + '— участки привязаны к дате, остальные данные нужно заполнить.'
                     : '',
-            ].filter(Boolean).join(' ') || 'Created the legs.');
+            ].filter(Boolean).join(' ') || 'Участки пути созданы.');
         } finally {
             setPasting(false);
         }
@@ -273,8 +274,8 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
         return (
             <Card>
                 <EmptyState
-                    title="No days to travel between yet"
-                    hint="A journey lands on a day, so the trip needs at least one. Set the dates in Settings and the days are built for you."
+                    title="Сначала добавьте дни поездки"
+                    hint="Поездке нужен хотя бы один день. Задайте даты в настройках — дни создадутся автоматически."
                 />
             </Card>
         );
@@ -283,14 +284,14 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
     return (
         <div className="max-w-4xl space-y-3">
             <TabToolbar
-                fab={busy ? undefined : { label: 'New journey', onClick: newJourney }}
+                fab={busy ? undefined : { label: 'Новая поездка', onClick: newJourney }}
                 left={summary.journeys > 0 ? (
                     <p className="text-xs text-gray-500">
-                        {summary.journeys} journey{summary.journeys === 1 ? '' : 's'}
-                        {summary.moving > 0 && ` · ${formatMinutes(summary.moving)} in transit`}
+                        {counted(summary.journeys, 'поездка', 'поездки', 'поездок')}
+                        {summary.moving > 0 && ` · ${formatMinutes(summary.moving)} в пути`}
                         {summary.problems > 0 && (
                             <span className="text-amber-700">
-                                {' '}· {summary.problems} thing{summary.problems === 1 ? '' : 's'} to check
+                                {' '}· {counted(summary.problems, 'замечание', 'замечания', 'замечаний')} на проверку
                             </span>
                         )}
                     </p>
@@ -299,7 +300,7 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
                     <>
                         <MiniSelect
                             value={mode}
-                            aria-label="Kind of journey"
+                            aria-label="Тип поездки"
                             onChange={(e) => setMode(e.target.value as TravelMode)}
                         >
                             {TRAVEL_MODES.map((entry) => (
@@ -307,9 +308,9 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
                             ))}
                         </MiniSelect>
                         <Button tone="primary" onClick={newJourney} disabled={busy} className={busy ? '' : 'max-md:hidden'}>
-                            {busy ? 'Working…' : '+ New journey'}
+                            {busy ? 'Выполняем…' : '+ Новая поездка'}
                         </Button>
-                        <Button onClick={() => setPasteOpen(true)}>Paste flights…</Button>
+                        <Button onClick={() => setPasteOpen(true)}>Вставить рейсы…</Button>
                     </>
                 )}
                 below={note ? <p className="text-[11px] text-gray-600">{note}</p> : undefined}
@@ -319,11 +320,11 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
                 open={pasteOpen}
                 onClose={() => setPasteOpen(false)}
                 side="center"
-                title={<h2 className="font-semibold text-gray-900">Paste the flight numbers off your confirmation</h2>}
+                title={<h2 className="font-semibold text-gray-900">Вставьте номера рейсов из подтверждения</h2>}
             >
                 <div className="space-y-2">
                     <label className="mb-1 block text-xs font-semibold text-gray-500">
-                        Or paste the flight numbers off your confirmation
+                        Или вставьте номера рейсов из подтверждения
                     </label>
                     <TextArea
                         rows={2}
@@ -334,13 +335,10 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
                     />
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                         <Button onClick={buildFromPaste} disabled={!paste.trim() || pasting}>
-                            {pasting ? 'Building…' : 'Build the journey'}
+                            {pasting ? 'Создаём…' : 'Создать поездку'}
                         </Button>
-                        <Hint label="How pasting flights works">
-                            One per line — the rest of the line can stay, dates in any form.
-                            Each is looked up and filled in — times, terminals, aircraft, time
-                            zones — and placed on the right day. Anything that cannot be looked
-                            up still becomes a leg to fill in by hand.
+                        <Hint label="Как работает вставка рейсов">
+                            По одному рейсу на строку с датой. Время, терминалы, самолёт и часовые пояса заполнятся по расписанию. Если рейс не найден, участок можно заполнить вручную.
                         </Hint>
                     </div>
                     {pasteNote && (
@@ -353,8 +351,8 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
             {groups.length === 0 ? (
                 <Card>
                     <EmptyState
-                        title="No travel entered yet"
-                        hint="Start with the flight that gets you there. Enter the whole ticket — every leg, both times, the layovers — and each leg lands on the right day by itself."
+                        title="Переезды пока не добавлены"
+                        hint="Начните с первого перелёта. Добавьте весь билет: участки, время и пересадки. Каждый участок попадёт на нужный день автоматически."
                     />
                 </Card>
             ) : (
@@ -371,11 +369,11 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
                                             days, trip.start_date, group.departDate,
                                         );
                                         return placed.dayNumber != null
-                                            ? ` · day ${placed.dayNumber}${placed.beyond ? ' (not planned yet)' : ''}`
+                                            ? ` · день ${placed.dayNumber}${placed.beyond ? ' (ещё не запланировано)' : ''}`
                                             : '';
                                     })()}
                                     {group.legs.length > 1
-                                        && ` · ${group.legs.length} legs`}
+                                        && ` · ${group.legs.length} участков`}
                                     {` · ${travelModeMeta(group.mode).label.toLowerCase()}`}
                                 </p>
                             )}

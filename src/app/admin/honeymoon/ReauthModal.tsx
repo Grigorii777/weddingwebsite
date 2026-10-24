@@ -37,10 +37,9 @@ export default function ReauthModal({ onAuthenticate, onDismiss }: {
         <div className="fixed inset-0 z-[90] flex items-center justify-center p-4
             bg-gray-900/40 backdrop-blur-sm">
             <div className="w-full max-w-sm rounded-2xl bg-white shadow-xl p-6">
-                <h2 className="text-lg font-semibold text-gray-900">Signed out</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Вы вышли</h2>
                 <p className="mt-1 text-sm text-gray-600">
-                    Your session timed out. Sign in and the change you just made will finish
-                    saving.
+                    Сеанс истёк. Войдите, чтобы завершить сохранение изменения.
                 </p>
                 <div className="mt-4">
                     <TextField
@@ -49,21 +48,21 @@ export default function ReauthModal({ onAuthenticate, onDismiss }: {
                         autoFocus
                         type="password"
                         value={password}
-                        placeholder="Admin password"
+                        placeholder="Пароль администратора"
                         autoComplete="current-password"
                         onChange={(e) => { setPassword(e.target.value); setWrong(false); }}
                         onKeyDown={(e) => { if (e.key === 'Enter') void submit(); }}
                     />
                     {wrong && (
                         <p className="mt-2 text-sm text-rose-600">
-                            That password didn&apos;t work. Try again.
+                            Неверный пароль. Попробуйте снова.
                         </p>
                     )}
                 </div>
                 <div className="mt-5 flex items-center justify-end gap-2">
-                    <Button onClick={onDismiss}>Not now</Button>
+                    <Button onClick={onDismiss}>Не сейчас</Button>
                     <Button tone="primary" onClick={() => void submit()} disabled={!password || busy}>
-                        {busy ? 'Signing in…' : 'Sign in and save'}
+                        {busy ? 'Входим…' : 'Войти и сохранить'}
                     </Button>
                 </div>
             </div>

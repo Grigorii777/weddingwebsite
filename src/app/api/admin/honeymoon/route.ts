@@ -7,6 +7,6 @@ export async function GET() {
         return NextResponse.json(await getHoneymoonPayload());
     } catch (error) {
         console.error('Error loading honeymoon payload:', error);
-        return NextResponse.json({ error: 'Failed to load honeymoon data' }, { status: 500 });
+        return NextResponse.json({ error: 'Не удалось загрузить поездку' }, { status: 500 });
     }
 }

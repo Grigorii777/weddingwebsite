@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import Image from 'next/image';
 import { daysBetween, formatDate, hasCoords, type Place } from '@/lib/honeymoon';
@@ -49,7 +50,7 @@ export function PlaceCard({ place, selected, onToggleSelect, active = false, onS
                 type="button"
                 onClick={() => openPlace(place.id)}
                 className="block w-full text-left"
-                aria-label={`Open ${place.name}`}
+                aria-label={`Открыть ${place.name}`}
             >
                 <Cover place={place} />
                 <div className="space-y-1 px-4 pt-3">
@@ -64,14 +65,14 @@ export function PlaceCard({ place, selected, onToggleSelect, active = false, onS
                         {place.status !== 'idea' && <StatusChip status={place.status} />}
                         {region && <span className="text-[11px] text-gray-400">{region}</span>}
                         {!hasCoords(place) && (
-                            <span className="rounded-full bg-sky-50 px-1.5 py-0.5 text-[10px] text-sky-700">no pin</span>
+                            <span className="rounded-full bg-sky-50 px-1.5 py-0.5 text-[10px] text-sky-700">нет координат</span>
                         )}
                     </div>
                     {price && <p className="text-sm text-gray-700">{price}</p>}
                     {booked && (
                         <p className="text-[11px] text-emerald-700">
                             🛏 {formatDate(booked.check_in)} → {formatDate(booked.check_out)}
-                            {nights != null && nights > 0 && ` · ${nights} night${nights === 1 ? '' : 's'}`}
+                            {nights != null && nights > 0 && ` · ${counted(nights, 'ночь', 'ночи', 'ночей')}`}
                         </p>
                     )}
                     {(place.star_rating != null || place.amenities.length > 0) && (
@@ -93,7 +94,7 @@ export function PlaceCard({ place, selected, onToggleSelect, active = false, onS
                             checked={!!selected}
                             onChange={onToggleSelect}
                             className="size-4 rounded accent-accent"
-                            aria-label={`Select ${place.name}`}
+                            aria-label={`Выбрать ${place.name}`}
                         />
                     </label>
                 )}
@@ -109,7 +110,7 @@ export function PlaceCard({ place, selected, onToggleSelect, active = false, onS
                         onClick={onShowOnMap}
                         className="min-h-11 md:min-h-0 rounded-full px-2.5 py-1 text-[11px] text-accent hover:bg-accent/10"
                     >
-                        {active ? '◉ On the map' : '◎ Map'}
+                        {active ? '◉ На карте' : '◎ Карта'}
                     </button>
                 )}
                 {menu.length > 0 && <OverflowMenu items={menu} />}
@@ -175,7 +176,7 @@ export function PlaceRow({ place, selected, onToggleSelect, dense = false, trail
                         checked={!!selected}
                         onChange={onToggleSelect}
                         className="size-4 rounded accent-accent"
-                        aria-label={`Select ${place.name}`}
+                        aria-label={`Выбрать ${place.name}`}
                     />
                 </label>
             )}
@@ -192,14 +193,14 @@ export function PlaceRow({ place, selected, onToggleSelect, dense = false, trail
                 <div className="flex flex-wrap items-center gap-2">
                     <span className="truncate text-sm font-medium text-gray-900">{place.name}</span>
                     {!hasCoords(place) && (
-                        <span className="rounded-full bg-sky-50 px-1.5 py-0.5 text-[10px] text-sky-700">no pin</span>
+                        <span className="rounded-full bg-sky-50 px-1.5 py-0.5 text-[10px] text-sky-700">нет координат</span>
                     )}
                     {place.needs_review && (
-                        <span className="rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-800">⚠ review</span>
+                        <span className="rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-800">⚠ проверить</span>
                     )}
                     {onDays.length > 0 && (
                         <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] text-emerald-800">
-                            day {onDays.join(', ')}
+                            день {onDays.join(', ')}
                         </span>
                     )}
                 </div>

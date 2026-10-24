@@ -27,7 +27,7 @@ async function create(request: Request) {
         const body = await request.json().catch(() => ({}));
         const entries: Entry[] = Array.isArray(body?.entries) ? body.entries.slice(0, 60) : [];
         if (!entries.length) {
-            return NextResponse.json({ error: 'Nothing to record' }, { status: 400 });
+            return NextResponse.json({ error: 'Нечего записывать' }, { status: 400 });
         }
 
         const places = await pool.query('SELECT id, name, links, price_note FROM honeymoon_places');
@@ -92,7 +92,7 @@ async function create(request: Request) {
         return NextResponse.json({ success: true, recorded, unmatched });
     } catch (error) {
         console.error('Error recording price checks:', error);
-        return NextResponse.json({ error: 'Could not record those prices' }, { status: 500 });
+        return NextResponse.json({ error: 'Не удалось записать цены' }, { status: 500 });
     }
 }
 
@@ -119,7 +119,7 @@ export async function GET(request: Request) {
         await ensureHoneymoonTables();
         const placeId = Math.trunc(Number(new URL(request.url).searchParams.get('place_id')));
         if (!Number.isFinite(placeId) || placeId <= 0) {
-            return NextResponse.json({ error: 'place_id required' }, { status: 400 });
+            return NextResponse.json({ error: 'Укажите place_id' }, { status: 400 });
         }
         const rows = await pool.query(
             `SELECT id, price_note, amount, currency, checked_at FROM honeymoon_price_checks
@@ -129,7 +129,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ checks: rows.rows });
     } catch (error) {
         console.error('Error reading price checks:', error);
-        return NextResponse.json({ error: 'Could not read that history' }, { status: 500 });
+        return NextResponse.json({ error: 'Не удалось прочитать историю' }, { status: 500 });
     }
 }
 

@@ -4,11 +4,11 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 const LABELS: Record<string, string> = {
-    '/': 'Home', '/about': 'About', '/our-story': 'Our story', '/wedding-party': 'Wedding party',
-    '/schedule': 'Schedule', '/photos': 'Photos', '/rsvp': 'RSVP', '/registry': 'Registry',
-    '/admin': 'Admin', '/admin/honeymoon': 'Honeymoon', '/admin/honeymoon/today': 'Honeymoon · Today',
-    '/admin/honeymoon/itinerary': 'Honeymoon · Itinerary', '/admin/honeymoon/files': 'Honeymoon · Files',
-    '/admin/rsvps': 'RSVPs', '/admin/finances': 'Finances', '/admin/seating': 'Seating chart',
+    '/': 'Главная', '/about': 'О нас', '/our-story': 'Наша история', '/wedding-party': 'Наши близкие',
+    '/schedule': 'Программа', '/photos': 'Фотографии', '/rsvp': 'RSVP', '/registry': 'Подарки',
+    '/admin': 'Управление', '/admin/honeymoon': 'Свадебное путешествие', '/admin/honeymoon/today': 'Путешествие · Сегодня',
+    '/admin/honeymoon/itinerary': 'Путешествие · Маршрут', '/admin/honeymoon/files': 'Путешествие · Файлы',
+    '/admin/rsvps': 'RSVPs', '/admin/finances': 'Финансы', '/admin/seating': 'План рассадки',
 };
 
 /** A readable name for any saved page: "/admin/wip-control" → "Admin · Wip control". */
@@ -17,7 +17,7 @@ function labelOf(path: string): string {
     const parts = path.split('/').filter(Boolean)
         .map((part) => part.replace(/-/g, ' '))
         .map((part) => part.charAt(0).toUpperCase() + part.slice(1));
-    return parts.join(' · ') || 'Home';
+    return parts.join(' · ') || 'Главная';
 }
 
 /**
@@ -40,10 +40,10 @@ export default function OfflinePage() {
 
     return (
         <div className="mx-auto max-w-xl px-6 py-16">
-            <h1 className="text-3xl font-serif text-gray-900">You&apos;re offline</h1>
+            <h1 className="text-3xl font-serif text-gray-900">Нет подключения к интернету</h1>
             <p className="mt-3 text-gray-600">
-                This page hasn&apos;t been saved on this device yet, so it can&apos;t open without a connection.
-                {saved && saved.length > 0 && ' These pages can:'}
+                Эта страница ещё не сохранена на устройстве. Для её открытия нужен интернет.
+                {saved && saved.length > 0 && ' Доступные страницы:'}
             </p>
             {saved && saved.length > 0 && (
                 <ul className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -60,7 +60,7 @@ export default function OfflinePage() {
                 </ul>
             )}
             <p className="mt-8 text-sm text-gray-500">
-                Open the installed app with a connection once and it saves the whole site.
+                Откройте установленное приложение с интернетом, чтобы сохранить весь сайт.
             </p>
         </div>
     );

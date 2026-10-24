@@ -17,12 +17,12 @@ export default function OfflineStatus() {
             <div className="flex items-center justify-between gap-2">
                 <span>
                     {saving
-                        ? `Saving for offline… ${pct}%`
+                        ? `Сохраняем для работы без интернета… ${pct}%`
                         : state.phase === 'failed'
-                            ? 'Saving for offline stopped — try again'
+                            ? 'Не удалось сохранить для работы без интернета. Попробуйте ещё раз.'
                             : state.record
-                                ? `Saved for offline · ${savedLabel(state.record.at)}`
-                                : 'Not saved for offline yet'}
+                                ? `Сохранено для работы без интернета · ${savedLabel(state.record.at)}`
+                                : 'Ещё не сохранено для работы без интернета'}
                 </span>
                 <button
                     type="button"
@@ -31,12 +31,12 @@ export default function OfflineStatus() {
                     className="shrink-0 rounded-full border border-gray-200 bg-white px-2.5 py-1 font-medium text-gray-700
                         hover:bg-gray-100 disabled:opacity-50"
                 >
-                    {saving ? 'Saving…' : state.record ? 'Save again' : 'Save now'}
+                    {saving ? 'Сохраняем…' : state.record ? 'Сохранить снова' : 'Сохранить сейчас'}
                 </button>
             </div>
             {state.pending > 0 && (
                 <p data-offline-pending className="mt-1 text-amber-700">
-                    {state.pending === 1 ? '1 change' : `${state.pending} changes`} made offline, waiting to be sent
+                    {state.pending === 1 ? '1 изменение' : `${state.pending} изменений`} без интернета, ожидают отправки
                 </p>
             )}
             {saving && (

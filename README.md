@@ -102,6 +102,23 @@ optional and each feature says so in the UI when its variable is missing:
 - **[Deployment](https://github.com/Soccerbeats/weddingwebsite/wiki/Deployment)** — what a merge publishes, and how it reaches a running server on its own
 - **[The demo instance](https://github.com/Soccerbeats/weddingwebsite/wiki/The-Demo-Instance)** — how the read-only copy at [weddingwebsitedemo.com](https://weddingwebsitedemo.com) is put together, and how to host your own
 
+## Русский интерфейс
+
+Публичные страницы и панель управления переведены на русский, включая финансы,
+рассадку, свадебное путешествие, формы ответа гостей и сообщения без интернета.
+Откройте `/admin/settings`, чтобы задать имена, место и дату свадьбы; затем
+заполните тексты страниц в соответствующих разделах админки.
+
+Дата свадьбы принимает `15 июня 2027`, `15.06.2027` и `2027-06-15`; старые даты
+на английском также поддерживаются. Программа дня отображает время в формате
+24 часов. Формат часов путешествия по-прежнему выбирается в его настройках.
+Суммы используют русские разделители, например `1 200,50`; валюта сохраняется.
+Имена, адреса, заметки и другие ранее сохранённые данные не переписываются.
+
+Шрифты с кириллицей поставляются вместе с приложением: сборка и браузер не
+загружают их из Google Fonts. Проверка русских дат, склонений и чтения цен:
+`npm run check:locale`.
+
 ## Email (SMTP)
 
 RSVPs can trigger two emails, and the admin can check that they would work:

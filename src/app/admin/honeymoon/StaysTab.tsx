@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
@@ -52,11 +53,11 @@ const MIN_LIST = 360;
 const WIDE_QUERY = '(min-width: 1280px)';
 
 const SORTS: { key: SortKey; label: string }[] = [
-    { key: 'rank', label: 'My ranking' },
-    { key: 'added', label: 'Recently added' },
-    { key: 'price', label: 'Price: low first' },
-    { key: 'name', label: 'Name: A → Z' },
-    { key: 'status', label: 'Status: booked first' },
+    { key: 'rank', label: 'Мой рейтинг' },
+    { key: 'added', label: 'Сначала новые' },
+    { key: 'price', label: 'Сначала дешевле' },
+    { key: 'name', label: 'По алфавиту' },
+    { key: 'status', label: 'Сначала забронированные' },
 ];
 
 const SORT_KEY = 'honeymoon.stays.sort';
@@ -323,7 +324,7 @@ export default function StaysTab({ api, segmentSwitch }: {
     const clearRanking = async () => {
         const ranked = stays.filter((s) => s.rank != null);
         if (!ranked.length) return;
-        if (!confirm(`Clear the ranking on ${ranked.length} stay(s)?`)) return;
+        if (!confirm(`Сбросить рейтинг для ${ranked.length} вариантов проживания?`)) return;
         await api.update('places', { ids: ranked.map((s) => s.id), rank: null });
     };
 
@@ -400,13 +401,13 @@ export default function StaysTab({ api, segmentSwitch }: {
         const named = [...byId.entries()]
             .map(([key, n]) => ({
                 key,
-                label: `${api.regionById.get(Number(key)) ?? 'Unknown area'} ${n}`,
+                label: `${api.regionById.get(Number(key)) ?? 'Район не указан'} ${n}`,
             }))
             .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
         return [
-            { key: '', label: 'All areas' },
+            { key: '', label: 'Все районы' },
             ...named,
-            ...(unset || area === 'none' ? [{ key: 'none', label: `No area set ${unset}` }] : []),
+            ...(unset || area === 'none' ? [{ key: 'none', label: `Без района ${unset}` }] : []),
         ];
     }, [stays, removed, filter, area, api.regionById]);
 
@@ -478,12 +479,12 @@ export default function StaysTab({ api, segmentSwitch }: {
                 // "Hard Rock Hotel Bali" rather than "Hard Rock Bali".
                 const name = cleanListingTitle(meta.title ?? '')
                     ?? nameFromStayUrl(url)
-                    ?? 'Untitled stay';
+                    ?? 'Проживание без названия';
                 await api.create('places', {
                     name,
                     category: 'stay',
                     status: 'idea',
-                    source: 'Added by me',
+                    source: 'Добавлено мной',
                     image_url: meta.image ?? '',
                     address: meta.address ?? '',
                     star_rating: meta.starRating ?? '',
@@ -494,7 +495,7 @@ export default function StaysTab({ api, segmentSwitch }: {
                     ...(meta.lat != null && meta.lng != null
                         ? { lat: meta.lat, lng: meta.lng, needs_review: false }
                         : {}),
-                    links: [{ label: isStayUrl(url) ? 'Booking' : 'Link', url }],
+                    links: [{ label: isStayUrl(url) ? 'Бронирование' : 'Ссылка', url }],
                 });
             }
             setBulk('');
@@ -589,23 +590,23 @@ export default function StaysTab({ api, segmentSwitch }: {
             down the page, runs off the bottom, and a pin down there eats the
             click that should have selected it. */}
         <TabToolbar
-            fab={{ label: 'Add stays', onClick: () => setPasting(true) }}
+            fab={{ label: 'Добавить проживание', onClick: () => setPasting(true) }}
             left={(
                 <>
                     {segmentSwitch}
                     {view === 'cards' && (
                         <Segmented
-                            ariaLabel="Show which stays"
+                            ariaLabel="Какие варианты показать"
                             size="sm"
                             value={filter}
                             onChange={setFilter}
                             options={[
-                                { key: 'all', label: 'All', count: counts.all },
-                                { key: 'yes', label: '👍', count: counts.yes, title: 'Interested' },
-                                { key: 'mid', label: '😐', count: counts.mid, title: 'Mid tier' },
-                                { key: 'no', label: '👎', count: counts.no, title: 'Not interested' },
-                                { key: 'unrated', label: 'Unrated', count: counts.unrated },
-                                ...(counts.removed ? [{ key: 'removed' as const, label: '🗑', count: counts.removed, title: 'Removed' }] : []),
+                                { key: 'all', label: 'Все', count: counts.all },
+                                { key: 'yes', label: '👍', count: counts.yes, title: 'Интересно' },
+                                { key: 'mid', label: '😐', count: counts.mid, title: 'Возможно' },
+                                { key: 'no', label: '👎', count: counts.no, title: 'Неинтересно' },
+                                { key: 'unrated', label: 'Без оценки', count: counts.unrated },
+                                ...(counts.removed ? [{ key: 'removed' as const, label: '🗑', count: counts.removed, title: 'Удалено' }] : []),
                             ]}
                         />
                     )}
@@ -614,26 +615,26 @@ export default function StaysTab({ api, segmentSwitch }: {
             right={(
                 <>
                     <Segmented
-                        ariaLabel="Stays view"
+                        ariaLabel="Вид проживания"
                         size="sm"
                         value={view}
                         onChange={chooseView}
                         options={[
-                            { key: 'cards', label: '▦ Cards' },
-                            { key: 'ranking', label: '① Ranking' },
-                            { key: 'compare', label: '⊞ Compare' },
+                            { key: 'cards', label: '▦ Карточки' },
+                            { key: 'ranking', label: '① Рейтинг' },
+                            { key: 'compare', label: '⊞ Сравнение' },
                         ]}
                     />
                     {view === 'cards' && areaOptions.length > 2 && (
                         <FilterButton
                             active={area ? [{
                                 key: 'area',
-                                label: areaOptions.find((o) => o.key === area)?.label ?? 'Area',
+                                label: areaOptions.find((o) => o.key === area)?.label ?? 'Район',
                                 clear: () => setArea(''),
                             }] : []}
                             onReset={() => setArea('')}
                         >
-                            <FilterField label="Area">
+                            <FilterField label="Район">
                                 <SelectField value={area} onChange={(e) => setArea(e.target.value)}>
                                     {areaOptions.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
                                 </SelectField>
@@ -644,35 +645,35 @@ export default function StaysTab({ api, segmentSwitch }: {
                         <MiniSelect
                             value={sort}
                             onChange={(e) => chooseSort(e.target.value as SortKey)}
-                            aria-label="Sort the shortlist"
+                            aria-label="Упорядочить избранное"
                         >
                             {SORTS.map((option) => <option key={option.key} value={option.key}>{option.label}</option>)}
                         </MiniSelect>
                     )}
-                    <Button tone="primary" onClick={() => setPasting(true)} className="max-md:hidden">+ Add stays</Button>
+                    <Button tone="primary" onClick={() => setPasting(true)} className="max-md:hidden">+ Добавить проживание</Button>
                     <OverflowMenu items={[
-                        ...(stays.length > 0 ? [{ label: 'Watch the prices…', onClick: () => setWatching(true) }] : []),
-                        ...(counts.unrated > 0 ? [{ label: `⚡ Rate ${counts.unrated} unrated`, onClick: () => setTriaging(true) }] : []),
+                        ...(stays.length > 0 ? [{ label: 'Следить за ценами…', onClick: () => setWatching(true) }] : []),
+                        ...(counts.unrated > 0 ? [{ label: `⚡ Оценить ${counts.unrated} без оценки`, onClick: () => setTriaging(true) }] : []),
                         ...(missingLocation.length > 0 && locating === 0 ? [{
-                            label: `Get locations for ${missingLocation.length}`, onClick: fetchMissingLocations,
+                            label: `Найти координаты: ${missingLocation.length}`, onClick: fetchMissingLocations,
                         }] : []),
                         ...(missingImages.length > 0 && fetching === 0 ? [{
-                            label: `Get photos for ${missingImages.length}`, onClick: fetchMissingImages,
+                            label: `Найти фотографии: ${missingImages.length}`, onClick: fetchMissingImages,
                         }] : []),
                         ...(view === 'ranking' && stays.some((st) => st.rank != null)
-                            ? [{ label: 'Clear the ranking', onClick: clearRanking }] : []),
+                            ? [{ label: 'Сбросить рейтинг', onClick: clearRanking }] : []),
                     ]} />
                 </>
             )}
             below={(locating > 0 || fetching > 0 || (located != null && locating === 0) || (area && view === 'cards')) ? (
                 <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-500">
-                    {locating > 0 && <span>Looking up locations… {locating} left</span>}
-                    {fetching > 0 && <span>Fetching photos… {fetching} left</span>}
+                    {locating > 0 && <span>Ищем координаты… {locating} осталось</span>}
+                    {fetching > 0 && <span>Загружаем фотографии… {fetching} осталось</span>}
                     {located != null && locating === 0 && (
                         <span>
                             {located > 0
-                                ? `Found a location for ${located} stay${located === 1 ? '' : 's'}. They are on the map now.`
-                                : 'No new locations found — open a stay and use Find to pin it by hand.'}
+                                ? `Координаты найдены: ${counted(located, 'вариант проживания', 'варианта проживания', 'вариантов проживания')}. Теперь они на карте.`
+                                : 'Новых координат не найдено. Откройте проживание и воспользуйтесь поиском вручную.'}
                         </span>
                     )}
                 </div>
@@ -688,33 +689,33 @@ export default function StaysTab({ api, segmentSwitch }: {
             {selected.size > 0 && (
                 <Card className="sticky top-2 z-10 flex flex-wrap items-center gap-2 p-3">
                     <span className="text-sm font-medium text-gray-700">
-                        {selected.size} selected
+                        {selected.size} выбрано
                     </span>
                     <div className="flex-1" />
                     <BulkFieldMenu
                         fields={[
                             {
                                 key: 'status',
-                                label: 'Status',
+                                label: 'Статус',
                                 options: STATUSES.map((entry) => ({
                                     value: entry.key, label: entry.label,
                                 })),
                             },
                             {
                                 key: 'rating',
-                                label: 'Rating',
+                                label: 'Оценка',
                                 options: [
                                     ...RATINGS.map((entry) => ({
                                         value: entry.key, label: `${entry.icon} ${entry.label}`,
                                     })),
-                                    { value: '', label: '— unrated —' },
+                                    { value: '', label: '— без оценки —' },
                                 ],
                             },
                             {
                                 key: 'region_id',
-                                label: 'Area',
+                                label: 'Район',
                                 options: [
-                                    { value: null, label: '— no area —' },
+                                    { value: null, label: '— район не указан —' },
                                     ...(data?.regions ?? []).map((region) => ({
                                         value: region.id, label: region.name,
                                     })),
@@ -725,7 +726,7 @@ export default function StaysTab({ api, segmentSwitch }: {
                             await api.update('places', { ids: [...selected], [key]: value });
                             setSelected(new Set());
                         }}
-                        label="Change a field on all selected"
+                        label="Изменить поле у всех выбранных"
                     />
                     <Button
                         onClick={async () => {
@@ -733,9 +734,9 @@ export default function StaysTab({ api, segmentSwitch }: {
                             setSelected(new Set());
                         }}
                     >
-                        Remove from shortlist
+                        Убрать из избранного
                     </Button>
-                    <Button tone="ghost" onClick={() => setSelected(new Set())}>Clear</Button>
+                    <Button tone="ghost" onClick={() => setSelected(new Set())}>Сбросить</Button>
                 </Card>
             )}
 
@@ -757,15 +758,15 @@ export default function StaysTab({ api, segmentSwitch }: {
                 <Card>
                     <EmptyState
                         title={stays.length || removed.length
-                            ? 'Nothing matches that filter'
-                            : 'No places to stay yet'}
+                            ? 'По этому фильтру ничего нет'
+                            : 'Вариантов проживания пока нет'}
                         // Name the filter that is actually hiding things, rather
                         // than saying "try All" when the area is the culprit.
                         hint={stays.length || removed.length
                             ? (area
-                                ? 'No stays in that area with those ratings — try All areas.'
-                                : 'Try All.')
-                            : 'Paste a Booking.com link above to start a shortlist.'}
+                                ? 'Нет вариантов с такими оценками в этом районе. Выберите «Все районы».'
+                                : 'Выберите «Все».')
+                            : 'Вставьте ссылку Booking.com выше, чтобы начать подборку.'}
                     />
                 </Card>
             ) : (
@@ -788,15 +789,15 @@ export default function StaysTab({ api, segmentSwitch }: {
                                 else cardRefs.current.delete(stay.id);
                             }}
                             menu={[
-                                { label: 'Open', onClick: () => openPlace(stay.id) },
-                                ...(stayLink(stay) ? [{ label: 'Preview the listing', onClick: () => setPreview(stay) }] : []),
+                                { label: 'Открыть', onClick: () => openPlace(stay.id) },
+                                ...(stayLink(stay) ? [{ label: 'Просмотр предложения', onClick: () => setPreview(stay) }] : []),
                                 // Removing is the ordinary action; deleting for good
                                 // lives one deliberate step further on, in Removed.
                                 stay.archived
-                                    ? { label: 'Put back on the shortlist', onClick: () => api.patchPlace(stay.id, { archived: false }) }
-                                    : { label: 'Remove from the shortlist', onClick: () => api.patchPlace(stay.id, { archived: true }) },
+                                    ? { label: 'Вернуть в избранное', onClick: () => api.patchPlace(stay.id, { archived: false }) }
+                                    : { label: 'Убрать из избранного', onClick: () => api.patchPlace(stay.id, { archived: true }) },
                                 ...(stay.archived ? [{
-                                    label: 'Delete for good', danger: true, onClick: () => api.removePlaces([stay]),
+                                    label: 'Удалить навсегда', danger: true, onClick: () => api.removePlaces([stay]),
                                 }] : []),
                             ]}
                         />
@@ -811,7 +812,7 @@ export default function StaysTab({ api, segmentSwitch }: {
                 under the list rather than squeezing both into half a screen. */}
             {wide && (
                 <ColumnDivider
-                    label="Resize the map"
+                    label="Изменить размер карты"
                     onDrag={resizeMap}
                 />
             )}
@@ -824,11 +825,11 @@ export default function StaysTab({ api, segmentSwitch }: {
                     {mapped.length === 0 ? (
                         <Card className="h-full flex items-center justify-center">
                             <EmptyState
-                                title="No stays on the map yet"
+                                title="Проживание на карте пока не отмечено"
                                 hint={stays.length
-                                    ? 'Press "Get locations" above and the shortlist puts itself on '
-                                        + 'the map.'
-                                    : 'Paste a booking link and its location comes with it.'}
+                                    ? 'Нажмите «Найти координаты», чтобы добавить варианты на '
+                                        + 'карту.'
+                                    : 'Вставьте ссылку бронирования — координаты загрузятся вместе с ней.'}
                             />
                         </Card>
                     ) : (
@@ -848,8 +849,8 @@ export default function StaysTab({ api, segmentSwitch }: {
                     )}
                 </div>
                 <p className="text-[11px] text-gray-400 px-1 pt-1.5">
-                    {mapped.length} of {stays.length} on the map
-                    {mapped.length > 0 && ' · click a pin to jump to its card'}
+                    {mapped.length} из {stays.length} на карте
+                    {mapped.length > 0 && ' · нажмите отметку для перехода к карточке'}
                 </p>
             </aside>
         </div>
@@ -871,7 +872,7 @@ export default function StaysTab({ api, segmentSwitch }: {
                 api={api}
                 open={triaging}
                 onClose={() => setTriaging(false)}
-                title="Rate the stays"
+                title="Оценить проживание"
                 filter={(place) => place.category === 'stay' && !place.is_excursion}
             />
 
@@ -879,7 +880,7 @@ export default function StaysTab({ api, segmentSwitch }: {
                 open={pasting}
                 onClose={() => setPasting(false)}
                 side="center"
-                title={<h2 className="font-semibold text-gray-900">Add stays from links</h2>}
+                title={<h2 className="font-semibold text-gray-900">Добавить проживание по ссылкам</h2>}
             >
                 <div className="space-y-2">
                     <TextArea
@@ -896,7 +897,7 @@ export default function StaysTab({ api, segmentSwitch }: {
                         placeholder="https://www.booking.com/hotel/id/…  — one per line, or several at once"
                     />
                     <p className="text-[11px] text-gray-400">
-                        The name, photo, address and pin are read from each listing; price and notes are yours.
+                        Название, фото, адрес и координаты берутся из предложения. Цену и заметки укажите сами.
                     </p>
                     <div className="flex justify-end">
                         <Button
@@ -904,7 +905,7 @@ export default function StaysTab({ api, segmentSwitch }: {
                             onClick={async () => { await addLinks(); setPasting(false); }}
                             disabled={adding || !stayUrlsFromText(bulk).length}
                         >
-                            {adding ? 'Adding…' : `Add ${stayUrlsFromText(bulk).length || ''}`.trim()}
+                            {adding ? 'Добавляем…' : `Добавить ${stayUrlsFromText(bulk).length || ''}`.trim()}
                         </Button>
                     </div>
                 </div>
@@ -915,7 +916,7 @@ export default function StaysTab({ api, segmentSwitch }: {
                 onClose={() => setWatching(false)}
                 side="center"
                 width="lg"
-                title={<h2 className="font-semibold text-gray-900">Watch the prices</h2>}
+                title={<h2 className="font-semibold text-gray-900">Следить за ценами</h2>}
             >
                 <PriceWatch api={api} />
             </Sheet>
@@ -957,8 +958,8 @@ function RankingList({ stays, currency, pickedId, onPick, onReorder, cardRefs }:
         return (
             <Card>
                 <EmptyState
-                    title="Nothing to rank yet"
-                    hint="Paste a booking link above, then drag the rows into the order you like them."
+                    title="Пока нечего упорядочивать"
+                    hint="Вставьте ссылку бронирования выше, затем расставьте строки в нужном порядке."
                 />
             </Card>
         );
@@ -978,8 +979,7 @@ function RankingList({ stays, currency, pickedId, onPick, onReorder, cardRefs }:
     return (
         <Card className="overflow-hidden">
             <p className="text-[11px] text-gray-400 px-3 pt-2.5">
-                Drag a row by its ⠿ handle. Every stay is here, whatever the filters say —
-                a ranking is the whole shortlist or it is nothing.
+                Перетаскивайте строки за ⠿. Здесь все варианты проживания независимо от фильтров.
             </p>
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
                 <SortableContext items={rows.map((s) => s.id)} strategy={verticalListSortingStrategy}>
@@ -1049,16 +1049,16 @@ function RankRow({ stay, currency, position, picked, onPick, cardRefs, onMove, i
                 {...listeners}
                 className="hidden [@media(pointer:fine)]:block cursor-grab active:cursor-grabbing text-gray-300
                     hover:text-gray-500 touch-none pl-2 pr-1 shrink-0"
-                aria-label={`Drag ${stay.name} to reorder the ranking`}
+                aria-label={`Перетащите ${stay.name} для изменения рейтинга`}
             >
                 ⠿
             </button>
             <span className="flex shrink-0 flex-col justify-center [@media(pointer:fine)]:hidden">
                 <button type="button" onClick={() => onMove(-1)} disabled={isFirst}
-                    aria-label={`Move ${stay.name} up`}
+                    aria-label={`Переместить ${stay.name} вверх`}
                     className="flex size-11 items-center justify-center text-gray-500 disabled:opacity-25">▲</button>
                 <button type="button" onClick={() => onMove(1)} disabled={isLast}
-                    aria-label={`Move ${stay.name} down`}
+                    aria-label={`Переместить ${stay.name} вниз`}
                     className="flex size-11 items-center justify-center text-gray-500 disabled:opacity-25">▼</button>
             </span>
             {/* The position on screen, not the stored rank: mid-drag they differ,
@@ -1075,7 +1075,7 @@ function RankRow({ stay, currency, position, picked, onPick, cardRefs, onMove, i
                     referrerPolicy="no-referrer"
                     loading="lazy"
                     onClick={onPick}
-                    title={`Show ${stay.name} on the map`}
+                    title={`Показать ${stay.name} на карте`}
                     // Twice the width at the same 96px height, so the photo is
                     // the biggest thing it can be without making every row
                     // taller. That is a 3:1 window onto a 3:2 photo, so
@@ -1102,8 +1102,8 @@ function RankRow({ stay, currency, position, picked, onPick, cardRefs, onMove, i
                     be compared down the list; repeating it here would just be
                     the same number twice. */}
                 <div className="text-[11px] text-gray-400 truncate">
-                    {stay.address || 'no address yet'}
-                    {!hasCoords(stay) ? ' · no pin' : ''}
+                    {stay.address || 'адрес не указан'}
+                    {!hasCoords(stay) ? ' · нет координат' : ''}
                 </div>
             </button>
             {rating && (

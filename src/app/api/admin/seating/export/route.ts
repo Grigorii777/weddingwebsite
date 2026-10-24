@@ -85,7 +85,7 @@ export async function GET() {
 
         const config = getSiteConfig();
         const header = {
-            title: [config.brideName, config.groomName].filter(Boolean).join(' & ') || 'Seating chart',
+            title: [config.brideName, config.groomName].filter(Boolean).join(' & ') || 'План рассадки',
             date: config.weddingDate || null,
             venue: config.weddingVenue || config.weddingLocation || null,
         };
@@ -246,7 +246,7 @@ export async function GET() {
         return NextResponse.json({ ...header, tables, unseated, vendors, room } satisfies SeatingExportData);
     } catch (error) {
         console.error('Error building seating export:', error);
-        return NextResponse.json({ error: 'Failed to build seating export' }, { status: 500 });
+        return NextResponse.json({ error: 'Не удалось подготовить экспорт рассадки' }, { status: 500 });
     } finally {
         client.release();
     }

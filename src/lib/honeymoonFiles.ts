@@ -10,8 +10,8 @@ import type { DocumentKind, Trip, TripDocument } from './honeymoon';
 
 /** Folder names: a folder holds several of a thing. */
 const FOLDER_LABELS: Record<string, string> = {
-    passport: 'Passports', visa: 'Visas', insurance: 'Insurance', ticket: 'Tickets',
-    vaccination: 'Vaccinations', reservation: 'Reservations', other: 'Other',
+    passport: 'Паспорта', visa: 'Визы', insurance: 'Страховка', ticket: 'Билеты',
+    vaccination: 'Прививки', reservation: 'Бронирования', other: 'Другое',
 };
 
 /** Filename words, in the order they are tested — the first match wins. */
@@ -70,25 +70,25 @@ export function documentWarnings(
         const margin = addDays(end, PASSPORT_MARGIN_DAYS);
         for (const doc of docs) {
             if (!doc.expires_on || !['passport', 'visa', 'insurance'].includes(doc.kind)) continue;
-            const whose = doc.person ? `${doc.person}'s ` : '';
+            const whose = doc.person ? `${doc.person} — ` : '';
             const what = DOCUMENT_KINDS.find((k) => k.key === doc.kind)?.label.toLowerCase() ?? 'document';
             const on = formatDate(doc.expires_on);
             const lead = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
             if (doc.expires_on < start) {
-                warnings.push({ documentId: doc.id, level: 'warn', message: lead(`${whose}${what} expires ${on}, before you leave.`) });
+                warnings.push({ documentId: doc.id, level: 'warn', message: lead(`${whose}${what} истекает ${on}, до отъезда.`) });
             } else if (doc.expires_on <= end) {
-                warnings.push({ documentId: doc.id, level: 'warn', message: lead(`${whose}${what} expires ${on}, during the trip.`) });
+                warnings.push({ documentId: doc.id, level: 'warn', message: lead(`${whose}${what} истекает ${on}, во время поездки.`) });
             } else if (doc.kind === 'passport' && doc.expires_on < margin) {
                 warnings.push({
                     documentId: doc.id,
                     level: 'warn',
-                    message: lead(`${whose}passport expires ${on}, under six months after you come home — many countries refuse that.`),
+                    message: lead(`${whose}срок паспорта истекает ${on}, менее чем через шесть месяцев после возвращения. Многие страны требуют большего срока.`),
                 });
             }
         }
     }
     if (!docs.some((doc) => doc.kind === 'passport')) {
-        warnings.push({ documentId: null, level: 'info', message: 'No passport on file yet.' });
+        warnings.push({ documentId: null, level: 'info', message: 'Паспорт ещё не добавлен.' });
     }
     return warnings;
 }
@@ -125,7 +125,7 @@ export function documentFolders(docs: TripDocument[]): { kinds: Folder[]; people
     const people: Folder[] = [...byPerson.entries()]
         .sort((a, b) => a[0].localeCompare(b[0]))
         .map(([person, count]) => ({ key: `person:${person}`, label: person, icon: '👤', count }));
-    if (shared) people.push({ key: 'person:', label: 'Shared', icon: '👥', count: shared });
+    if (shared) people.push({ key: 'person:', label: 'Общий', icon: '👥', count: shared });
     return { kinds, people };
 }
 

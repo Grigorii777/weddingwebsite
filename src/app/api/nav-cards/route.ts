@@ -19,12 +19,12 @@ interface NavCard {
 }
 
 const ALL_PAGES: NavCard[] = [
-  { href: '/our-story',     slug: 'our-story',     label: 'Timeline',      eyebrow: 'Our Journey', subtitle: '', image: null },
-  { href: '/wedding-party', slug: 'wedding-party', label: 'Wedding Party', eyebrow: 'The Crew',    subtitle: '', image: null },
-  { href: '/schedule',      slug: 'schedule',      label: 'Schedule',      eyebrow: 'The Day',     subtitle: '', image: null },
-  { href: '/photos',        slug: 'photos',        label: 'Photos',        eyebrow: 'Gallery',     subtitle: '', image: null },
-  { href: '/registry',      slug: 'registry',      label: 'Registry',      eyebrow: 'Gifts',       subtitle: '', image: null },
-  { href: '/rsvp',          slug: 'rsvp',          label: 'RSVP',          eyebrow: 'Join Us',     subtitle: '', image: null },
+  { href: '/our-story',     slug: 'our-story',     label: 'Наша история',      eyebrow: 'Наша история', subtitle: '', image: null },
+  { href: '/wedding-party', slug: 'wedding-party', label: 'Наши близкие', eyebrow: 'Наши близкие',    subtitle: '', image: null },
+  { href: '/schedule',      slug: 'schedule',      label: 'Программа',      eyebrow: 'Наш день',     subtitle: '', image: null },
+  { href: '/photos',        slug: 'photos',        label: 'Фотографии',        eyebrow: 'Галерея',     subtitle: '', image: null },
+  { href: '/registry',      slug: 'registry',      label: 'Подарки',      eyebrow: 'Подарки',       subtitle: '', image: null },
+  { href: '/rsvp',          slug: 'rsvp',          label: 'Ответ на приглашение',          eyebrow: 'Ждём вас',     subtitle: '', image: null },
 ];
 
 

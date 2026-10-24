@@ -37,23 +37,23 @@ export async function POST(request: Request) {
         const file = form.get('file') as File | null;
 
         if (!Number.isFinite(id) || id <= 0) {
-            return NextResponse.json({ error: 'Valid purchase id required' }, { status: 400 });
+            return NextResponse.json({ error: 'Укажите корректный идентификатор покупки' }, { status: 400 });
         }
-        if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+        if (!file) return NextResponse.json({ error: 'Файл не выбран' }, { status: 400 });
         if (file.size > MAX_BYTES) {
-            return NextResponse.json({ error: 'File is larger than 12MB' }, { status: 400 });
+            return NextResponse.json({ error: 'Файл больше 12 МБ' }, { status: 400 });
         }
         const ext = extensionOf(file.name);
         if (!ext) {
             return NextResponse.json(
-                { error: 'Use a JPG, PNG, WebP, AVIF, HEIC or PDF' }, { status: 400 },
+                { error: 'Выберите JPG, PNG, WebP, AVIF, HEIC или PDF' }, { status: 400 },
             );
         }
 
         const existing = await pool.query(
             'SELECT receipt_path FROM finance_purchases WHERE id = $1', [id],
         );
-        if (!existing.rowCount) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        if (!existing.rowCount) return NextResponse.json({ error: 'Не найдено' }, { status: 404 });
 
         fs.mkdirSync(RECEIPTS_DIR, { recursive: true });
         // Include the id so a receipt is traceable back to its purchase, and a
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, receipt_path: stored });
     } catch (error) {
         console.error('Error saving receipt:', error);
-        return NextResponse.json({ error: 'Failed to save receipt' }, { status: 500 });
+        return NextResponse.json({ error: 'Не удалось сохранить чек' }, { status: 500 });
     }
 }
 
@@ -79,18 +79,18 @@ export async function DELETE(request: Request) {
         await ensureFinanceTables();
         const id = Math.trunc(Number(new URL(request.url).searchParams.get('id')));
         if (!Number.isFinite(id) || id <= 0) {
-            return NextResponse.json({ error: 'Valid purchase id required' }, { status: 400 });
+            return NextResponse.json({ error: 'Укажите корректный идентификатор покупки' }, { status: 400 });
         }
         const existing = await pool.query(
             'SELECT receipt_path FROM finance_purchases WHERE id = $1', [id],
         );
-        if (!existing.rowCount) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        if (!existing.rowCount) return NextResponse.json({ error: 'Не найдено' }, { status: 404 });
 
         deleteStored(existing.rows[0].receipt_path);
         await pool.query('UPDATE finance_purchases SET receipt_path = NULL WHERE id = $1', [id]);
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Error removing receipt:', error);
-        return NextResponse.json({ error: 'Failed to remove receipt' }, { status: 500 });
+        return NextResponse.json({ error: 'Не удалось удалить чек' }, { status: 500 });
     }
 }

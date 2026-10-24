@@ -127,7 +127,7 @@ console.log('\nWith the network cut');
 await goOffline(context, true);
 const bodyOf = async () => p.evaluate(() => ({
     text: document.body.innerText.trim(),
-    fallback: !!document.querySelector('h1') && /You.re offline/.test(document.querySelector('h1')?.textContent ?? ''),
+    fallback: !!document.querySelector('h1') && /Нет подключения к интернету/.test(document.querySelector('h1')?.textContent ?? ''),
 }));
 for (const path of [...PUBLIC_PAGES, ...ADMIN_PAGES]) {
     if (path === '/offline') continue;
@@ -177,14 +177,14 @@ const onPage = (text: string) => p.evaluate((wanted) => document.body.innerText.
     || [...document.querySelectorAll('input, textarea')].some((el) => (el as HTMLInputElement).value === wanted), text);
 await p.goto(`${BASE}/admin/honeymoon/checklist`, { waitUntil: 'load' });
 await p.waitForTimeout(1500);
-const box = p.locator('input[placeholder^="Add a to-do"], input[placeholder^="Renew passports"]').first();
+const box = p.locator('input[placeholder^="Добавить дело"]').first();
 check('the checklist opens offline with its add box', (await box.count()) > 0);
 if (await box.count()) {
     await box.fill(typed);
-    await p.getByRole('button', { name: 'Add', exact: true }).first().click();
+    await p.getByRole('button', { name: "Добавить", exact: true }).first().click();
     await p.waitForTimeout(1200);
     check('a to-do added offline shows at once', await onPage(typed));
-    check('nothing says it was not saved', (await p.locator("text=/wasn.t saved/").count()) === 0);
+    check('nothing says it was not saved', (await p.locator("text=/не удалось сохранить/").count()) === 0);
     check('the bar says one change is waiting',
         (await p.locator('[data-offline-banner]').getAttribute('data-pending').catch(() => null)) === '1');
     await p.reload({ waitUntil: 'load' });
@@ -320,7 +320,7 @@ await p.goto(`${BASE}/admin`, { waitUntil: 'networkidle' });
 // a full page load (the worker gives up on navigations at once while it still
 // believes the connection is down) — so click, wait for the login, then look.
 await p.evaluate(() => {
-    const button = [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Logout');
+    const button = [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Выйти');
     button?.click();
 });
 await p.waitForURL((url) => url.pathname.startsWith('/admin/login'), { timeout: 15000 }).catch(() => undefined);

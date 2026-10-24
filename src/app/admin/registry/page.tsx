@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { SaveStatus, useAutosave } from '@/components/admin/useAutosave';
@@ -23,13 +24,13 @@ interface FundConfig {
 const DEFAULTS: FundConfig = {
     enabled: false,
     showFinancials: true,
-    title: 'Registry',
-    subtitle: 'Help us start our adventure together',
-    description: "Your presence at our wedding is the greatest gift of all. But if you'd like to give a little something extra, a contribution to our registry would mean the world to us!",
-    zelle: { handle: '', label: 'Send via Zelle' },
-    venmo: { handle: '', label: 'Send via Venmo' },
-    cashapp: { handle: '', label: 'Send via Cash App' },
-    paypal: { handle: '', label: 'Send via PayPal (Friends & Family)' },
+    title: 'Подарки',
+    subtitle: 'Помогите нам начать наше путешествие',
+    description: "Ваше присутствие — лучший подарок! Если вы хотите порадовать нас ещё чем-то, здесь можно выбрать подарок или поддержать наше путешествие.",
+    zelle: { handle: '', label: 'Перевести через Zelle' },
+    venmo: { handle: '', label: 'Перевести через Venmo' },
+    cashapp: { handle: '', label: 'Перевести через Cash App' },
+    paypal: { handle: '', label: 'Перевести через PayPal (друзьям и близким)' },
     items: [],
 };
 
@@ -59,7 +60,7 @@ export default function AdminRegistryPage() {
     const [donorGuests, setDonorGuests] = useState<{ id: number; guest_name: string; party_members?: { name: string | null }[]; plus_one_name?: string | null }[]>([]);
     const [donorSearch, setDonorSearch] = useState('');
     const [selectedDonor, setSelectedDonor] = useState<{ id: number | null; guest_name: string } | null>(null);
-    const [donationEvent, setDonationEvent] = useState('Wedding Day');
+    const [donationEvent, setDonationEvent] = useState('День свадьбы');
     const [otherEvent, setOtherEvent] = useState('');
     const [coGivers, setCoGivers] = useState<{ id: number | null; name: string }[]>([]);
     const [coGiverSearch, setCoGiverSearch] = useState('');
@@ -109,10 +110,10 @@ export default function AdminRegistryPage() {
                 setRegistryItems(Array.isArray(items) ? items : []);
             } else {
                 setImportResult({ added: 0, skipped: -1 });
-                alert(data.error || 'Import failed.');
+                alert(data.error || 'Не удалось импортировать.');
             }
         } catch {
-            alert('Failed to read CSV file.');
+            alert('Не удалось прочитать CSV.');
         } finally {
             setImporting(false);
             // Reset file input so same file can be re-selected
@@ -138,10 +139,10 @@ export default function AdminRegistryPage() {
                 const items = await fetch('/api/admin/registry-items').then(r => r.json());
                 setRegistryItems(Array.isArray(items) ? items : []);
             } else {
-                alert(data.error || 'Import failed.');
+                alert(data.error || 'Не удалось импортировать.');
             }
         } catch {
-            alert('Failed to read CSV file.');
+            alert('Не удалось прочитать CSV.');
         } finally {
             setTargetImporting(false);
             if (targetCsvRef.current) targetCsvRef.current.value = '';
@@ -169,9 +170,9 @@ export default function AdminRegistryPage() {
                 price: data.price || '',
                 url: urlInput.trim(),
             });
-            if (!data.success) setFetchError(data.error || 'Could not auto-fetch — fill in manually below.');
+            if (!data.success) setFetchError(data.error || 'Не удалось загрузить автоматически. Заполните данные ниже.');
         } catch {
-            setFetchError('Network error fetching URL.');
+            setFetchError('Не удалось загрузить данные по ссылке.');
             setPendingItem({ id: Math.random().toString(36).slice(2, 10), store: 'other', title: '', description: '', image: '', price: '', url: urlInput.trim() });
         } finally {
             setFetching(false);
@@ -293,7 +294,7 @@ export default function AdminRegistryPage() {
         if (!contributingItem) return;
         const amount = parseFloat(contributionAmount);
         if (!amount || isNaN(amount)) return;
-        const eventValue = donationEvent === 'Other' ? (otherEvent.trim() || 'Other') : donationEvent;
+        const eventValue = donationEvent === 'Other' ? (otherEvent.trim() || 'Другое') : donationEvent;
         const updated = {
             ...fund,
             items: fund.items.map(i => i.id === contributingItem.id
@@ -325,7 +326,7 @@ export default function AdminRegistryPage() {
         setContributionAmount('');
         setDonorSearch('');
         setSelectedDonor(null);
-        setDonationEvent('Wedding Day');
+        setDonationEvent('День свадьбы');
         setOtherEvent('');
         setCoGivers([]);
         setCoGiverSearch('');
@@ -335,7 +336,7 @@ export default function AdminRegistryPage() {
         setFund(prev => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
     };
 
-    if (loading) return <div className="p-8 text-gray-500">Loading...</div>;
+    if (loading) return <div className="p-8 text-gray-500">Загрузка...</div>;
 
     const totalGoal = fund.items.reduce((s, i) => s + i.price, 0);
     const totalFunded = fund.items.reduce((s, i) => s + i.funded, 0);
@@ -345,8 +346,8 @@ export default function AdminRegistryPage() {
             {/* Header */}
             <div className="mb-6 flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold mb-1">Registry</h1>
-                    <p className="text-gray-500">Build your Honeyfund-style registry.</p>
+                    <h1 className="text-3xl font-bold mb-1">Подарки</h1>
+                    <p className="text-gray-500">Создайте список подарков и сбор на путешествие.</p>
                 </div>
                 <div className="flex items-center gap-4">
                     <SaveStatus state={state} onRetry={retry} />
@@ -354,7 +355,7 @@ export default function AdminRegistryPage() {
                         href="/admin/rsvps?tab=donations"
                         className="px-4 py-2 rounded-xl text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 shadow-md hover:shadow-lg transition-all duration-300"
                     >
-                        View donations →
+                        Посмотреть подарки →
                     </a>
                     <a
                         href="/registry"
@@ -362,7 +363,7 @@ export default function AdminRegistryPage() {
                         rel="noopener noreferrer"
                         className="px-4 py-2 rounded-xl text-sm font-medium bg-accent text-white hover:bg-accent-dark shadow-md hover:shadow-lg transition-all duration-300"
                     >
-                        View page →
+                        Открыть страницу →
                     </a>
                 </div>
             </div>
@@ -370,8 +371,8 @@ export default function AdminRegistryPage() {
             {/* Enable toggle */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-3 flex items-center justify-between">
                 <div>
-                    <h2 className="font-semibold text-gray-900">Page Enabled</h2>
-                    <p className="text-sm text-gray-500">Show this page to visitors</p>
+                    <h2 className="font-semibold text-gray-900">Страница включена</h2>
+                    <p className="text-sm text-gray-500">Показывать страницу гостям</p>
                 </div>
                 <button
                     onClick={() => setFund(prev => ({ ...prev, enabled: !prev.enabled }))}
@@ -384,8 +385,8 @@ export default function AdminRegistryPage() {
             {/* Show financials toggle */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6 flex items-center justify-between">
                 <div>
-                    <h2 className="font-semibold text-gray-900">Show Financial Details</h2>
-                    <p className="text-sm text-gray-500">Display prices, progress bars, and funding amounts to guests</p>
+                    <h2 className="font-semibold text-gray-900">Показывать суммы</h2>
+                    <p className="text-sm text-gray-500">Показывать гостям цены, прогресс и собранные суммы</p>
                 </div>
                 <button
                     onClick={() => { const updated = { ...fund, showFinancials: !fund.showFinancials }; setFund(updated); }}
@@ -398,9 +399,9 @@ export default function AdminRegistryPage() {
             {/* Tabs */}
             <div className="flex gap-1 mb-6 bg-gray-100 rounded-xl p-1 w-fit">
                 {([
-                    { key: 'experiences', label: 'Honeymoon Fund' },
-                    { key: 'registry', label: 'Registry Items' },
-                    { key: 'settings', label: 'Settings' },
+                    { key: 'experiences', label: 'Фонд путешествия' },
+                    { key: 'registry', label: 'Список подарков' },
+                    { key: 'settings', label: 'Настройки' },
                 ] as const).map(t => (
                     <button
                         key={t.key}
@@ -419,9 +420,9 @@ export default function AdminRegistryPage() {
                     {fund.items.length > 0 && (
                         <div className="grid grid-cols-3 gap-4 mb-6">
                             {[
-                                { label: 'Total Goal', value: `$${totalGoal.toLocaleString()}` },
-                                { label: 'Total Funded', value: `$${totalFunded.toLocaleString()}` },
-                                { label: 'Progress', value: `${totalGoal > 0 ? Math.round((totalFunded / totalGoal) * 100) : 0}%` },
+                                { label: 'Целевая сумма', value: `$${totalGoal.toLocaleString('ru-RU')}` },
+                                { label: 'Всего собрано', value: `$${totalFunded.toLocaleString('ru-RU')}` },
+                                { label: 'Прогресс', value: `${totalGoal > 0 ? Math.round((totalFunded / totalGoal) * 100) : 0}%` },
                             ].map(s => (
                                 <div key={s.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
                                     <p className="text-2xl font-bold text-accent">{s.value}</p>
@@ -441,29 +442,29 @@ export default function AdminRegistryPage() {
                                         <div className="space-y-3">
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
-                                                    <label className="text-xs font-medium text-gray-600 mb-1 block">Emoji</label>
+                                                    <label className="text-xs font-medium text-gray-600 mb-1 block">Эмодзи</label>
                                                     <input value={editingItem.emoji} onChange={e => setEditingItem({ ...editingItem, emoji: e.target.value })}
                                                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
                                                 </div>
                                                 <div>
-                                                    <label className="text-xs font-medium text-gray-600 mb-1 block">Price ($)</label>
+                                                    <label className="text-xs font-medium text-gray-600 mb-1 block">Цена ($)</label>
                                                     <input type="number" value={editingItem.price} onChange={e => setEditingItem({ ...editingItem, price: parseFloat(e.target.value) || 0 })}
                                                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
                                                 </div>
                                             </div>
                                             <div>
-                                                <label className="text-xs font-medium text-gray-600 mb-1 block">Title</label>
+                                                <label className="text-xs font-medium text-gray-600 mb-1 block">Название</label>
                                                 <input value={editingItem.title} onChange={e => setEditingItem({ ...editingItem, title: e.target.value })}
                                                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
                                             </div>
                                             <div>
-                                                <label className="text-xs font-medium text-gray-600 mb-1 block">Description</label>
+                                                <label className="text-xs font-medium text-gray-600 mb-1 block">Описание</label>
                                                 <textarea rows={2} value={editingItem.description} onChange={e => setEditingItem({ ...editingItem, description: e.target.value })}
                                                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none" />
                                             </div>
                                             <div className="flex gap-2">
-                                                <button onClick={saveEditItem} className="bg-accent text-white px-4 py-2 rounded-lg text-sm font-medium">Save</button>
-                                                <button onClick={() => setEditingItem(null)} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm">Cancel</button>
+                                                <button onClick={saveEditItem} className="bg-accent text-white px-4 py-2 rounded-lg text-sm font-medium">Сохранить</button>
+                                                <button onClick={() => setEditingItem(null)} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm">Отмена</button>
                                             </div>
                                         </div>
                                     ) : (
@@ -472,11 +473,11 @@ export default function AdminRegistryPage() {
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-0.5">
                                                     <h3 className="font-bold text-gray-900">{item.title}</h3>
-                                                    {pct >= 100 && <span className="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">Funded!</span>}
+                                                    {pct >= 100 && <span className="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">Собрано!</span>}
                                                 </div>
                                                 <p className="text-gray-500 text-sm mb-2">{item.description}</p>
                                                 <div className="flex items-center gap-3 text-sm">
-                                                    <span className="font-semibold text-accent">${item.funded.toLocaleString()} / ${item.price.toLocaleString()}</span>
+                                                    <span className="font-semibold text-accent">${item.funded.toLocaleString('ru-RU')} / ${item.price.toLocaleString('ru-RU')}</span>
                                                     <span className="text-gray-400">{pct}%</span>
                                                 </div>
                                                 <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mt-2">
@@ -486,15 +487,15 @@ export default function AdminRegistryPage() {
                                             <div className="flex gap-2 shrink-0">
                                                 <button onClick={() => { setContributingItem(item); setContributionAmount(''); }}
                                                     className="text-xs bg-green-50 text-green-700 border border-green-200 px-3 py-1.5 rounded-lg font-medium hover:bg-green-100 transition-colors">
-                                                    + Log Gift
+                                                    + Записать подарок
                                                 </button>
                                                 <button onClick={() => setEditingItem(item)}
                                                     className="text-xs bg-gray-50 text-gray-700 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
-                                                    Edit
+                                                    Изменить
                                                 </button>
                                                 <button onClick={() => deleteItem(item.id)}
                                                     className="text-xs bg-red-50 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors">
-                                                    Delete
+                                                    Удалить
                                                 </button>
                                             </div>
                                         </div>
@@ -507,44 +508,44 @@ export default function AdminRegistryPage() {
                     {/* Add item */}
                     {showAddForm ? (
                         <div className="bg-white rounded-2xl border-2 border-dashed border-accent/30 p-6 space-y-4">
-                            <h3 className="font-semibold text-gray-900">New Experience</h3>
+                            <h3 className="font-semibold text-gray-900">Новое впечатление</h3>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="text-xs font-medium text-gray-600 mb-1 block">Emoji</label>
+                                    <label className="text-xs font-medium text-gray-600 mb-1 block">Эмодзи</label>
                                     <input value={newItem.emoji} onChange={e => setNewItem({ ...newItem, emoji: e.target.value })}
                                         placeholder="✈️" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-medium text-gray-600 mb-1 block">Price ($)</label>
+                                    <label className="text-xs font-medium text-gray-600 mb-1 block">Цена ($)</label>
                                     <input type="number" value={newItem.price || ''} onChange={e => setNewItem({ ...newItem, price: parseFloat(e.target.value) || 0 })}
                                         placeholder="250" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
                                 </div>
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-gray-600 mb-1 block">Title</label>
+                                <label className="text-xs font-medium text-gray-600 mb-1 block">Название</label>
                                 <input value={newItem.title} onChange={e => setNewItem({ ...newItem, title: e.target.value })}
-                                    placeholder="One Night at the Resort" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                                    placeholder="Ночь в отеле" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-gray-600 mb-1 block">Description</label>
+                                <label className="text-xs font-medium text-gray-600 mb-1 block">Описание</label>
                                 <textarea rows={2} value={newItem.description} onChange={e => setNewItem({ ...newItem, description: e.target.value })}
-                                    placeholder="Help us enjoy a beautiful night at our dream resort..." className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none" />
+                                    placeholder="Подарите нам ночь в отеле мечты..." className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none" />
                             </div>
                             <div className="flex gap-2">
                                 <button onClick={addItem} disabled={!newItem.title || !newItem.price}
                                     className="bg-accent text-white px-5 py-2 rounded-lg text-sm font-medium disabled:opacity-40">
-                                    Add Experience
+                                    Добавить впечатление
                                 </button>
                                 <button onClick={() => { setShowAddForm(false); setNewItem(BLANK_ITEM); }}
                                     className="bg-gray-100 text-gray-700 px-5 py-2 rounded-lg text-sm">
-                                    Cancel
+                                    Отмена
                                 </button>
                             </div>
                         </div>
                     ) : (
                         <button onClick={() => setShowAddForm(true)}
                             className="w-full border-2 border-dashed border-gray-200 rounded-2xl py-4 text-gray-400 hover:text-gray-600 hover:border-gray-300 transition-colors text-sm font-medium">
-                            + Add Experience
+                            + Добавить впечатление
                         </button>
                     )}
                 </div>
@@ -553,22 +554,22 @@ export default function AdminRegistryPage() {
             {/* ── REGISTRY ITEMS TAB ── */}
             {tab === 'registry' && (
                 <div>
-                    <p className="text-sm text-gray-500 mb-6">Paste a product URL from Target or Amazon and we&apos;ll pull in the details automatically. You can edit anything before saving.</p>
+                    <p className="text-sm text-gray-500 mb-6">Вставьте ссылку на товар из Target или Amazon. Данные загрузятся автоматически, и их можно будет изменить перед сохранением.</p>
 
                     {/* Amazon CSV import */}
                     <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6">
                         <div className="flex items-start justify-between gap-4">
                             <div className="min-w-0">
                                 <h3 className="text-sm font-semibold text-amber-900 flex items-center gap-2">
-                                    📦 Import from Amazon Registry CSV
+                                    📦 Импорт списка Amazon из CSV
                                 </h3>
                                 <p className="text-xs text-amber-700 mt-1">
-                                    On Amazon, go to your registry → <strong>Manage</strong> → <strong>Download list as spreadsheet (.csv)</strong>. Then upload it here — every item imports individually.
+                                    В Amazon откройте список подарков → <strong>Управление</strong> → <strong>Скачать список в виде таблицы (.csv)</strong>. Затем загрузите файл здесь — каждый подарок будет добавлен отдельно.
                                 </p>
                                 {importResult && (
                                     <p className={`text-xs mt-2 font-medium ${importResult.added > 0 ? 'text-green-700' : 'text-gray-600'}`}>
-                                        ✓ {importResult.added} item{importResult.added !== 1 ? 's' : ''} added
-                                        {importResult.skipped > 0 ? `, ${importResult.skipped} skipped (already exist)` : ''}
+                                        ✓ {counted(importResult.added, 'подарок', 'подарка', 'подарков')} добавлено
+                                        {importResult.skipped > 0 ? `, ${importResult.skipped} пропущено (уже есть)` : ''}
                                     </p>
                                 )}
                             </div>
@@ -585,7 +586,7 @@ export default function AdminRegistryPage() {
                                     disabled={importing}
                                     className="bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium px-4 py-2 rounded-lg disabled:opacity-50 transition-colors whitespace-nowrap"
                                 >
-                                    {importing ? 'Importing…' : 'Upload CSV'}
+                                    {importing ? 'Импортируем…' : 'Загрузить CSV'}
                                 </button>
                             </div>
                         </div>
@@ -596,11 +597,10 @@ export default function AdminRegistryPage() {
                         <div className="flex items-start justify-between gap-4">
                             <div className="min-w-0 flex-1">
                                 <h3 className="text-sm font-semibold text-red-900 flex items-center gap-2">
-                                    🎯 Import from Target Registry
+                                    🎯 Импорт списка подарков Target
                                 </h3>
                                 <p className="text-xs text-red-700 mt-1">
-                                    Target doesn&apos;t offer a native export, so use the bookmarklet below.
-                                    Run it on your Target registry page — it downloads a CSV automatically.
+                                    Для экспорта из Target используйте закладку ниже. Запустите её на странице списка подарков, чтобы скачать CSV.
                                 </p>
 
                                 {/* Bookmarklet section */}
@@ -609,38 +609,38 @@ export default function AdminRegistryPage() {
                                         onClick={() => setShowTargetBookmarklet(v => !v)}
                                         className="text-xs text-red-700 underline font-medium"
                                     >
-                                        {showTargetBookmarklet ? 'Hide' : 'Show'} bookmarklet instructions →
+                                        {showTargetBookmarklet ? 'Скрыть' : 'Показать'} инструкцию для закладки →
                                     </button>
 
                                     {showTargetBookmarklet && (
                                         <div className="mt-3 space-y-3">
-                                            <p className="text-xs text-red-800 font-medium">Step 1 — Add the bookmarklet to your browser:</p>
+                                            <p className="text-xs text-red-800 font-medium">Шаг 1. Добавьте закладку в браузер:</p>
                                             <p className="text-xs text-red-700">
-                                                Drag this link to your bookmarks bar, or right-click → Bookmark this link:
+                                                Перетащите ссылку на панель закладок или нажмите правой кнопкой → Добавить ссылку в закладки:
                                             </p>
                                             <a
                                                 href={`javascript:(function(){var items=[];document.querySelectorAll('[data-test="registry-item"]').forEach(function(el){var title=(el.querySelector('[data-test="product-title"]')||el.querySelector('a[href*="/p/"]')||{}).textContent||'';var price=(el.querySelector('[data-test="current-price"]')||el.querySelector('[data-test="reg-price"]')||{}).textContent||'';var img=(el.querySelector('img')||{}).src||'';var link=el.querySelector('a[href*="/p/"]');var url=link?'https://www.target.com'+link.getAttribute('href'):'';if(title.trim())items.push({title:title.trim(),price:price.trim(),image:img,url:url});});if(!items.length){alert('No items found. Make sure you are on your Target registry page with items visible.');return;}var csv='title,price,image,url\\n'+items.map(function(i){return[i.title,i.price,i.image,i.url].map(function(v){return'"'+v.replace(/"/g,'""')+'"';}).join(',');}).join('\\n');var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='target-registry.csv';a.click();alert('Downloaded '+items.length+' items. Upload the CSV file in the admin panel.');})();`}
                                                 className="inline-block bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-grab"
                                                 onClick={e => e.preventDefault()}
                                             >
-                                                🎯 Export Target Registry
+                                                🎯 Экспорт списка Target
                                             </a>
-                                            <p className="text-xs text-red-800 font-medium">Step 2 — Run it on Target:</p>
+                                            <p className="text-xs text-red-800 font-medium">Шаг 2. Запустите на сайте Target:</p>
                                             <ol className="text-xs text-red-700 list-decimal list-inside space-y-1">
-                                                <li>Go to <strong>target.com</strong> → your registry → <strong>Manage registry</strong></li>
-                                                <li>Scroll down so all your items are loaded on the page</li>
-                                                <li>Click the <strong>&ldquo;🎯 Export Target Registry&rdquo;</strong> bookmark</li>
-                                                <li>A <code>target-registry.csv</code> file will download automatically</li>
+                                                <li>Откройте <strong>target.com</strong> → ваш список подарков → <strong>Управление списком</strong></li>
+                                                <li>Прокрутите страницу вниз, чтобы загрузились все товары</li>
+                                                <li>Нажмите <strong>«🎯 Экспорт списка Target»</strong> в закладках</li>
+                                                <li>Файл <code>target-registry.csv</code> скачается автоматически</li>
                                             </ol>
-                                            <p className="text-xs text-red-800 font-medium">Step 3 — Upload it here:</p>
+                                            <p className="text-xs text-red-800 font-medium">Шаг 3. Загрузите файл здесь:</p>
                                         </div>
                                     )}
                                 </div>
 
                                 {targetImportResult && (
                                     <p className={`text-xs mt-2 font-medium ${targetImportResult.added > 0 ? 'text-green-700' : 'text-gray-600'}`}>
-                                        ✓ {targetImportResult.added} item{targetImportResult.added !== 1 ? 's' : ''} added
-                                        {targetImportResult.skipped > 0 ? `, ${targetImportResult.skipped} skipped (already exist)` : ''}
+                                        ✓ {counted(targetImportResult.added, 'подарок', 'подарка', 'подарков')} добавлено
+                                        {targetImportResult.skipped > 0 ? `, ${targetImportResult.skipped} пропущено (уже есть)` : ''}
                                     </p>
                                 )}
                             </div>
@@ -658,7 +658,7 @@ export default function AdminRegistryPage() {
                                     disabled={targetImporting}
                                     className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-lg disabled:opacity-50 transition-colors whitespace-nowrap"
                                 >
-                                    {targetImporting ? 'Importing…' : 'Upload CSV'}
+                                    {targetImporting ? 'Импортируем…' : 'Загрузить CSV'}
                                 </button>
                             </div>
                         </div>
@@ -666,7 +666,7 @@ export default function AdminRegistryPage() {
 
                     {/* URL fetch bar */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Add item from URL</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Добавить подарок по ссылке</label>
                         <div className="flex gap-2">
                             <input
                                 ref={urlInputRef}
@@ -683,7 +683,7 @@ export default function AdminRegistryPage() {
                                 disabled={fetching || !urlInput.trim()}
                                 className="bg-accent text-white px-5 py-2 rounded-lg text-sm font-medium disabled:opacity-40 shrink-0"
                             >
-                                {fetching ? 'Fetching…' : 'Fetch →'}
+                                {fetching ? 'Загружаем…' : 'Загрузить →'}
                             </button>
                         </div>
                         {fetchError && <p className="text-amber-600 text-xs mt-2">⚠️ {fetchError}</p>}
@@ -692,11 +692,11 @@ export default function AdminRegistryPage() {
                     {/* Pending item preview / edit form */}
                     {pendingItem && (
                         <div className="bg-white rounded-2xl border-2 border-accent/30 shadow-sm p-5 mb-6">
-                            <h3 className="font-semibold text-gray-900 mb-4">Review &amp; Save</h3>
+                            <h3 className="font-semibold text-gray-900 mb-4">Проверить и сохранить</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {/* Image preview */}
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1">Image URL</label>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">Ссылка на изображение</label>
                                     <input
                                         type="text"
                                         value={pendingItem.image || ''}
@@ -711,7 +711,7 @@ export default function AdminRegistryPage() {
                                 </div>
                                 <div className="space-y-3">
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-600 mb-1">Store</label>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Магазин</label>
                                         <select
                                             value={pendingItem.store || 'other'}
                                             onChange={e => setPendingItem(p => p ? { ...p, store: e.target.value as RegistryItem['store'] } : p)}
@@ -719,11 +719,11 @@ export default function AdminRegistryPage() {
                                         >
                                             <option value="target">Target</option>
                                             <option value="amazon">Amazon</option>
-                                            <option value="other">Other</option>
+                                            <option value="other">Другое</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-600 mb-1">Title</label>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Название</label>
                                         <input
                                             type="text"
                                             value={pendingItem.title || ''}
@@ -732,7 +732,7 @@ export default function AdminRegistryPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-600 mb-1">Price (display only)</label>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Цена для отображения</label>
                                         <input
                                             type="text"
                                             value={pendingItem.price || ''}
@@ -744,7 +744,7 @@ export default function AdminRegistryPage() {
                                 </div>
                             </div>
                             <div className="mt-3">
-                                <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Описание</label>
                                 <textarea
                                     rows={2}
                                     value={pendingItem.description || ''}
@@ -758,13 +758,13 @@ export default function AdminRegistryPage() {
                                     disabled={!pendingItem.title}
                                     className="bg-accent text-white px-5 py-2 rounded-lg text-sm font-medium disabled:opacity-40"
                                 >
-                                    Save Item
+                                    Сохранить подарок
                                 </button>
                                 <button
                                     onClick={() => { setPendingItem(null); setUrlInput(''); setFetchError(''); }}
                                     className="bg-gray-100 text-gray-700 px-5 py-2 rounded-lg text-sm"
                                 >
-                                    Cancel
+                                    Отмена
                                 </button>
                             </div>
                         </div>
@@ -774,14 +774,14 @@ export default function AdminRegistryPage() {
                     {registryItems.length === 0 && !pendingItem && (
                         <div className="text-center py-16 text-gray-400">
                             <p className="text-4xl mb-3">🛍️</p>
-                            <p className="text-sm">No registry items yet — paste a URL above to add your first item.</p>
+                            <p className="text-sm">Подарков пока нет. Вставьте ссылку выше, чтобы добавить первый.</p>
                         </div>
                     )}
 
                     {['target', 'amazon', 'other'].map(store => {
                         const storeItems = registryItems.filter(i => i.store === store);
                         if (storeItems.length === 0) return null;
-                        const storeLabel = store === 'target' ? '🎯 Target' : store === 'amazon' ? '📦 Amazon' : '🛍️ Other';
+                        const storeLabel = store === 'target' ? '🎯 Target' : store === 'amazon' ? '📦 Amazon' : '🛍️ Другие магазины';
                         return (
                             <div key={store} className="mb-8">
                                 <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wider mb-3">{storeLabel}</h3>
@@ -791,7 +791,7 @@ export default function AdminRegistryPage() {
                                             {editingRegItem?.id === item.id ? (
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-600 mb-1">Image URL</label>
+                                                        <label className="block text-xs font-medium text-gray-600 mb-1">Ссылка на изображение</label>
                                                         <input type="text" value={editingRegItem.image}
                                                             onChange={e => setEditingRegItem(p => p ? { ...p, image: e.target.value } : p)}
                                                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs mb-2" />
@@ -802,27 +802,27 @@ export default function AdminRegistryPage() {
                                                     </div>
                                                     <div className="space-y-3">
                                                         <div>
-                                                            <label className="block text-xs font-medium text-gray-600 mb-1">Title</label>
+                                                            <label className="block text-xs font-medium text-gray-600 mb-1">Название</label>
                                                             <input type="text" value={editingRegItem.title}
                                                                 onChange={e => setEditingRegItem(p => p ? { ...p, title: e.target.value } : p)}
                                                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
                                                         </div>
                                                         <div>
-                                                            <label className="block text-xs font-medium text-gray-600 mb-1">Price</label>
+                                                            <label className="block text-xs font-medium text-gray-600 mb-1">Цена</label>
                                                             <input type="text" value={editingRegItem.price}
                                                                 onChange={e => setEditingRegItem(p => p ? { ...p, price: e.target.value } : p)}
                                                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
                                                         </div>
                                                         <div>
-                                                            <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                                                            <label className="block text-xs font-medium text-gray-600 mb-1">Описание</label>
                                                             <textarea rows={2} value={editingRegItem.description}
                                                                 onChange={e => setEditingRegItem(p => p ? { ...p, description: e.target.value } : p)}
                                                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none" />
                                                         </div>
                                                     </div>
                                                     <div className="sm:col-span-2 flex gap-2">
-                                                        <button onClick={() => updateRegistryItem(editingRegItem)} className="bg-accent text-white px-4 py-2 rounded-lg text-sm font-medium">Save</button>
-                                                        <button onClick={() => setEditingRegItem(null)} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm">Cancel</button>
+                                                        <button onClick={() => updateRegistryItem(editingRegItem)} className="bg-accent text-white px-4 py-2 rounded-lg text-sm font-medium">Сохранить</button>
+                                                        <button onClick={() => setEditingRegItem(null)} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm">Отмена</button>
                                                     </div>
                                                 </div>
                                             ) : (
@@ -840,11 +840,11 @@ export default function AdminRegistryPage() {
                                                     <div className="flex gap-2 shrink-0">
                                                         <button onClick={() => setEditingRegItem(item)}
                                                             className="text-xs bg-gray-50 text-gray-700 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
-                                                            Edit
+                                                            Изменить
                                                         </button>
                                                         <button onClick={() => deleteRegistryItem(item.id)}
                                                             className="text-xs bg-red-50 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors">
-                                                            Delete
+                                                            Удалить
                                                         </button>
                                                     </div>
                                                 </div>
@@ -862,31 +862,31 @@ export default function AdminRegistryPage() {
             {tab === 'settings' && (
                 <div className="space-y-6">
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-5">
-                        <h2 className="text-lg font-semibold text-gray-900">Page Content</h2>
+                        <h2 className="text-lg font-semibold text-gray-900">Содержимое страницы</h2>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Page Title</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Заголовок страницы</label>
                             <input type="text" value={fund.title} onChange={e => setFund(p => ({ ...p, title: e.target.value }))}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Registry" />
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Подарки" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Подзаголовок</label>
                             <input type="text" value={fund.subtitle} onChange={e => setFund(p => ({ ...p, subtitle: e.target.value }))}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Описание</label>
                             <textarea rows={4} value={fund.description} onChange={e => setFund(p => ({ ...p, description: e.target.value }))}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Nav Card Subtitle</label>
-                            <p className="text-xs text-gray-500 mb-1">Short tagline shown on the Registry card at the bottom of the home page.</p>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Подпись карточки раздела</label>
+                            <p className="text-xs text-gray-500 mb-1">Подпись карточки «Подарки» внизу главной страницы.</p>
                             <input type="text" value={registryPageSubtitle} onChange={e => setRegistryPageSubtitle(e.target.value)}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                                placeholder="e.g. Help us start our adventure" />
+                                placeholder="Например: Начало нашего путешествия" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Background Color</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Цвет фона</label>
                             <div className="flex items-center gap-3">
                                 <input type="color" value={bgColor} onChange={e => setBgColor(e.target.value)}
                                     className="h-9 w-16 rounded border border-gray-300 cursor-pointer p-0.5" />
@@ -898,11 +898,11 @@ export default function AdminRegistryPage() {
 
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-5">
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-900">Payment Methods</h2>
-                            <p className="text-sm text-gray-500 mt-0.5">Leave handle blank to hide on the public page.</p>
+                            <h2 className="text-lg font-semibold text-gray-900">Способы перевода</h2>
+                            <p className="text-sm text-gray-500 mt-0.5">Оставьте реквизиты пустыми, чтобы скрыть способ перевода.</p>
                         </div>
                         {([
-                            { key: 'zelle' as const, name: 'Zelle', icon: '🏦', placeholder: 'phone or email' },
+                            { key: 'zelle' as const, name: 'Zelle', icon: '🏦', placeholder: 'телефон или email' },
                             { key: 'venmo' as const, name: 'Venmo', icon: '💙', placeholder: '@yourhandle' },
                             { key: 'cashapp' as const, name: 'Cash App', icon: '💚', placeholder: '$yourcashtag' },
                             { key: 'paypal' as const, name: 'PayPal', icon: '💛', placeholder: 'yourhandle' },
@@ -914,12 +914,12 @@ export default function AdminRegistryPage() {
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-600 mb-1">Handle</label>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Реквизиты</label>
                                         <input type="text" value={fund[key].handle} onChange={e => updatePayment(key, 'handle', e.target.value)}
                                             placeholder={placeholder} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white" />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-600 mb-1">Display Label</label>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Подпись</label>
                                         <input type="text" value={fund[key].label} onChange={e => updatePayment(key, 'label', e.target.value)}
                                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white" />
                                     </div>
@@ -934,20 +934,20 @@ export default function AdminRegistryPage() {
             {/* Log contribution modal */}
             {contributingItem && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/40" onClick={() => { setContributingItem(null); setDonorSearch(''); setSelectedDonor(null); setDonationEvent('Wedding Day'); setOtherEvent(''); setCoGivers([]); setCoGiverSearch(''); }} />
+                    <div className="absolute inset-0 bg-black/40" onClick={() => { setContributingItem(null); setDonorSearch(''); setSelectedDonor(null); setDonationEvent('День свадьбы'); setOtherEvent(''); setCoGivers([]); setCoGiverSearch(''); }} />
                     <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 z-10">
-                        <h2 className="text-lg font-bold text-gray-900 mb-1">Log a Gift</h2>
+                        <h2 className="text-lg font-bold text-gray-900 mb-1">Записать подарок</h2>
                         <p className="text-sm text-gray-500 mb-4">{contributingItem.emoji} {contributingItem.title}</p>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Amount received ($)</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Полученная сумма ($)</label>
                         <input
                             type="number"
                             value={contributionAmount}
                             onChange={e => setContributionAmount(e.target.value)}
-                            placeholder={`up to $${(contributingItem.price - contributingItem.funded).toLocaleString()} remaining`}
+                            placeholder={`до $${(contributingItem.price - contributingItem.funded).toLocaleString('ru-RU')} осталось`}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-4"
                             autoFocus
                         />
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Who donated?</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Кто подарил?</label>
                         {selectedDonor ? (
                             <div className="flex items-center justify-between border border-gray-300 rounded-lg px-3 py-2 text-sm mb-4">
                                 <span>{selectedDonor.guest_name}</span>
@@ -959,7 +959,7 @@ export default function AdminRegistryPage() {
                                     type="text"
                                     value={donorSearch}
                                     onChange={e => setDonorSearch(e.target.value)}
-                                    placeholder="Search guest list..."
+                                    placeholder="Поиск по списку гостей..."
                                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                                 />
                                 {donorSearch.trim() && (
@@ -978,13 +978,13 @@ export default function AdminRegistryPage() {
                                                 </button>
                                             ))}
                                         {donorPeople.filter(p => p.name.toLowerCase().includes(donorSearch.toLowerCase())).length === 0 && (
-                                            <p className="px-3 py-2 text-sm text-gray-400">No matching guest</p>
+                                            <p className="px-3 py-2 text-sm text-gray-400">Гость не найден</p>
                                         )}
                                     </div>
                                 )}
                             </div>
                         )}
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Co-givers (optional)</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Совместный подарок (необязательно)</label>
                         {coGivers.length > 0 && (
                             <div className="flex flex-wrap gap-1 mb-2">
                                 {coGivers.map(c => (
@@ -1000,7 +1000,7 @@ export default function AdminRegistryPage() {
                             value={coGiverSearch}
                             onChange={e => setCoGiverSearch(e.target.value)}
                             onKeyDown={e => { if (e.key === 'Enter' && coGiverSearch.trim()) { e.preventDefault(); addCoGiver({ id: null, name: coGiverSearch }); } }}
-                            placeholder="Add a co-giver (type & Enter, or pick below)"
+                            placeholder="Добавьте дарителя: введите имя и Enter или выберите ниже"
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                         />
                         {coGiverSearch.trim() && (
@@ -1017,34 +1017,34 @@ export default function AdminRegistryPage() {
                             </div>
                         )}
                         {!coGiverSearch.trim() && <div className="mb-4" />}
-                        <label className="block text-sm font-medium text-gray-700 mb-1">From what event?</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">По какому случаю?</label>
                         <select
                             value={donationEvent}
                             onChange={e => setDonationEvent(e.target.value)}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3"
                         >
-                            <option>Bridal Shower</option>
-                            <option>Engagement Party</option>
-                            <option>Wedding Day</option>
-                            <option>Other</option>
+                            <option>Девичник</option>
+                            <option>Помолвка</option>
+                            <option>День свадьбы</option>
+                            <option>Другое</option>
                         </select>
                         {donationEvent === 'Other' && (
                             <input
                                 type="text"
                                 value={otherEvent}
                                 onChange={e => setOtherEvent(e.target.value)}
-                                placeholder="Name the event"
+                                placeholder="Название события"
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-4"
                             />
                         )}
                         <div className="flex gap-2">
                             <button onClick={logContribution} disabled={!contributionAmount}
                                 className="flex-1 bg-accent text-white py-2 rounded-lg text-sm font-medium disabled:opacity-40">
-                                Save
+                                Сохранить
                             </button>
-                            <button onClick={() => { setContributingItem(null); setDonorSearch(''); setSelectedDonor(null); setDonationEvent('Wedding Day'); setOtherEvent(''); setCoGivers([]); setCoGiverSearch(''); }}
+                            <button onClick={() => { setContributingItem(null); setDonorSearch(''); setSelectedDonor(null); setDonationEvent('День свадьбы'); setOtherEvent(''); setCoGivers([]); setCoGiverSearch(''); }}
                                 className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg text-sm">
-                                Cancel
+                                Отмена
                             </button>
                         </div>
                     </div>

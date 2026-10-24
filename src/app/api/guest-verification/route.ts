@@ -35,7 +35,7 @@ export async function POST(request: Request) {
 
     if (typeof guest_name !== 'string' || !guest_name.trim()) {
       return NextResponse.json(
-        { verified: false, message: 'Guest name is required' },
+        { verified: false, message: 'Укажите имя гостя' },
         { status: 400 }
       );
     }
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     if (!guest) {
       return NextResponse.json({
         verified: false,
-        message: 'We could not find your name on our guest list. Please check the spelling or contact us if you believe this is an error.',
+        message: 'Мы не нашли ваше имя в списке гостей. Проверьте написание или свяжитесь с нами.',
       });
     }
 

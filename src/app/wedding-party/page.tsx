@@ -18,8 +18,8 @@ export default function WeddingPartyPage() {
     groomParty: [] as WeddingPartyMember[],
     ...(config.weddingParty ?? {}),
   };
-  const bridePartyTitle = config.bridePartyTitle || `${config.brideName}'s Bridesmaids`;
-  const groomPartyTitle = config.groomPartyTitle || `${config.groomName}'s Groomsmen`;
+  const bridePartyTitle = config.bridePartyTitle || `${config.brideName} — подруги невесты`;
+  const groomPartyTitle = config.groomPartyTitle || `${config.groomName} — друзья жениха`;
   const bgColor = config.pageBgColors?.weddingParty || '#ffffff';
 
   const getObjectPositionClass = (align?: 'top' | 'top-center' | 'center' | 'center-bottom' | 'bottom') => {
@@ -44,10 +44,10 @@ export default function WeddingPartyPage() {
       <div className="relative bg-accent/10 py-20">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h1 className="text-5xl font-serif font-bold text-gray-900 mb-4">
-            Our Wedding Party
+            Наши близкие
           </h1>
           <p className="text-lg text-gray-600">
-            {config.weddingPartySubtitle || 'Meet the special people standing by our side on our big day'}
+            {config.weddingPartySubtitle || 'Люди, которые будут рядом с нами в этот важный день'}
           </p>
         </div>
       </div>
@@ -62,7 +62,7 @@ export default function WeddingPartyPage() {
 
           {weddingParty.brideParty.length === 0 ? (
             <p className="text-center text-gray-500">
-              Wedding party members will be announced soon!
+              Скоро мы познакомим вас с нашими близкими!
             </p>
           ) : (
             <div className="flex flex-wrap justify-center gap-8">
@@ -117,7 +117,7 @@ export default function WeddingPartyPage() {
 
           {weddingParty.groomParty.length === 0 ? (
             <p className="text-center text-gray-500">
-              Wedding party members will be announced soon!
+              Скоро мы познакомим вас с нашими близкими!
             </p>
           ) : (
             <div className="flex flex-wrap justify-center gap-8">
@@ -168,7 +168,7 @@ export default function WeddingPartyPage() {
         {weddingParty.somethingBlueCrew && weddingParty.somethingBlueCrew.length > 0 && (
           <div className="mb-20">
             <h2 className="text-3xl font-serif font-bold text-center text-gray-900 mb-12">
-              {config.somethingBlueCrewTitle || 'Something Blue Crew'}
+              {config.somethingBlueCrewTitle || 'Команда поддержки'}
             </h2>
 
             <div className="flex flex-wrap justify-center gap-8 max-w-3xl mx-auto">
@@ -219,7 +219,7 @@ export default function WeddingPartyPage() {
         {weddingParty.officiant && (
           <div>
             <h2 className="text-3xl font-serif font-bold text-center text-gray-900 mb-12">
-              Officiant
+              Ведущий церемонии
             </h2>
 
             <div className="flex justify-center">
@@ -254,7 +254,7 @@ export default function WeddingPartyPage() {
                   <h3 className="text-xl font-serif font-bold text-gray-900 mb-1">
                     {weddingParty.officiant.name}
                   </h3>
-                  <p className="text-accent font-medium mb-2">Officiant</p>
+                  <p className="text-accent font-medium mb-2">Ведущий церемонии</p>
                   {weddingParty.officiant.relationship && (
                     <p className="text-sm text-gray-600 mb-3">{weddingParty.officiant.relationship}</p>
                   )}

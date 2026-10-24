@@ -51,11 +51,10 @@ export default function LinkPreview({ title, url, rating, onRate, onClose }: {
                         <div className="absolute inset-0 bg-white flex items-center justify-center p-6">
                             <div className="text-center max-w-sm">
                                 <p className="text-sm font-medium text-gray-700">
-                                    This site won&apos;t display inside the portal
+                                    Этот сайт нельзя открыть внутри планировщика
                                 </p>
                                 <p className="text-xs text-gray-500 mt-1">
-                                    Some sites block being embedded. Open it in a tab instead —
-                                    your notes and rating stay here.
+                                    Некоторые сайты запрещают встраивание. Откройте в отдельной вкладке — заметки и оценки останутся здесь.
                                 </p>
                                 <a
                                     href={url}
@@ -64,7 +63,7 @@ export default function LinkPreview({ title, url, rating, onRate, onClose }: {
                                     className="inline-block mt-3 rounded-full bg-accent text-white
                                         px-4 py-1.5 text-sm font-medium hover:opacity-90"
                                 >
-                                    Open the page ↗
+                                    Открыть страницу ↗
                                 </a>
                             </div>
                         </div>
@@ -92,7 +91,7 @@ export default function LinkPreview({ title, url, rating, onRate, onClose }: {
                         rel="noopener noreferrer"
                         className="text-sm text-accent hover:underline"
                     >
-                        Open in a tab ↗
+                        Открыть во вкладке ↗
                     </a>
                 </div>
             </div>

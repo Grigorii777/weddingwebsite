@@ -45,14 +45,14 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
         if (!body || typeof body !== 'object' || Array.isArray(body)) {
-            return NextResponse.json({ error: 'Expected a JSON object' }, { status: 400 });
+            return NextResponse.json({ error: 'Ожидается объект JSON' }, { status: 400 });
         }
         const updates = body as Partial<SiteConfig> & Record<string, unknown>;
 
         for (const key of COLOR_KEYS) {
             const value = updates[key];
             if (value !== undefined && value !== '' && (typeof value !== 'string' || !HEX.test(value))) {
-                return NextResponse.json({ error: `${key} must be a hex colour like #D4AF37` }, { status: 400 });
+                return NextResponse.json({ error: `${key} должен быть цветом в формате #D4AF37` }, { status: 400 });
             }
         }
 
@@ -68,6 +68,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, config: newConfig });
     } catch (error) {
         console.error('Config update error:', error);
-        return NextResponse.json({ error: 'Update failed' }, { status: 500 });
+        return NextResponse.json({ error: 'Не удалось обновить' }, { status: 500 });
     }
 }

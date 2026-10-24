@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -137,7 +138,7 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
             })
             .filter((pt): pt is { lat: number; lng: number; label: string } => pt != null),
         color: dayColor(day.day_number),
-        label: `Day ${day.day_number}${day.title ? ` — ${day.title}` : ''}`,
+        label: `День ${day.day_number}${day.title ? ` — ${day.title}` : ''}`,
     })).filter((r) => r.points.length > 0),
     [days, api.placeById]);
 
@@ -149,47 +150,47 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
         const items: { label: string; href: string; tone: 'warn' | 'info' }[] = [];
         if (stats.unconfirmed) {
             items.push({
-                label: `${stats.unconfirmed} pin${stats.unconfirmed === 1 ? '' : 's'} still unconfirmed`,
+                label: `${counted(stats.unconfirmed, 'отметка', 'отметки', 'отметок')} ещё не подтверждено`,
                 href: `${BASE}/map`, tone: 'warn',
             });
         }
         if (stats.unpinned) {
             items.push({
-                label: `${stats.unpinned} place${stats.unpinned === 1 ? '' : 's'} with no location`,
+                label: `${counted(stats.unpinned, 'место', 'места', 'мест')} без координат`,
                 href: `${BASE}/places`, tone: 'info',
             });
         }
         if (emptyDays.length) {
             items.push({
-                label: `${emptyDays.length} day${emptyDays.length === 1 ? '' : 's'} with nothing planned`,
+                label: `${counted(emptyDays.length, 'день', 'дня', 'дней')} без планов`,
                 href: `${BASE}/itinerary`, tone: 'info',
             });
         }
         const unratedStays = stays.filter((s) => s.rating == null && s.links.length > 0).length;
         if (unratedStays) {
             items.push({
-                label: `${unratedStays} stay${unratedStays === 1 ? '' : 's'} not yet rated`,
+                label: `${counted(unratedStays, 'вариант проживания', 'варианта проживания', 'вариантов проживания')} ещё не оценено`,
                 href: `${BASE}/stays`, tone: 'info',
             });
         }
         const unratedExcursions = excursions.filter((e) => e.rating == null).length;
         if (unratedExcursions) {
             items.push({
-                label: `${unratedExcursions} excursion${unratedExcursions === 1 ? '' : 's'} not yet rated`,
+                label: `${counted(unratedExcursions, 'экскурсия', 'экскурсии', 'экскурсий')} ещё не оценено`,
                 href: `${BASE}/excursions`, tone: 'info',
             });
         }
         if (todosLeft) {
             items.push({
-                label: `${todosLeft} thing${todosLeft === 1 ? '' : 's'} left on the checklist`,
+                label: `${counted(todosLeft, 'дело', 'дела', 'дел')} осталось в списке`,
                 href: `${BASE}/checklist`, tone: 'info',
             });
         }
         if (!days.length) {
-            items.push({ label: 'No days yet — start the itinerary', href: `${BASE}/itinerary`, tone: 'info' });
+            items.push({ label: 'Дней пока нет — начните маршрут', href: `${BASE}/itinerary`, tone: 'info' });
         }
         if (!trip?.start_date) {
-            items.push({ label: 'No dates set — drag a range', href: `${BASE}/settings`, tone: 'info' });
+            items.push({ label: 'Даты не заданы — выделите период', href: `${BASE}/settings`, tone: 'info' });
         }
         return items;
     }, [stats, emptyDays.length, stays, excursions, days.length, trip?.start_date, todosLeft]);
@@ -216,16 +217,16 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
     return (
         <div className="space-y-3">
             <TabToolbar
-                left={<h2 className="text-sm font-semibold text-gray-700">Where the trip stands</h2>}
+                left={<h2 className="text-sm font-semibold text-gray-700">Подготовка к поездке</h2>}
                 right={data && (
                     <button
                         type="button"
                         onClick={() => downloadOfflineCopy(data)}
-                        title="Every detail of the trip in one HTML file that opens with no internet"
+                        title="Вся поездка в одном HTML-файле, доступном без интернета"
                         className="hidden md:inline-flex rounded-full border border-gray-200 bg-white px-4 py-1.5 text-xs
                             font-medium text-gray-700 transition hover:bg-gray-50"
                     >
-                        ⬇ Download offline copy
+                        ⬇ Скачать для работы без интернета
                     </button>
                 )}
             />
@@ -234,53 +235,53 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
             <div className="xl:col-span-2 flex flex-col gap-3">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 shrink-0">
                 <Stat
-                    label="Trip"
-                    value={days.length ? `${days.length} day${days.length === 1 ? '' : 's'}` : 'Not planned'}
+                    label="Поездка"
+                    value={days.length ? `${counted(days.length, 'день', 'дня', 'дней')}` : 'Не запланировано'}
                     hint={trip?.start_date
                         ? `${formatDayDate(trip.start_date, 1)}${lastDay > 1 ? ` → ${formatDayDate(trip.start_date, lastDay)}` : ''}`
-                        : 'No dates set'}
+                        : 'Даты не заданы'}
                     href={`${BASE}/itinerary`}
                 />
                 <Stat
-                    label="Countdown"
-                    value={startsIn == null ? '—' : startsIn > 0 ? `${startsIn} days` : startsIn === 0 ? 'Today' : 'Under way'}
+                    label="Обратный отсчёт"
+                    value={startsIn == null ? '—' : startsIn > 0 ? `${startsIn} дней` : startsIn === 0 ? 'Сегодня' : 'В пути'}
                     hint={startsIn == null
-                        ? 'Set the dates'
+                        ? 'Задать даты'
                         : nights != null
-                            ? `until you fly · ${nights} night${nights === 1 ? '' : 's'} away`
-                            : 'until you fly'}
+                            ? `до вылета · ${counted(nights, 'ночь', 'ночи', 'ночей')} в поездке`
+                            : 'до вылета'}
                     href={`${BASE}/settings`}
                 />
                 <Stat
-                    label="Places"
+                    label="Места"
                     value={String(stats.places)}
-                    hint={`${stats.pinned} pinned`}
+                    hint={`${stats.pinned} на карте`}
                     href={`${BASE}/places`}
                 />
                 <Stat
-                    label="To review"
+                    label="На проверку"
                     value={String(stats.unconfirmed)}
-                    hint={stats.unconfirmed ? 'unconfirmed pins' : 'all confirmed'}
+                    hint={stats.unconfirmed ? 'неподтверждённые отметки' : 'всё подтверждено'}
                     tone={stats.unconfirmed ? 'warn' : 'good'}
                     href={`${BASE}/map`}
                 />
                 <Stat
-                    label="Stays"
+                    label="Проживание"
                     value={String(stays.length)}
-                    hint={`${stays.filter((s) => s.rating === 'yes').length} interested`}
+                    hint={`${stays.filter((s) => s.rating === 'yes').length} понравилось`}
                     href={`${BASE}/stays`}
                 />
                 <Stat
-                    label="To do"
+                    label="Дела"
                     value={todos.length ? `${todos.length - todosLeft}/${todos.length}` : '—'}
-                    hint={todos.length ? (todosLeft ? `${todosLeft} left` : 'all done') : 'nothing listed'}
+                    hint={todos.length ? (todosLeft ? `${todosLeft} осталось` : 'всё готово') : 'ничего не добавлено'}
                     tone={todos.length && !todosLeft ? 'good' : 'default'}
                     href={`${BASE}/checklist`}
                 />
                 <Stat
-                    label="Excursions"
+                    label="Экскурсии"
                     value={String(excursions.length)}
-                    hint={`${excursions.filter((e) => e.rating === 'yes').length} interested`}
+                    hint={`${excursions.filter((e) => e.rating === 'yes').length} понравилось`}
                     href={`${BASE}/excursions`}
                 />
             </div>
@@ -288,37 +289,37 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
             {/* ---- Itinerary, filling what's left on the left ---- */}
             <Card data-card className="p-4 flex flex-col">
                 <div className="flex items-baseline justify-between gap-2 mb-2 shrink-0">
-                    <h2 className="text-sm font-semibold text-gray-900">Itinerary</h2>
+                    <h2 className="text-sm font-semibold text-gray-900">Маршрут</h2>
                     <Link href={`${BASE}/itinerary`} className="inline-flex min-h-11 md:min-h-0 items-center text-xs text-accent hover:underline">
-                        Open →
+                        Открыть →
                     </Link>
                 </div>
                 {days.length === 0 ? (
                     <p className="text-sm text-gray-500">
-                        No days yet. <Link href={`${BASE}/itinerary`} className="text-accent hover:underline">
-                            Add the first one
+                        Дней пока нет. <Link href={`${BASE}/itinerary`} className="text-accent hover:underline">
+                            Добавить первый
                         </Link>.
                     </p>
                 ) : (
                     <>
                         <p className="text-xs text-gray-400 mb-1 shrink-0">
-                            {stopCount} stop{stopCount === 1 ? '' : 's'} across {days.length} day
-                            {days.length === 1 ? '' : 's'}
+                            {counted(stopCount, 'остановка', 'остановки', 'остановок')} на {days.length} день
+                            {days.length === 1 ? '' : ''}
                             {emptyDays.length > 0 && (
-                                <span className="text-amber-600"> · {emptyDays.length} still empty</span>
+                                <span className="text-amber-600"> · {emptyDays.length} пока пусто</span>
                             )}
                         </p>
                         <ul className="divide-y divide-gray-100 max-h-96 overflow-auto">
                             {days.map((day) => (
                                 <li key={day.id} className="py-1.5 flex items-baseline gap-3">
                                     <span className="text-xs font-semibold text-gray-700 shrink-0 w-14">
-                                        Day {day.day_number}
+                                        День {day.day_number}
                                     </span>
                                     <span className="text-xs text-gray-400 shrink-0 w-24 hidden sm:block">
                                         {formatDayDate(trip?.start_date ?? null, day.day_number) ?? ''}
                                     </span>
                                     <span className="text-sm text-gray-700 truncate flex-1">
-                                        {day.title || <span className="text-gray-400">Untitled</span>}
+                                        {day.title || <span className="text-gray-400">Без названия</span>}
                                         {day.stops.length > 0 && (
                                             <span className="text-gray-400">
                                                 {' — '}
@@ -333,7 +334,7 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
                                         )}
                                     </span>
                                     <span className={`text-xs shrink-0 ${day.stops.length ? 'text-gray-400' : 'text-amber-600'}`}>
-                                        {day.stops.length || 'empty'}
+                                        {day.stops.length || 'пусто'}
                                     </span>
                                 </li>
                             ))}
@@ -346,17 +347,17 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
                 {/* ---- Where it all is ---- */}
                 <Card data-card className="p-3 flex flex-col">
                     <div className="flex items-baseline justify-between gap-2 mb-2">
-                        <h2 className="text-sm font-semibold text-gray-900">Where it all is</h2>
+                        <h2 className="text-sm font-semibold text-gray-900">Всё на карте</h2>
                         <Link href={`${BASE}/map`} className="inline-flex min-h-11 md:min-h-0 items-center text-xs text-accent hover:underline">
-                            Open map →
+                            Открыть карту →
                         </Link>
                     </div>
                     {mapPlaces.length === 0 ? (
                         <div className="h-64 flex items-center justify-center rounded-2xl bg-gray-50">
                             <p className="text-xs text-gray-400 text-center px-4">
-                                Nothing pinned yet.{' '}
+                                На карте ещё нет отметок.{' '}
                                 <Link href={`${BASE}/places`} className="text-accent hover:underline">
-                                    Pin a place
+                                    Добавить место на карту
                                 </Link>.
                             </p>
                         </div>
@@ -368,11 +369,11 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
                         />
                     )}
                     <p className="text-[11px] text-gray-400 mt-2">
-                        {mapPlaces.length} confirmed
+                        {mapPlaces.length} подтверждено
                         {stats.unconfirmed > 0 && (
-                            <span className="text-amber-600"> · {stats.unconfirmed} unconfirmed hidden</span>
+                            <span className="text-amber-600"> · {stats.unconfirmed} неподтверждённые скрыты</span>
                         )}
-                        {mapRoutes.length > 0 && <span> · {mapRoutes.length} day{mapRoutes.length === 1 ? '' : 's'} drawn</span>}
+                        {mapRoutes.length > 0 && <span> · {counted(mapRoutes.length, 'день', 'дня', 'дней')} нарисовано</span>}
                         {trip?.focus_country && <span> · {trip.focus_country}</span>}
                     </p>
                 </Card>
@@ -381,9 +382,9 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 items-start">
                 {/* ---- What needs doing ---- */}
                 <Card data-card className="p-4 flex flex-col">
-                    <h2 className="text-sm font-semibold text-gray-900 mb-2 shrink-0">Needs attention</h2>
+                    <h2 className="text-sm font-semibold text-gray-900 mb-2 shrink-0">Требует внимания</h2>
                     {todo.length === 0 ? (
-                        <p className="text-sm text-emerald-700">Nothing outstanding. </p>
+                        <p className="text-sm text-emerald-700">Всё в порядке. </p>
                     ) : (
                         <ul className="space-y-1.5 max-h-72 overflow-auto">
                             {todo.map((item) => (
@@ -406,11 +407,11 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
                 {/* ---- Money ---- */}
                 <Card data-card className="p-4 flex flex-col">
                     <div className="flex items-baseline justify-between gap-2 mb-2 shrink-0">
-                        <h2 className="text-sm font-semibold text-gray-900">Cost of the trip</h2>
+                        <h2 className="text-sm font-semibold text-gray-900">Стоимость поездки</h2>
                         {budget && budget.total > 0 && (
                             <span className="text-[11px] text-gray-400">
                                 {formatMoney(perPerson(budget.total), trip?.home_currency || 'USD')}
-                                {' '}each
+                                {' '}на человека
                             </span>
                         )}
                     </div>
@@ -418,12 +419,10 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
                     {!budget || budget.total === 0 ? (
                         <>
                             <p className="text-sm text-gray-500">
-                                Nothing priced with a number yet.
+                                Стоимость пока нигде не указана числом.
                             </p>
                             <p className="text-[11px] text-gray-400 mt-2">
-                                A place&apos;s <strong>Cost</strong> field (per night, per person or
-                                total) is what this adds up — the free-text price note stays for the
-                                detail. Travel legs and bookings count too.
+                                У места поле <strong>Стоимость</strong> используется для подсчёта: за ночь, на человека или всего. Текстовые заметки не суммируются. Переезды и бронирования тоже учитываются.
                             </p>
                         </>
                     ) : (
@@ -449,18 +448,18 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
                                     <p className={`text-[11px] mt-1 ${budget.remaining != null
                                         && budget.remaining < 0 ? 'text-rose-700' : 'text-gray-500'}`}>
                                         {budget.remaining != null && budget.remaining >= 0
-                                            ? `${formatMoney(budget.remaining, trip?.home_currency || 'USD')} left of ${formatMoney(budget.budget, trip?.home_currency || 'USD')}`
-                                            : `${formatMoney(Math.abs(budget.remaining ?? 0), trip?.home_currency || 'USD')} over the ${formatMoney(budget.budget, trip?.home_currency || 'USD')} budget`}
+                                            ? `${formatMoney(budget.remaining, trip?.home_currency || 'USD')} осталось из ${formatMoney(budget.budget, trip?.home_currency || 'USD')}`
+                                            : `${formatMoney(Math.abs(budget.remaining ?? 0), trip?.home_currency || 'USD')} сверх ${formatMoney(budget.budget, trip?.home_currency || 'USD')} бюджета`}
                                     </p>
                                 </div>
                             )}
 
                             <dl className="mt-3 space-y-1 text-sm">
                                 {([
-                                    ['Stays', budget.stays],
-                                    ['Travel', budget.travel],
-                                    ['Excursions', budget.excursions],
-                                    ['Everything else', budget.other],
+                                    ['Проживание', budget.stays],
+                                    ['Переезды', budget.travel],
+                                    ['Экскурсии', budget.excursions],
+                                    ['Прочее', budget.other],
                                 ] as [string, number][]).filter(([, amount]) => amount > 0)
                                     .map(([label, amount]) => (
                                         <div key={label} className="flex justify-between gap-2">
@@ -473,7 +472,7 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
                                 {budget.paid > 0 && (
                                     <div className="flex justify-between gap-2 border-t
                                         border-gray-100 pt-1">
-                                        <dt className="text-gray-500">Paid so far</dt>
+                                        <dt className="text-gray-500">Уже оплачено</dt>
                                         <dd className="text-emerald-700 tabular-nums">
                                             {formatMoney(budget.paid, trip?.home_currency || 'USD')}
                                         </dd>
@@ -481,7 +480,7 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
                                 )}
                                 {budget.outstanding > 0 && budget.paid > 0 && (
                                     <div className="flex justify-between gap-2">
-                                        <dt className="text-gray-500">Still to pay</dt>
+                                        <dt className="text-gray-500">Осталось оплатить</dt>
                                         <dd className="text-gray-800 tabular-nums">
                                             {formatMoney(budget.outstanding, trip?.home_currency || 'USD')}
                                         </dd>
@@ -492,12 +491,10 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
                             {(budget.unpriced > 0 || budget.unconverted > 0) && (
                                 <p className="text-[11px] text-gray-400 mt-2">
                                     {budget.unpriced > 0 && (
-                                        <>{budget.unpriced} place{budget.unpriced === 1 ? '' : 's'} priced
-                                        only in words, so not counted. </>
+                                        <>{counted(budget.unpriced, 'место', 'места', 'мест')} с текстовой ценой — не учтено. </>
                                     )}
                                     {budget.unconverted > 0 && (
-                                        <>{budget.unconverted} amount{budget.unconverted === 1 ? '' : 's'} in
-                                        a currency with no rate, counted at face value.</>
+                                        <>{counted(budget.unconverted, 'сумма', 'суммы', 'сумм')} без курса валюты — учтено по номиналу.</>
                                     )}
                                 </p>
                             )}
@@ -508,17 +505,17 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
                                 is not arithmetic. */}
                             {budget.unpriced > 0 && (stayCost || excursionCost.priced > 0) && (
                                 <p className="text-[11px] text-gray-500 mt-1">
-                                    From the notes:{' '}
+                                    Из заметок:{' '}
                                     {stayCost && (
-                                        <>stays {stayCost.min === stayCost.max
-                                            ? `${symbol}${stayCost.min.toLocaleString('en-US')}`
-                                            : `${symbol}${stayCost.min.toLocaleString('en-US')}–${symbol}${stayCost.max.toLocaleString('en-US')}`}
-                                        {' '}a night</>
+                                        <>вариантов проживания {stayCost.min === stayCost.max
+                                            ? `${symbol}${stayCost.min.toLocaleString('ru-RU')}`
+                                            : `${symbol}${stayCost.min.toLocaleString('ru-RU')}–${symbol}${stayCost.max.toLocaleString('ru-RU')}`}
+                                        {' '}за ночь</>
                                     )}
                                     {stayCost && excursionCost.priced > 0 && ', '}
                                     {excursionCost.priced > 0 && (
-                                        <>excursions about {symbol}
-                                        {excursionCost.total.toLocaleString('en-US')}</>
+                                        <>экскурсии примерно {symbol}
+                                        {excursionCost.total.toLocaleString('ru-RU')}</>
                                     )}.
                                 </p>
                             )}
@@ -529,16 +526,16 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
                 {/* ---- Shortlist ---- */}
                 <Card data-card className="p-4 flex flex-col">
                     <div className="flex items-baseline justify-between gap-2 mb-2 shrink-0">
-                        <h2 className="text-sm font-semibold text-gray-900">Shortlist</h2>
-                        <span className="text-xs text-gray-400">everything you marked interested</span>
+                        <h2 className="text-sm font-semibold text-gray-900">Избранное</h2>
+                        <span className="text-xs text-gray-400">всё, что вам понравилось</span>
                     </div>
                     {shortlist.length === 0 ? (
                         <p className="text-sm text-gray-500">
-                            Nothing shortlisted yet — rate a{' '}
-                            <Link href={`${BASE}/stays`} className="text-accent hover:underline">stay</Link>
-                            {' '}or an{' '}
+                            Избранное пусто — оцените{' '}
+                            <Link href={`${BASE}/stays`} className="text-accent hover:underline">проживание</Link>
+                            {' '}или{' '}
                             <Link href={`${BASE}/excursions`} className="text-accent hover:underline">
-                                excursion
+                                экскурсию
                             </Link>.
                         </p>
                     ) : (
@@ -590,7 +587,7 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
                     {soon.length > 0 && (
                         <Card className="p-3">
                             <h2 className="mb-2 text-sm font-semibold text-gray-900">
-                                Due this week
+                                Срок на этой неделе
                             </h2>
                             <ul className="space-y-1.5">
                                 {soon.slice(0, 4).map((entry) => (
@@ -608,9 +605,9 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
                                             </span>
                                             <span className="shrink-0 text-[11px] tabular-nums">
                                                 {entry.bucket === 'overdue'
-                                                    ? `${Math.abs(entry.daysAway ?? 0)}d late`
+                                                    ? `${Math.abs(entry.daysAway ?? 0)} дн. просрочено`
                                                     : entry.bucket === 'today'
-                                                        ? 'today' : `${entry.daysAway}d`}
+                                                        ? 'сегодня' : `${entry.daysAway}d`}
                                             </span>
                                         </Link>
                                     </li>
@@ -622,7 +619,7 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
                     {deadlines.length > 0 && (
                         <Card className="p-3">
                             <h2 className="text-sm font-semibold text-gray-900 mb-2">
-                                Before these dates
+                                До указанных дат
                             </h2>
                             <ul className="space-y-1.5">
                                 {deadlines.slice(0, 4).map((deadline) => (
@@ -636,14 +633,14 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
                                         <span className="min-w-0 truncate">{deadline.label}</span>
                                         <span className="shrink-0 tabular-nums text-[11px]">
                                             {deadline.daysAway === 0
-                                                ? 'today'
+                                                ? 'сегодня'
                                                 : `${deadline.daysAway}d`}
                                         </span>
                                     </li>
                                 ))}
                             </ul>
                             <p className="text-[11px] text-gray-400 mt-2">
-                                From the cancellation and deposit dates on your bookings.
+                                По срокам отмены и авансов в бронированиях.
                             </p>
                         </Card>
                     )}
@@ -651,7 +648,7 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
                     {unbooked.length > 0 && (
                         <Card className="p-3">
                             <h2 className="text-sm font-semibold text-gray-900 mb-2">
-                                Nights not booked
+                                Ночи без бронирования
                             </h2>
                             <ul className="space-y-1.5">
                                 {unbooked.slice(0, 5).map((entry) => (
@@ -663,10 +660,10 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
                                                 text-amber-900 hover:bg-amber-100"
                                         >
                                             <span className="min-w-0 truncate">
-                                                Day {entry.dayNumber}
+                                                День {entry.dayNumber}
                                                 {entry.base
-                                                    ? ` — ${entry.base.name} is only ${entry.base.status}`
-                                                    : ' — nowhere to sleep'}
+                                                    ? ` — ${entry.base.name} только ${entry.base.status}`
+                                                    : ' — проживание не указано'}
                                             </span>
                                             <span className="shrink-0 tabular-nums text-[11px]">
                                                 {entry.daysUntil != null ? `${entry.daysUntil}d` : ''}
@@ -676,8 +673,7 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
                                 ))}
                             </ul>
                             <p className="text-[11px] text-gray-400 mt-2">
-                                Only shown inside two months of departure — the most expensive
-                                mistake to notice late.
+                                Показывается за два месяца до отъезда, чтобы успеть забронировать жильё.
                             </p>
                         </Card>
                     )}
@@ -686,7 +682,7 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
                         <Card className="p-3">
                             <div className="flex items-baseline justify-between gap-2 mb-2">
                                 <h2 className="text-sm font-semibold text-gray-900">
-                                    Itinerary completeness
+                                    Готовность маршрута
                                 </h2>
                                 <span className="text-sm font-semibold tabular-nums text-gray-900">
                                     {completeness.score}%
@@ -700,22 +696,18 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
                             </div>
                             <ul className="mt-2 space-y-0.5 text-[11px] text-gray-600">
                                 <li>
-                                    {completeness.withBase}/{completeness.days} days have somewhere
-                                    to sleep
+                                    {completeness.withBase}/{completeness.days} дней с указанным проживанием
                                 </li>
                                 <li>
-                                    {completeness.booked}/{Math.max(completeness.withBase, 1)} of
-                                    those are booked
+                                    {completeness.booked}/{Math.max(completeness.withBase, 1)} из них забронированы
                                 </li>
                                 <li>
-                                    {completeness.withStops}/{completeness.days} have at least two
-                                    things planned
+                                    {completeness.withStops}/{completeness.days} с двумя и более запланированными занятиями
                                 </li>
                                 {completeness.missingTravel.length > 0 && (
                                     <li className="text-amber-700">
-                                        Day{completeness.missingTravel.length === 1 ? '' : 's'}{' '}
-                                        {completeness.missingTravel.join(', ')}: the base changes with
-                                        no travel leg
+                                        День{completeness.missingTravel.length === 1 ? '' : ''}{' '}
+                                        {completeness.missingTravel.join(', ')}: смена места проживания без переезда
                                     </li>
                                 )}
                             </ul>
@@ -733,27 +725,27 @@ export default function DashboardTab({ api }: { api: HoneymoonApi }) {
             {/* ---- Progress ---- */}
             <Card className="p-3 shrink-0">
                 <div className="flex items-baseline justify-between gap-2 mb-2">
-                    <h2 className="text-sm font-semibold text-gray-900">Planning progress</h2>
+                    <h2 className="text-sm font-semibold text-gray-900">Подготовка</h2>
                     <span className="text-xs text-gray-400">
-                        {stats.booked} booked · {stats.shortlisted} shortlisted · {stats.places} total
+                        {stats.booked} забронировано · {stats.shortlisted} в избранном · {stats.places} всего
                     </span>
                 </div>
                 <Bar
                     segments={[
-                        { value: stats.booked, color: '#059669', label: 'Booked' },
-                        { value: stats.shortlisted, color: '#f59e0b', label: 'Shortlisted' },
+                        { value: stats.booked, color: '#059669', label: 'Забронировано' },
+                        { value: stats.shortlisted, color: '#f59e0b', label: 'В избранном' },
                         {
                             value: Math.max(0, stats.places - stats.booked - stats.shortlisted),
                             color: '#e5e7eb',
-                            label: 'Ideas',
+                            label: 'Идеи',
                         },
                     ]}
                 />
                 <div className="flex flex-wrap gap-3 mt-2">
                     {[
-                        { label: 'Booked', color: '#059669' },
-                        { label: 'Shortlisted', color: '#f59e0b' },
-                        { label: 'Ideas', color: '#e5e7eb' },
+                        { label: 'Забронировано', color: '#059669' },
+                        { label: 'В избранном', color: '#f59e0b' },
+                        { label: 'Идеи', color: '#e5e7eb' },
                     ].map((s) => (
                         <span key={s.label} className="inline-flex items-center gap-1.5 text-[11px] text-gray-600">
                             <span className="inline-block w-2.5 h-2.5 rounded-full"
@@ -793,7 +785,7 @@ function Stat({ label, value, hint, href, tone = 'default' }: {
 /** Proportional bar. Renders nothing rather than a misleading empty bar at zero. */
 function Bar({ segments }: { segments: { value: number; color: string; label: string }[] }) {
     const total = segments.reduce((sum, s) => sum + s.value, 0);
-    if (total === 0) return <p className="text-sm text-gray-400">Nothing to chart yet.</p>;
+    if (total === 0) return <p className="text-sm text-gray-400">Пока нет данных для графика.</p>;
     return (
         <div className="flex h-3 rounded-full overflow-hidden bg-gray-100">
             {segments.filter((s) => s.value > 0).map((s) => (

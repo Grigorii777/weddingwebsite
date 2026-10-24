@@ -54,7 +54,7 @@ export default function ChangelogView() {
                 setReleases(body.releases ?? []);
                 if (body.error) setError(body.error);
             } catch {
-                if (alive) setError('Could not load the changelog.');
+                if (alive) setError('Не удалось загрузить историю изменений.');
             }
         })();
         return () => { alive = false; };
@@ -111,22 +111,22 @@ export default function ChangelogView() {
                 <button
                     onClick={() => router.push('/admin')}
                     className="cl-back"
-                    aria-label="Back to the admin panel"
+                    aria-label="Назад в панель управления"
                 >
                     ‹
                 </button>
-                <h1 className="text-2xl font-semibold text-gray-900">Changelog</h1>
+                <h1 className="text-2xl font-semibold text-gray-900">История изменений</h1>
                 {releases?.[0] && (
                     <span className="cl-ver-pill ml-2">{releases[0].version}</span>
                 )}
             </div>
 
             {releases == null ? (
-                <div className="cl-loading">Loading…</div>
+                <div className="cl-loading">Загрузка…</div>
             ) : error && !releases.length ? (
                 <div className="cl-error">{error}</div>
             ) : !releases.length ? (
-                <div className="cl-error">No changelog entries found.</div>
+                <div className="cl-error">Записей об изменениях пока нет.</div>
             ) : (
                 <div className="cl-body">
                     <aside className="cl-toc" ref={navRef}>
@@ -144,7 +144,7 @@ export default function ChangelogView() {
                             >
                                 <span className="cl-toc-ver">{release.version}</span>
                                 <span className={`cl-toc-tag ${release.tag.toLowerCase()}`}>
-                                    {release.tag}
+                                    {release.tag === 'Released' ? 'Выпущено' : 'В разработке'}
                                 </span>
                                 <span className="cl-toc-title">{release.title}</span>
                             </button>
@@ -161,7 +161,7 @@ export default function ChangelogView() {
                                 <div className="cl-entry-titleline">
                                     <span className="cl-ver-pill">{release.version}</span>
                                     <span className={`cl-tag-pill ${release.tag.toLowerCase()}`}>
-                                        {release.tag}
+                                        {release.tag === 'Released' ? 'Выпущено' : 'В разработке'}
                                     </span>
                                     {release.date && (
                                         <span className="cl-entry-date">
@@ -185,13 +185,14 @@ export default function ChangelogView() {
 }
 
 /** Added / Changed / Fixed render as coloured badges; anything else stays plain. */
+const GROUP_LABELS: Record<string, string> = { Added: 'Добавлено', Changed: 'Изменено', Fixed: 'Исправлено', Changes: 'Изменения' };
 const BADGED = new Set(['added', 'changed', 'fixed']);
 
 function Group({ group }: { group: ChangelogGroup }) {
     const key = group.heading.toLowerCase();
     return (
         <div>
-            <h3 className={`cl-group${BADGED.has(key) ? ` ${key}` : ''}`}>{group.heading}</h3>
+            <h3 className={`cl-group${BADGED.has(key) ? ` ${key}` : ''}`}>{GROUP_LABELS[group.heading] ?? group.heading}</h3>
             <ul className="list-disc pl-5 space-y-1.5">
                 {group.entries.map((entry, i) => (
                     <li key={i}>

@@ -244,7 +244,7 @@ async function updateSettings(body: Record<string, unknown>) {
     for (const [key, field] of Object.entries(SETTINGS_FIELDS)) {
         if (key in body) { columns.push(key); values.push(coerce(field, body[key], key)); }
     }
-    if (!columns.length) return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+    if (!columns.length) return NextResponse.json({ error: 'Нет полей для обновления' }, { status: 400 });
     const sets = columns.map((c, i) => `${c} = $${i + 1}`).join(', ');
     const result = await pool.query(
         `UPDATE finance_settings SET ${sets} WHERE id = 1 RETURNING *`, values,
@@ -264,19 +264,19 @@ async function create(request: Request, { params }: Params) {
         if (resource === 'settings') return await updateSettings(body);
 
         const def = resolve(resource);
-        if (!def) return NextResponse.json({ error: 'Unknown resource' }, { status: 404 });
+        if (!def) return NextResponse.json({ error: 'Неизвестный раздел данных' }, { status: 404 });
 
         for (const key of def.required) {
             const value = body[key];
             const missing = value == null || value === ''
                 || (def.fields[key]?.kind === 'ref' && coerce(def.fields[key], value, key) == null);
             if (missing) {
-                return NextResponse.json({ error: `${key} is required` }, { status: 400 });
+                return NextResponse.json({ error: `${key} обязательно` }, { status: 400 });
             }
         }
 
         const { columns, values } = collect(def, body);
-        if (!columns.length) return NextResponse.json({ error: 'No fields provided' }, { status: 400 });
+        if (!columns.length) return NextResponse.json({ error: 'Поля не указаны' }, { status: 400 });
         applyTargetExclusivity(def, columns, values);
 
         const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
@@ -288,7 +288,7 @@ async function create(request: Request, { params }: Params) {
     } catch (error) {
         if (error instanceof BadValue) return NextResponse.json({ error: error.message }, { status: 400 });
         console.error(`Error creating ${resource}:`, error);
-        return NextResponse.json({ error: `Failed to create ${resource}` }, { status: 500 });
+        return NextResponse.json({ error: `Не удалось создать: ${resource}` }, { status: 500 });
     }
 }
 
@@ -303,7 +303,7 @@ export async function PATCH(request: Request, { params }: Params) {
         if (resource === 'settings') return await updateSettings(await request.json());
 
         const def = resolve(resource);
-        if (!def) return NextResponse.json({ error: 'Unknown resource' }, { status: 404 });
+        if (!def) return NextResponse.json({ error: 'Неизвестный раздел данных' }, { status: 404 });
 
         const body = await request.json();
 
@@ -351,11 +351,11 @@ export async function PATCH(request: Request, { params }: Params) {
             const ids = body.ids
                 .map((raw: unknown) => Math.trunc(Number(raw)))
                 .filter((n: number) => Number.isFinite(n) && n > 0);
-            if (!ids.length) return NextResponse.json({ error: 'No valid ids' }, { status: 400 });
+            if (!ids.length) return NextResponse.json({ error: 'Нет допустимых идентификаторов' }, { status: 400 });
             const { columns, values } = collect(def, body);
             applyTargetExclusivity(def, columns, values);
             stampThankYou(def, body, columns, values);
-            if (!columns.length) return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+            if (!columns.length) return NextResponse.json({ error: 'Нет полей для обновления' }, { status: 400 });
             const sets = columns.map((c, i) => `${c} = $${i + 1}`).join(', ');
             const result = await pool.query(
                 `UPDATE ${def.table} SET ${sets} WHERE id = ANY($${columns.length + 1})`,
@@ -366,11 +366,11 @@ export async function PATCH(request: Request, { params }: Params) {
 
         const id = Math.trunc(Number(body.id));
         if (!Number.isFinite(id) || id <= 0) {
-            return NextResponse.json({ error: 'Valid id required' }, { status: 400 });
+            return NextResponse.json({ error: 'Требуется корректный идентификатор' }, { status: 400 });
         }
 
         const { columns, values } = collect(def, body);
-        if (!columns.length) return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+        if (!columns.length) return NextResponse.json({ error: 'Нет полей для обновления' }, { status: 400 });
         applyTargetExclusivity(def, columns, values);
         stampThankYou(def, body, columns, values);
 
@@ -379,12 +379,12 @@ export async function PATCH(request: Request, { params }: Params) {
             `UPDATE ${def.table} SET ${sets} WHERE id = $${columns.length + 1} RETURNING *`,
             [...values, id],
         );
-        if (!result.rowCount) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        if (!result.rowCount) return NextResponse.json({ error: 'Не найдено' }, { status: 404 });
         return NextResponse.json(result.rows[0]);
     } catch (error) {
         if (error instanceof BadValue) return NextResponse.json({ error: error.message }, { status: 400 });
         console.error(`Error updating ${resource}:`, error);
-        return NextResponse.json({ error: `Failed to update ${resource}` }, { status: 500 });
+        return NextResponse.json({ error: `Не удалось обновить: ${resource}` }, { status: 500 });
     }
 }
 
@@ -393,20 +393,20 @@ export async function DELETE(request: Request, { params }: Params) {
     try {
         await ensureFinanceTables();
         const def = resolve(resource);
-        if (!def) return NextResponse.json({ error: 'Unknown resource' }, { status: 404 });
+        if (!def) return NextResponse.json({ error: 'Неизвестный раздел данных' }, { status: 404 });
 
         const id = Math.trunc(Number(new URL(request.url).searchParams.get('id')));
         if (!Number.isFinite(id) || id <= 0) {
-            return NextResponse.json({ error: 'Valid id required' }, { status: 400 });
+            return NextResponse.json({ error: 'Требуется корректный идентификатор' }, { status: 400 });
         }
 
         const result = await pool.query(`DELETE FROM ${def.table} WHERE id = $1`, [id]);
-        if (!result.rowCount) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        if (!result.rowCount) return NextResponse.json({ error: 'Не найдено' }, { status: 404 });
         return NextResponse.json({ success: true });
     } catch (error) {
         if (error instanceof BadValue) return NextResponse.json({ error: error.message }, { status: 400 });
         console.error(`Error deleting ${resource}:`, error);
-        return NextResponse.json({ error: `Failed to delete ${resource}` }, { status: 500 });
+        return NextResponse.json({ error: `Не удалось удалить: ${resource}` }, { status: 500 });
     }
 }
 

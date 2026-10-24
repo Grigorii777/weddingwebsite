@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { formatWeddingDate, formatWeddingTime } from '@/lib/locale';
 import { getSiteConfig } from '@/lib/config';
 import CountdownClock from '@/components/CountdownClock';
 import FadeIn from '@/components/FadeIn';
@@ -51,7 +52,7 @@ export default function Home() {
           className="text-white text-xl md:text-2xl font-serif italic tracking-wider mb-4 px-4 text-center"
           style={{ animation: 'page-enter 700ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 200ms both' }}
         >
-          {config.homeHeadline || "We're getting married!"}
+          {config.homeHeadline || "Мы женимся!"}
         </p>
         <h1
           data-hero-role="title"
@@ -66,8 +67,8 @@ export default function Home() {
           style={{ animation: 'page-enter 700ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 600ms both' }}
         >
           {isBasicMode && !showVenue
-            ? config.weddingDate
-            : <>{config.weddingDate}<br className="md:hidden" /><span className="hidden md:inline"> • </span>{config.weddingLocation}</>
+            ? formatWeddingDate(config.weddingDate)
+            : <>{formatWeddingDate(config.weddingDate)}<br className="md:hidden" /><span className="hidden md:inline"> • </span>{config.weddingLocation}</>
           }
         </p>
         {!isBasicMode && (
@@ -80,13 +81,13 @@ export default function Home() {
               href="/rsvp"
               className="px-8 py-3 bg-accent text-white hover:bg-accent-dark transition-colors rounded-full uppercase tracking-widest text-sm font-bold shadow-lg hover:shadow-xl"
             >
-              RSVP Now
+              Подтвердить участие
             </Link>
             <Link
               href="/schedule"
               className="px-8 py-3 bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 transition-colors rounded-full uppercase tracking-widest text-sm font-bold shadow-lg hover:shadow-xl"
             >
-              View Schedule
+              Программа дня
             </Link>
           </div>
         )}
@@ -97,7 +98,7 @@ export default function Home() {
             style={{ animation: 'page-enter 700ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 1100ms both' }}
           >
             <span className="text-white/80 text-xs uppercase tracking-[0.25em] font-light">
-              Scroll Down
+              Листайте вниз
             </span>
             <svg
               className="h-6 w-6 text-white/80 animate-bounce"
@@ -128,13 +129,13 @@ export default function Home() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <FadeIn animation="slide-up">
             <h2 className="text-3xl font-serif text-gray-900 mb-6">
-              {config.homeIntroTitle || "Join us for the celebration"}
+              {config.homeIntroTitle || "Разделите с нами этот день"}
             </h2>
           </FadeIn>
           <FadeIn animation="slide-up" delay={100}>
             <p className="text-lg text-gray-600 leading-relaxed mb-12 whitespace-pre-line">
-              {config.homeIntroBody || `We are so excited to celebrate our special day with our family and friends.
-              This website contains wedding day details, travel information, and much more - check back for updates!`}
+              {config.homeIntroBody || `Мы счастливы разделить этот день с родными и друзьями.
+              Здесь вы найдёте программу свадьбы, информацию о месте торжества и другие подробности. Следите за обновлениями!`}
             </p>
           </FadeIn>
           <FadeIn animation="scale" delay={150}>
@@ -160,12 +161,12 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <FadeIn animation="slide-up">
               <h2 className="text-4xl font-serif text-gray-900 tracking-tight sm:text-5xl md:text-6xl">
-                About
+                О нас
               </h2>
             </FadeIn>
             <FadeIn animation="slide-up" delay={100}>
               <p className="mt-4 max-w-2xl mx-auto text-xl text-gray-500 font-serif italic">
-                {config.ourStoryTitle || "A chance meeting that turned into forever."}
+                {config.ourStoryTitle || "Случайная встреча, ставшая началом нашей истории."}
               </p>
             </FadeIn>
           </div>
@@ -178,10 +179,10 @@ export default function Home() {
               <FadeIn animation="slide-right">
                 <div>
                   <h3 className="text-2xl font-serif text-gray-900 tracking-tight sm:text-3xl mb-4">
-                    {config.howWeMetTitle || "How We Met"}
+                    {config.howWeMetTitle || "Как мы познакомились"}
                   </h3>
                   <div className="mt-3 text-lg text-gray-600 leading-relaxed whitespace-pre-line">
-                    {config.ourStoryBody || `It started with a coffee shop mishap involving two identical orders and one very confused barista. What began as an awkward exchange over oat milk lattes turned into a conversation that lasted for hours.`}
+                    {config.ourStoryBody || `Всё началось в кофейне: два одинаковых заказа и один растерянный бариста. Неловкое знакомство за чашкой кофе превратилось в разговор, который длился несколько часов.`}
                   </div>
                 </div>
               </FadeIn>
@@ -189,10 +190,10 @@ export default function Home() {
                 <div className="mt-10 lg:mt-0 relative">
                   <div className="aspect-w-3 aspect-h-4 rounded-3xl overflow-hidden bg-gray-100 shadow-xl border-4 border-white transform md:rotate-2 hover:rotate-0 transition-transform duration-500">
                     {config.aboutHero ? (
-                      <img src={photoSrc(config.aboutHero, 'large')} srcSet={photoSrcSet(config.aboutHero)} sizes="(max-width: 1024px) 100vw, 50vw" alt="About Couple" className="h-full w-full object-cover" loading="lazy" />
+                      <img src={photoSrc(config.aboutHero, 'large')} srcSet={photoSrcSet(config.aboutHero)} sizes="(max-width: 1024px) 100vw, 50vw" alt="Наша фотография" className="h-full w-full object-cover" loading="lazy" />
                     ) : (
                       <div className="flex items-center justify-center h-full w-full bg-gray-200 text-gray-400 p-8 text-center">
-                        [Couple Photo Placeholder]
+                        [Здесь будет наша фотография]
                       </div>
                     )}
                   </div>
@@ -214,7 +215,7 @@ export default function Home() {
                       srcSet={photoSrcSet(config.venuePhoto)}
                       sizes="(max-width: 768px) 100vw, 768px"
                       loading="lazy"
-                      alt={config.weddingVenue || 'The Venue'}
+                      alt={config.weddingVenue || 'Место торжества'}
                       className="w-full h-72 sm:h-96 object-cover"
                     />
                   </div>
@@ -223,12 +224,12 @@ export default function Home() {
               <div className="text-center">
                 <FadeIn animation="slide-up" delay={100}>
                   <h2 className="text-3xl font-serif text-gray-900 tracking-tight sm:text-4xl">
-                    The Venue
+                    Место торжества
                   </h2>
                 </FadeIn>
                 <FadeIn animation="slide-up" delay={200}>
                   <p className="mt-4 text-lg text-gray-600 whitespace-pre-line">
-                    {config.venueDescription || `We'll be celebrating at the historic ${config.weddingVenue || '[Venue]'} in ${config.weddingLocation}.`}
+                    {config.venueDescription || `Мы будем отмечать свадьбу здесь: ${config.weddingVenue || '[Место торжества]'}, ${config.weddingLocation}.`}
                   </p>
                   {config.venueAddress && (
                     <a
@@ -241,7 +242,7 @@ export default function Home() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      Get Directions
+                      Построить маршрут
                     </a>
                   )}
                 </FadeIn>
@@ -249,17 +250,17 @@ export default function Home() {
               <div className="mt-12 grid gap-8 grid-cols-1 md:grid-cols-2">
                 <FadeIn animation="slide-right">
                   <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 transform hover:-translate-y-1 transition-transform duration-300">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">The Ceremony</h3>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Церемония</h3>
                     <p className="text-gray-600 whitespace-pre-line">
-                      {config.ceremonyText || `The ceremony will take place at ${config.weddingTime} at ${config.weddingVenue || 'the venue'}.`}
+                      {config.ceremonyText || `Церемония начнётся в ${formatWeddingTime(config.weddingTime)}. Место: ${config.weddingVenue || config.weddingLocation}.`}
                     </p>
                   </div>
                 </FadeIn>
                 <FadeIn animation="slide-left" delay={80}>
                   <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 transform hover:-translate-y-1 transition-transform duration-300">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">The Reception</h3>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Праздничный ужин</h3>
                     <p className="text-gray-600 whitespace-pre-line">
-                      {config.receptionText || 'Dinner and dancing will follow immediately.'}
+                      {config.receptionText || 'После церемонии вас ждут ужин и танцы.'}
                     </p>
                   </div>
                 </FadeIn>
@@ -274,7 +275,7 @@ export default function Home() {
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
               <FadeIn animation="slide-up">
                 <h2 className="text-3xl font-serif text-center text-gray-900 mb-12">
-                  Details &amp; FAQ
+                  Подробности и вопросы
                 </h2>
               </FadeIn>
               {faqs.length > 0 ? (
@@ -291,7 +292,7 @@ export default function Home() {
                   ))}
                 </dl>
               ) : (
-                <p className="text-center text-gray-500 italic">FAQ details coming soon.</p>
+                <p className="text-center text-gray-500 italic">Ответы на вопросы скоро появятся.</p>
               )}
             </div>
           </div>

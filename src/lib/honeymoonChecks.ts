@@ -57,7 +57,7 @@ export function conflictsOf(
             out.push({
                 kind: 'no-base',
                 dayNumber: day.day_number,
-                message: `Day ${day.day_number} has nowhere to sleep.`,
+                message: `День ${day.day_number} без места ночёвки.`,
                 severity: 'warn',
             });
         }
@@ -74,8 +74,8 @@ export function conflictsOf(
             out.push({
                 kind: 'duplicate-stop',
                 dayNumber: day.day_number,
-                message: `${byId.get(placeId)?.name ?? 'A place'} is on day ${day.day_number} `
-                    + `${count} times.`,
+                message: `${byId.get(placeId)?.name ?? 'Место'} добавлено в день ${day.day_number} `
+                    + `${count} раз.`,
                 severity: 'info',
             });
         }
@@ -90,7 +90,7 @@ export function conflictsOf(
             out.push({
                 kind: 'same-time',
                 dayNumber: day.day_number,
-                message: `Two things are set for ${time} on day ${day.day_number}.`,
+                message: `Два события запланированы на ${time} в день ${day.day_number}.`,
                 severity: 'warn',
             });
         }
@@ -106,8 +106,8 @@ export function conflictsOf(
                     out.push({
                         kind: 'far-from-base',
                         dayNumber: day.day_number,
-                        message: `${place.name} is ${Math.round(km)} km from ${base.name} `
-                            + `on day ${day.day_number}.`,
+                        message: `${place.name} находится в ${Math.round(km)} км от ${base.name} `
+                            + `в день ${day.day_number}.`,
                         severity: 'info',
                     });
                 }
@@ -135,8 +135,8 @@ export function conflictsOf(
             out.push({
                 kind: 'two-stays',
                 dayNumber: null,
-                message: `${nameOf(byId, a)} and ${nameOf(byId, b)} are both booked over the same `
-                    + 'nights.',
+                message: `${nameOf(byId, a)} и ${nameOf(byId, b)} забронированы на одни и те же `
+                    + 'ночи.',
                 severity: 'warn',
             });
         }
@@ -152,9 +152,9 @@ export function conflictsOf(
         out.push({
             kind: 'base-change-no-travel',
             dayNumber: day.day_number,
-            message: `You move from ${byId.get(previous.base_place_id)?.name ?? 'one stay'} to `
-                + `${byId.get(day.base_place_id)?.name ?? 'another'} on day ${day.day_number} `
-                + 'with no travel leg.',
+            message: `Вы переезжаете из ${byId.get(previous.base_place_id)?.name ?? 'одного места проживания'} в `
+                + `${byId.get(day.base_place_id)?.name ?? 'другое'} в день ${day.day_number} `
+                + 'без указанного переезда.',
             severity: 'warn',
         });
     });
@@ -172,8 +172,8 @@ export function conflictsOf(
             out.push({
                 kind: 'booking-dates',
                 dayNumber: nights[0].day_number,
-                message: `${nameOf(byId, booking)} is booked ${booking.check_in} → `
-                    + `${booking.check_out}, but it is the base for ${firstNight} → ${expectedOut}.`,
+                message: `${nameOf(byId, booking)} забронировано на ${booking.check_in} → `
+                    + `${booking.check_out}, но в плане ночёвок указано ${firstNight} → ${expectedOut}.`,
                 severity: 'warn',
             });
         }
@@ -185,14 +185,14 @@ export function conflictsOf(
             out.push({
                 kind: 'todo-after-departure',
                 dayNumber: null,
-                message: `"${todo.text}" is due after you leave.`,
+                message: `"${todo.text}» со сроком после отъезда.`,
                 severity: 'warn',
             });
         } else if (todo.due_on < today) {
             out.push({
                 kind: 'todo-overdue',
                 dayNumber: null,
-                message: `"${todo.text}" was due ${todo.due_on}.`,
+                message: `"${todo.text}» просрочено с ${todo.due_on}.`,
                 severity: 'warn',
             });
         }
@@ -209,7 +209,7 @@ export function conflictsOf(
 function nameOf(byId: Map<number, Place>, booking: Booking): string {
     return (booking.place_id != null ? byId.get(booking.place_id)?.name : null)
         ?? booking.provider
-        ?? 'A booking';
+        ?? 'Бронирование';
 }
 
 /* ------------------------------------------------------------------ */
@@ -349,25 +349,25 @@ export function packingSuggestions(
     const add = (text: string, why: string) => out.push({ text, why });
 
     if (categories.has('beach')) {
-        add('Reef-safe sunscreen', 'you have beach days');
-        add('Two swimsuits each', 'you have beach days');
+        add('Солнцезащитный крем, безопасный для рифов', 'в планах есть пляж');
+        add('По два купальника или плавок', 'в планах есть пляж');
     }
     if (categories.has('temple')) {
-        add('Sarong and covered shoulders', 'temples need covered knees and shoulders');
+        add('Саронг и одежда с закрытыми плечами', 'для храмов нужно закрыть колени и плечи');
     }
     if (categories.has('nature') || categories.has('waterfall')) {
-        add('Shoes that can get wet', 'waterfalls and trails');
+        add('Обувь, которую можно намочить', 'для водопадов и троп');
     }
-    if (categories.has('spa')) add('Flip-flops', 'spa days');
+    if (categories.has('spa')) add('Шлёпанцы', 'для спа');
     if (categories.has('restaurant') || categories.has('food')) {
-        add('One smart outfit each', 'dinner reservations');
+        add('По одному нарядному комплекту', 'для ужинов');
     }
     if (hasFlight) {
-        add('Passports and a photo of them on your phone', 'you are flying');
-        add('Universal adapter', 'you are flying');
+        add('Паспорта и их фото в телефоне', 'предстоит перелёт');
+        add('Универсальный переходник', 'предстоит перелёт');
     }
-    if (longFlight) add('Eye mask and earplugs', 'an overnight flight');
-    add('Insurance details, printed', 'the one thing that is useless on a dead phone');
-    add('Motion sickness tablets', 'boats and mountain roads');
+    if (longFlight) add('Маска для сна и беруши', 'для ночного перелёта');
+    add('Распечатанная страховка', 'нужна даже при разряженном телефоне');
+    add('Таблетки от укачивания', 'для лодок и горных дорог');
     return out;
 }

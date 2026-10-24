@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import { useMemo, useState } from 'react';
 import { sourceLabel } from '@/lib/honeymoon';
@@ -18,33 +19,33 @@ import {
  */
 const NOTE_TEMPLATES: { title: string; category: string; body: string }[] = [
     {
-        title: 'Language card',
-        category: 'Practical',
+        title: 'Языковая памятка',
+        category: 'Полезное',
         body: [
             '## Twenty phrases',
             '',
-            '| English | Local |',
+            '| По-русски | На местном языке |',
             '| --- | --- |',
-            '| Hello | |',
-            '| Thank you | |',
-            '| Please | |',
-            '| Yes / No | |',
-            '| How much? | |',
-            '| Too expensive | |',
-            '| Where is…? | |',
-            '| The bill, please | |',
-            '| No ice | |',
-            '| Not spicy | |',
-            '| I am vegetarian | |',
-            '| Help | |',
-            '| Hospital | |',
-            '| Police | |',
-            '| I don\'t understand | |',
-            '| Do you speak English? | |',
-            '| Good morning | |',
-            '| Goodbye | |',
-            '| Sorry | |',
-            '| Delicious | |',
+            '| Здравствуйте | |',
+            '| Спасибо | |',
+            '| Пожалуйста | |',
+            '| Да / Нет | |',
+            '| Сколько стоит? | |',
+            '| Слишком дорого | |',
+            '| Где находится…? | |',
+            '| Счёт, пожалуйста | |',
+            '| Без льда | |',
+            '| Не острое | |',
+            '| Я вегетарианец | |',
+            '| Помогите | |',
+            '| Больница | |',
+            '| Полиция | |',
+            '| Я не понимаю | |',
+            '| Вы говорите по-английски? | |',
+            '| Доброе утро | |',
+            '| До свидания | |',
+            '| Извините | |',
+            '| Очень вкусно | |',
             '',
             '## Tipping',
             '',
@@ -66,8 +67,8 @@ const NOTE_TEMPLATES: { title: string; category: string; body: string }[] = [
         ].join('\n'),
     },
     {
-        title: 'Money',
-        category: 'Practical',
+        title: 'Деньги',
+        category: 'Полезное',
         body: [
             '- Cards that work here:',
             '- Cash to carry:',
@@ -76,8 +77,8 @@ const NOTE_TEMPLATES: { title: string; category: string; body: string }[] = [
         ].join('\n'),
     },
     {
-        title: 'Health and water',
-        category: 'Practical',
+        title: 'Здоровье и вода',
+        category: 'Полезное',
         body: [
             '- Tap water:',
             '- Ice:',
@@ -87,8 +88,8 @@ const NOTE_TEMPLATES: { title: string; category: string; body: string }[] = [
         ].join('\n'),
     },
     {
-        title: 'Getting around',
-        category: 'Practical',
+        title: 'Транспорт',
+        category: 'Полезное',
         body: [
             '- Driver / transfer contacts:',
             '- Scooter: yes or no, and why:',
@@ -96,8 +97,8 @@ const NOTE_TEMPLATES: { title: string; category: string; body: string }[] = [
         ].join('\n'),
     },
     {
-        title: 'Etiquette',
-        category: 'Practical',
+        title: 'Этикет',
+        category: 'Полезное',
         body: [
             '- Dress at temples and religious sites:',
             '- Shoes off where:',
@@ -127,7 +128,7 @@ export default function GuideTab({ api }: { api: HoneymoonApi }) {
     const grouped = useMemo(() => {
         const map = new Map<string, typeof notes>();
         for (const note of notes) {
-            const key = note.category?.trim() || 'General';
+            const key = note.category?.trim() || 'Общее';
             const list = map.get(key);
             if (list) list.push(note); else map.set(key, [note]);
         }
@@ -144,21 +145,21 @@ export default function GuideTab({ api }: { api: HoneymoonApi }) {
             (note) => note.title.trim().toLowerCase() === template.title.toLowerCase(),
         );
         if (exists) {
-            alert(`You already have a note called “${template.title}”.`);
+            alert(`Уже есть заметка «${template.title}”.`);
             return;
         }
         await api.create('notes', {
             title: template.title,
             category: template.category,
             body: template.body,
-            source: 'Template',
+            source: 'Шаблон',
         });
     };
 
     const addNote = async () => {
         const title = newTitle.trim();
         if (!title) return;
-        await api.create('notes', { title, body: '', category: 'General' });
+        await api.create('notes', { title, body: '', category: 'Общее' });
         setNewTitle('');
     };
 
@@ -169,19 +170,19 @@ export default function GuideTab({ api }: { api: HoneymoonApi }) {
             <TabToolbar
                 left={(
                     <>
-                        <Button onClick={() => jump('guide-regions')}>Regions</Button>
-                        <Button onClick={() => jump('guide-notes')}>Know before you go</Button>
+                        <Button onClick={() => jump('guide-regions')}>Регионы</Button>
+                        <Button onClick={() => jump('guide-notes')}>Перед поездкой</Button>
                     </>
                 )}
             />
             {/* ---- Regions ---- */}
             <section id="guide-regions" className="scroll-mt-16">
-                <h2 className="text-sm font-semibold text-gray-900 mb-2 px-1">Regions</h2>
+                <h2 className="text-sm font-semibold text-gray-900 mb-2 px-1">Регионы</h2>
                 {regions.length === 0 ? (
                     <Card>
                         <EmptyState
-                            title="No regions yet"
-                            hint="Regions group your places and carry the guide's area write-ups."
+                            title="Регионов пока нет"
+                            hint="Регионы объединяют места и хранят описание района в путеводителе."
                         />
                     </Card>
                 ) : (
@@ -201,17 +202,17 @@ export default function GuideTab({ api }: { api: HoneymoonApi }) {
                                             </span>
                                             <span className="text-xs text-gray-400 ml-2">
                                                 {region.country || (
-                                                    <span className="text-sky-700">no country</span>
-                                                )} · {count} place{count === 1 ? '' : 's'}
+                                                    <span className="text-sky-700">страна не задана</span>
+                                                )} · {counted(count, 'место', 'места', 'мест')}
                                             </span>
                                         </button>
                                         <span className="text-gray-300 text-xs">{open ? '▲' : '▼'}</span>
                                         <OverflowMenu items={[{
-                                            label: 'Delete region',
+                                            label: 'Удалить регион',
                                             danger: true,
                                             onClick: () => {
                                                 if (confirm(
-                                                    `Delete ${region.name}? Its ${count} place(s) stay, but lose their region.`,
+                                                    `Удалить ${region.name}? Связанные ${count} места сохранятся без региона.`,
                                                 )) api.remove('regions', region.id);
                                             },
                                         }]} />
@@ -224,11 +225,11 @@ export default function GuideTab({ api }: { api: HoneymoonApi }) {
                                             <div className="flex items-center gap-2 mb-1">
                                                 <span className="text-[11px] uppercase tracking-wide
                                                     text-gray-400 font-semibold shrink-0">
-                                                    Country
+                                                    Страна
                                                 </span>
                                                 <InlineText
                                                     value={region.country ?? ''}
-                                                    placeholder="Indonesia"
+                                                    placeholder="Индонезия"
                                                     className="text-xs -ml-1 max-w-[14rem]"
                                                     onCommit={(country) => api.update('regions', {
                                                         id: region.id, country,
@@ -236,14 +237,14 @@ export default function GuideTab({ api }: { api: HoneymoonApi }) {
                                                 />
                                                 {!region.country && (
                                                     <span className="text-[11px] text-sky-700 shrink-0">
-                                                        not set — hidden from country filters
+                                                        не задана — скрыто из фильтров стран
                                                     </span>
                                                 )}
                                             </div>
                                             <InlineText
                                                 multiline
                                                 value={region.description ?? ''}
-                                                placeholder="What's this area like?"
+                                                placeholder="Что это за район?"
                                                 className="text-sm text-gray-600 -ml-2"
                                                 onCommit={(description) => api.update('regions', {
                                                     id: region.id, description,
@@ -261,7 +262,7 @@ export default function GuideTab({ api }: { api: HoneymoonApi }) {
             {/* ---- Notes ---- */}
             <section id="guide-notes" className="scroll-mt-16">
                 <div className="flex items-center justify-between gap-2 mb-2 px-1">
-                    <h2 className="text-sm font-semibold text-gray-900">Know Before You Go</h2>
+                    <h2 className="text-sm font-semibold text-gray-900">Перед поездкой</h2>
                 </div>
 
                 <Card className="p-3 mb-2">
@@ -270,14 +271,14 @@ export default function GuideTab({ api }: { api: HoneymoonApi }) {
                             value={newTitle}
                             onChange={(e) => setNewTitle(e.target.value)}
                             onKeyDown={(e) => { if (e.key === 'Enter') addNote(); }}
-                            placeholder="Add a note — visa on arrival, SIM cards…"
+                            placeholder="Добавить заметку: виза, SIM-карты…"
                         />
-                        <Button tone="primary" onClick={addNote} disabled={!newTitle.trim()}>Add</Button>
+                        <Button tone="primary" onClick={addNote} disabled={!newTitle.trim()}>Добавить</Button>
                     </div>
                     {/* Templates, because the useful notes are the same five
                         every trip and nobody wants to type the headings. */}
                     <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                        <span className="text-[11px] text-gray-400">Start from a template:</span>
+                        <span className="text-[11px] text-gray-400">Начать с шаблона:</span>
                         {NOTE_TEMPLATES.map((template) => (
                             <button
                                 key={template.title}
@@ -294,8 +295,8 @@ export default function GuideTab({ api }: { api: HoneymoonApi }) {
                 {notes.length === 0 ? (
                     <Card>
                         <EmptyState
-                            title="No notes yet"
-                            hint="Run npm run seed:honeymoon to load the Bali guide's practical sections."
+                            title="Заметок пока нет"
+                            hint="Запустите npm run seed:honeymoon, чтобы загрузить практические советы путеводителя по Бали."
                         />
                     </Card>
                 ) : (
@@ -321,7 +322,7 @@ export default function GuideTab({ api }: { api: HoneymoonApi }) {
                                                     <InlineText
                                                         multiline
                                                         value={note.body}
-                                                        placeholder="Details… **bold**, *italic*, - lists, [links](https://…)"
+                                                        placeholder="Подробности… **жирный**, *курсив*, - списки, [ссылки](https://…)"
                                                         className="text-sm text-gray-600 -ml-2 mt-0.5"
                                                         onCommit={(body) => api.update('notes', {
                                                             id: note.id, body,
@@ -336,7 +337,7 @@ export default function GuideTab({ api }: { api: HoneymoonApi }) {
                                                         <details className="mt-1">
                                                             <summary className="cursor-pointer
                                                                 text-[11px] text-gray-400">
-                                                                Formatted
+                                                                С форматированием
                                                             </summary>
                                                             <Markdown
                                                                 source={note.body}
@@ -346,18 +347,18 @@ export default function GuideTab({ api }: { api: HoneymoonApi }) {
                                                     )}
                                                 </div>
                                                 <OverflowMenu items={[{
-                                                    label: 'Delete note',
+                                                    label: 'Удалить заметку',
                                                     danger: true,
                                                     // Undoable, so no confirm — see the toast.
                                                     onClick: () => api.removeRow(
-                                                        'notes', note, `Deleted "${note.title}"`,
+                                                        'notes', note, `Удалено «${note.title}"`,
                                                     ),
                                                 }]} />
                                             </div>
                                             <div className="flex flex-wrap items-center gap-2 mt-1">
                                                 <InlineText
                                                     value={note.category ?? ''}
-                                                    placeholder="Category"
+                                                    placeholder="Категория"
                                                     className="text-[11px] text-gray-400 -ml-2"
                                                     onCommit={(cat) => api.update('notes', {
                                                         id: note.id, category: cat,
@@ -375,12 +376,12 @@ export default function GuideTab({ api }: { api: HoneymoonApi }) {
                                                         id: note.id,
                                                         region_id: e.target.value || null,
                                                     })}
-                                                    aria-label="About which region"
+                                                    aria-label="К какому региону относится"
                                                 >
-                                                    <option value="">Trip-wide</option>
+                                                    <option value="">Вся поездка</option>
                                                     {regions.map((region) => (
                                                         <option key={region.id} value={region.id}>
-                                                            About {region.name}
+                                                            О нас {region.name}
                                                         </option>
                                                     ))}
                                                 </MiniSelect>

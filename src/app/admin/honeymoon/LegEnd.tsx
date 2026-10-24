@@ -62,7 +62,7 @@ export default function LegEnd({ leg, end, api }: {
             const body = await res.json();
             const found: Hit[] = body.results ?? [];
             if (!found.length) {
-                setError(body.error ?? `Nothing found for "${term}".`);
+                setError(body.error ?? `Ничего не найдено по запросу «${term}".`);
                 return;
             }
             /*
@@ -81,7 +81,7 @@ export default function LegEnd({ leg, end, api }: {
             if (confident) applyHit(found[0]);
             else setHits(found.slice(0, 5));
         } catch {
-            setError('Lookup failed.');
+            setError('Не удалось выполнить поиск.');
         } finally {
             setSearching(false);
         }
@@ -106,7 +106,7 @@ export default function LegEnd({ leg, end, api }: {
             <div className="flex items-center gap-1.5">
                 <span className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold
                     w-9 shrink-0">
-                    {end === 'from' ? 'From' : 'To'}
+                    {end === 'from' ? 'Из' : 'Куда'}
                 </span>
                 <TextField
                     value={draft}
@@ -114,11 +114,11 @@ export default function LegEnd({ leg, end, api }: {
                     onBlur={() => { if ((text ?? '') !== draft) save({ [`${end}_text`]: draft }); }}
                     onKeyDown={(e) => { if (e.key === 'Enter') lookup(); }}
                     placeholder={end === 'from'
-                        ? `${meta.label} from — DPS, or a place name`
-                        : `${meta.label} to — SIN, or a place name`}
+                        ? `${meta.label} откуда — DPS или название места`
+                        : `${meta.label} куда — SIN или название места`}
                 />
                 <Button onClick={lookup} disabled={searching || !draft.trim()} className="!px-3">
-                    {searching ? '…' : 'Find'}
+                    {searching ? '…' : 'Найти'}
                 </Button>
             </div>
 
@@ -127,21 +127,21 @@ export default function LegEnd({ leg, end, api }: {
                     <>
                         <span
                             className="text-[11px] text-emerald-700 tabular-nums"
-                            title="Looked up — this end is on the map"
+                            title="Найдено — точка на карте"
                         >
                             📍 {lat.toFixed(4)}, {lng.toFixed(4)}
                         </span>
                         <button
                             onClick={() => save({ [`${end}_lat`]: null, [`${end}_lng`]: null })}
                             className="text-[11px] text-gray-400 hover:text-rose-600"
-                            title="Forget where this is"
+                            title="Удалить координаты"
                         >
-                            clear
+                            сбросить
                         </button>
                     </>
                 ) : (
                     <span className="text-[11px] text-gray-400">
-                        Not looked up — press Find to put it on the map
+                        Координаты не найдены — нажмите «Найти»
                     </span>
                 )}
             </div>
@@ -165,7 +165,7 @@ export default function LegEnd({ leg, end, api }: {
                                         fuzzily and can return a different
                                         airport with a similar code. */}
                                     {hit.source === 'photon' && (
-                                        <span className="text-amber-700"> · fuzzy match, check it</span>
+                                        <span className="text-amber-700"> · неточное совпадение, проверьте</span>
                                     )}
                                 </div>
                             </button>

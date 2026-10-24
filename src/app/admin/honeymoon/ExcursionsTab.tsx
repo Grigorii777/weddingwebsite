@@ -118,15 +118,15 @@ export default function ExcursionsTab({ api, segmentSwitch }: {
                 const meta = await previewOf(url);
                 const name = cleanListingTitle(meta.title ?? '')
                     ?? nameFromAnyUrl(url)
-                    ?? 'Untitled excursion';
+                    ?? 'Экскурсия без названия';
                 await api.create('places', {
                     name,
                     category: 'activity',
                     status: 'idea',
-                    source: 'Added by me',
+                    source: 'Добавлено мной',
                     is_excursion: true,
                     image_url: meta.image ?? '',
-                    links: [{ label: 'Link', url }],
+                    links: [{ label: 'Ссылка', url }],
                 });
             }
             setBulk('');
@@ -160,22 +160,22 @@ export default function ExcursionsTab({ api, segmentSwitch }: {
     return (
         <div className="space-y-3">
             <TabToolbar
-                fab={{ label: 'Add excursions', onClick: () => setPasting(true) }}
+                fab={{ label: 'Добавить экскурсии', onClick: () => setPasting(true) }}
                 left={(
                     <>
                         {segmentSwitch}
                         <Segmented
-                            ariaLabel="Show which excursions"
+                            ariaLabel="Какие экскурсии показать"
                             size="sm"
                             value={rated}
                             onChange={setRated}
                             options={[
-                                { key: 'all', label: 'All', count: counts.all },
-                                { key: 'yes', label: '👍', count: counts.yes, title: 'Interested' },
-                                { key: 'mid', label: '😐', count: counts.mid, title: 'Mid tier' },
-                                { key: 'no', label: '👎', count: counts.no, title: 'Not interested' },
-                                { key: 'unrated', label: 'Unrated', count: counts.unrated },
-                                ...(counts.removed ? [{ key: 'removed' as const, label: '🗑', count: counts.removed, title: 'Removed' }] : []),
+                                { key: 'all', label: 'Все', count: counts.all },
+                                { key: 'yes', label: '👍', count: counts.yes, title: 'Интересно' },
+                                { key: 'mid', label: '😐', count: counts.mid, title: 'Возможно' },
+                                { key: 'no', label: '👎', count: counts.no, title: 'Неинтересно' },
+                                { key: 'unrated', label: 'Без оценки', count: counts.unrated },
+                                ...(counts.removed ? [{ key: 'removed' as const, label: '🗑', count: counts.removed, title: 'Удалено' }] : []),
                             ]}
                         />
                     </>
@@ -189,58 +189,58 @@ export default function ExcursionsTab({ api, segmentSwitch }: {
                                 }] : []}
                                 onReset={() => setTypeFilter('')}
                             >
-                                <FilterField label="What it is">
+                                <FilterField label="Тип">
                                     <SelectField value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-                                        <option value="">Every type</option>
+                                        <option value="">Все типы</option>
                                         {types.map((t) => <option key={t.key} value={t.key}>{t.icon} {t.label}</option>)}
                                     </SelectField>
                                 </FilterField>
                             </FilterButton>
                         )}
-                        <Button tone="primary" onClick={() => setPasting(true)} className="max-md:hidden">+ Add excursions</Button>
+                        <Button tone="primary" onClick={() => setPasting(true)} className="max-md:hidden">+ Добавить экскурсии</Button>
                         <OverflowMenu items={[
-                            ...(counts.unrated > 0 ? [{ label: `⚡ Rate ${counts.unrated} unrated`, onClick: () => setTriaging(true) }] : []),
+                            ...(counts.unrated > 0 ? [{ label: `⚡ Оценить ${counts.unrated} без оценки`, onClick: () => setTriaging(true) }] : []),
                             ...(missingImages.length > 0 && fetching === 0 ? [{
-                                label: `Get photos for ${missingImages.length}`, onClick: fetchMissingImages,
+                                label: `Найти фотографии: ${missingImages.length}`, onClick: fetchMissingImages,
                             }] : []),
                         ]} />
                     </>
                 )}
-                below={fetching > 0 ? <p className="text-[11px] text-gray-500">Fetching photos… {fetching} left</p> : undefined}
+                below={fetching > 0 ? <p className="text-[11px] text-gray-500">Загружаем фотографии… {fetching} осталось</p> : undefined}
             />
 
             {selected.size > 0 && (
                 <Card className="sticky top-2 z-10 flex flex-wrap items-center gap-2 p-3">
                     <span className="text-sm font-medium text-gray-700">
-                        {selected.size} selected
+                        {selected.size} выбрано
                     </span>
                     <div className="flex-1" />
                     <BulkFieldMenu
                         fields={[
                             {
                                 key: 'rating',
-                                label: 'Rating',
+                                label: 'Оценка',
                                 options: [
-                                    { value: 'yes', label: '👍 Interested' },
-                                    { value: 'mid', label: '😐 Mid tier' },
-                                    { value: 'no', label: '👎 Not interested' },
-                                    { value: '', label: '— unrated —' },
+                                    { value: 'yes', label: '👍 Интересно' },
+                                    { value: 'mid', label: '😐 Возможно' },
+                                    { value: 'no', label: '👎 Неинтересно' },
+                                    { value: '', label: '— без оценки —' },
                                 ],
                             },
                             {
                                 key: 'status',
-                                label: 'Status',
+                                label: 'Статус',
                                 options: [
-                                    { value: 'idea', label: 'Idea' },
-                                    { value: 'shortlisted', label: 'Shortlisted' },
-                                    { value: 'booked', label: 'Booked' },
+                                    { value: 'idea', label: 'Идея' },
+                                    { value: 'shortlisted', label: 'В избранном' },
+                                    { value: 'booked', label: 'Забронировано' },
                                 ],
                             },
                             {
                                 key: 'region_id',
-                                label: 'Area',
+                                label: 'Район',
                                 options: [
-                                    { value: null, label: '— no area —' },
+                                    { value: null, label: '— район не указан —' },
                                     ...(data?.regions ?? []).map((region) => ({
                                         value: region.id, label: region.name,
                                     })),
@@ -251,7 +251,7 @@ export default function ExcursionsTab({ api, segmentSwitch }: {
                             await api.update('places', { ids: [...selected], [key]: value });
                             setSelected(new Set());
                         }}
-                        label="Change a field on all selected"
+                        label="Изменить поле у всех выбранных"
                     />
                     <Button
                         onClick={async () => {
@@ -259,9 +259,9 @@ export default function ExcursionsTab({ api, segmentSwitch }: {
                             setSelected(new Set());
                         }}
                     >
-                        Remove from shortlist
+                        Убрать из избранного
                     </Button>
-                    <Button tone="ghost" onClick={() => setSelected(new Set())}>Clear</Button>
+                    <Button tone="ghost" onClick={() => setSelected(new Set())}>Сбросить</Button>
                 </Card>
             )}
 
@@ -269,10 +269,10 @@ export default function ExcursionsTab({ api, segmentSwitch }: {
             {shown.length === 0 ? (
                 <Card>
                     <EmptyState
-                        title={excursions.length ? 'Nothing matches that filter' : 'No excursions yet'}
+                        title={excursions.length ? 'По этому фильтру ничего нет' : 'Экскурсий пока нет'}
                         hint={excursions.length
-                            ? 'Try All.'
-                            : 'Paste a link above — a tour, a cooking class, a dive.'}
+                            ? 'Выберите «Все».'
+                            : 'Вставьте ссылку выше: экскурсия, мастер-класс, погружение.'}
                     />
                 </Card>
             ) : (
@@ -288,14 +288,14 @@ export default function ExcursionsTab({ api, segmentSwitch }: {
                                 return next;
                             })}
                             menu={[
-                                { label: 'Open', onClick: () => openPlace(item.id) },
-                                ...(linkOf(item) ? [{ label: 'Preview the page', onClick: () => setPreview(item) }] : []),
+                                { label: 'Открыть', onClick: () => openPlace(item.id) },
+                                ...(linkOf(item) ? [{ label: 'Предпросмотр страницы', onClick: () => setPreview(item) }] : []),
                                 // Archive, not un-flag: see `removed`.
                                 item.archived
-                                    ? { label: 'Put back on the shortlist', onClick: () => api.patchPlace(item.id, { archived: false }) }
-                                    : { label: 'Remove from the shortlist', onClick: () => api.patchPlace(item.id, { archived: true }) },
-                                { label: 'Not an excursion', onClick: () => api.update('places', { id: item.id, is_excursion: false }) },
-                                { label: 'Delete for good', danger: true, onClick: () => api.removePlaces([item]) },
+                                    ? { label: 'Вернуть в избранное', onClick: () => api.patchPlace(item.id, { archived: false }) }
+                                    : { label: 'Убрать из избранного', onClick: () => api.patchPlace(item.id, { archived: true }) },
+                                { label: 'Не экскурсия', onClick: () => api.update('places', { id: item.id, is_excursion: false }) },
+                                { label: 'Удалить навсегда', danger: true, onClick: () => api.removePlaces([item]) },
                             ]}
                         />
                     ))}
@@ -317,7 +317,7 @@ export default function ExcursionsTab({ api, segmentSwitch }: {
                 open={pasting}
                 onClose={() => setPasting(false)}
                 side="center"
-                title={<h2 className="font-semibold text-gray-900">Add excursions from links</h2>}
+                title={<h2 className="font-semibold text-gray-900">Добавить экскурсии по ссылкам</h2>}
             >
                 <div className="space-y-2">
                     <TextArea
@@ -334,7 +334,7 @@ export default function ExcursionsTab({ api, segmentSwitch }: {
                         placeholder="https://…  — a tour, a class, a dive shop. One per line."
                     />
                     <p className="text-[11px] text-gray-400">
-                        Name and photo come from the page where it offers them. Type and cost are yours.
+                        Название и фото берутся со страницы, если доступны. Тип и стоимость укажите сами.
                     </p>
                     <div className="flex justify-end">
                         <Button
@@ -342,7 +342,7 @@ export default function ExcursionsTab({ api, segmentSwitch }: {
                             onClick={async () => { await addLinks(); setPasting(false); }}
                             disabled={adding || !stayUrlsFromText(bulk).length}
                         >
-                            {adding ? 'Adding…' : `Add ${stayUrlsFromText(bulk).length || ''}`.trim()}
+                            {adding ? 'Добавляем…' : `Добавить ${stayUrlsFromText(bulk).length || ''}`.trim()}
                         </Button>
                     </div>
                 </div>
@@ -352,7 +352,7 @@ export default function ExcursionsTab({ api, segmentSwitch }: {
                 api={api}
                 open={triaging}
                 onClose={() => setTriaging(false)}
-                title="Rate the excursions"
+                title="Оценить экскурсии"
                 filter={(place) => place.is_excursion}
             />
 

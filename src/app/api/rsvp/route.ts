@@ -91,7 +91,7 @@ async function saveRsvp(input: RsvpInput): Promise<{ id: number; isUpdate: boole
         const guest = guestRow.rows[0];
         const maxParty = Number(guest.party_size) || 1;
         if (input.attending && input.guestCount > maxParty) {
-            throw Object.assign(new Error(`Party size exceeds maximum of ${maxParty}`), { status: 400 });
+            throw Object.assign(new Error(`Число гостей превышает максимум: ${maxParty}`), { status: 400 });
         }
         const count = input.attending ? Math.max(1, input.guestCount) : 0;
 
@@ -188,7 +188,7 @@ async function householdFor(
         ? rawId
         : (typeof rawId === 'string' && /^\d+$/.test(rawId.trim()) ? parseInt(rawId.trim(), 10) : null);
     if (id === null) {
-        throw Object.assign(new Error('An existing RSVP id is required to make changes.'), { status: 400 });
+        throw Object.assign(new Error('Для изменения нужен идентификатор существующего ответа.'), { status: 400 });
     }
     const row = await pool.query('SELECT guest_name FROM rsvps WHERE id = $1', [id]);
     if (row.rows.length === 0) {
@@ -203,21 +203,21 @@ async function sendEmails(input: RsvpInput) {
     try {
         const transporter = createTransporter();
 
-        const status = input.attending ? 'Attending' : 'Not Attending';
+        const status = input.attending ? 'придём' : 'не сможем прийти';
         await transporter.sendMail({
             from: `"${couple.replace(/"/g, '')}" <${getMailFrom()}>`,
             to: input.email,
-            subject: 'We received your RSVP!',
-            text: `Hi ${input.guestName},\n\nThank you so much for RSVPing to our wedding. We have confirmed your response: ${status}.\n\nWe can't wait to celebrate with you!\n\nBest,\n${couple}`,
-            html: `<h1>RSVP Confirmation</h1><p>Hi ${escapeHtml(input.guestName)},</p><p>Thank you so much for RSVPing to our wedding. We have confirmed your response: <strong>${status}</strong>.</p><p>Best,<br>${escapeHtml(couple)}</p>`,
+            subject: 'Мы получили ваш ответ!',
+            text: `Здравствуйте, ${input.guestName}!\n\nСпасибо за ответ на наше приглашение. Ваш ответ: ${status}.\n\nС теплом,\n${couple}`,
+            html: `<h1>Ваш ответ получен</h1><p>Здравствуйте, ${escapeHtml(input.guestName)}!</p><p>Спасибо за ответ на приглашение. Ваш ответ: <strong>${status}</strong>.</p><p>С теплом,<br>${escapeHtml(couple)}</p>`,
         });
 
         if (process.env.NOTIFICATION_EMAIL) {
             await transporter.sendMail({
                 from: `"Wedding Bot" <${getMailFrom()}>`,
                 to: process.env.NOTIFICATION_EMAIL,
-                subject: `New RSVP from ${input.guestName}`,
-                text: `Name: ${input.guestName}\nAttending: ${input.attending ? 'Yes' : 'No'}\nGuests: ${input.attending ? input.guestCount : 0}\nEmail: ${input.email}\nPhone: ${input.phone}\nMessage: ${input.message ?? ''}`,
+                subject: `Новый ответ от ${input.guestName}`,
+                text: `Имя: ${input.guestName}\nПридёт: ${input.attending ? 'Да' : 'Нет'}\nГостей: ${input.attending ? input.guestCount : 0}\nEmail: ${input.email}\nТелефон: ${input.phone}\nСообщение: ${input.message ?? ''}`,
             });
         }
     } catch (emailError) {
@@ -230,7 +230,7 @@ async function handle(request: Request, method: 'POST' | 'PUT') {
     try {
         body = await request.json();
     } catch {
-        return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+        return NextResponse.json({ error: 'Некорректный JSON' }, { status: 400 });
     }
     const input = parseInput(body);
     if (typeof input === 'string') return NextResponse.json({ error: input }, { status: 400 });
@@ -244,7 +244,7 @@ async function handle(request: Request, method: 'POST' | 'PUT') {
     // only writing stops.
     if (isPastWeddingDay(getSiteConfig().weddingDate)) {
         return NextResponse.json(
-            { error: "RSVPs are closed — the wedding day has arrived. Please contact us directly if you need to make a change." },
+            { error: "Приём ответов завершён — наступил день свадьбы. Для изменений свяжитесь с нами напрямую." },
             { status: 403 },
         );
     }
@@ -287,7 +287,7 @@ async function handle(request: Request, method: 'POST' | 'PUT') {
                     const link = await verifyRsvpLink(typeof record.token === 'string' ? record.token : null);
                     if (!link || link.guestListId !== household.id || !sameHousehold) {
                         return NextResponse.json(
-                            { error: 'This RSVP needs a valid link from your email. Ask for a fresh one on the RSVP page.' },
+                            { error: 'Нужна действующая ссылка из письма. Запросите новую на странице ответа.' },
                             { status: 403 }
                         );
                     }
@@ -297,7 +297,7 @@ async function handle(request: Request, method: 'POST' | 'PUT') {
                         const onFile = (existingRsvp.email || '').trim().toLowerCase();
                         if (!onFile || onFile !== input.email.trim().toLowerCase() || !sameHousehold) {
                             return NextResponse.json(
-                                { error: "That doesn't match our records. Go back and verify with the email on file, or ask us for help." },
+                                { error: "Данные не совпадают. Подтвердите ранее указанный email или свяжитесь с нами." },
                                 { status: 403 }
                             );
                         }
@@ -313,7 +313,7 @@ async function handle(request: Request, method: 'POST' | 'PUT') {
         const status = (error as { status?: number }).status;
         if (status === 404) {
             return NextResponse.json(
-                { error: 'We could not find that name on the guest list. Please go back and check the spelling.' },
+                { error: 'Это имя не найдено в списке гостей. Проверьте написание.' },
                 { status: 404 },
             );
         }
@@ -321,7 +321,7 @@ async function handle(request: Request, method: 'POST' | 'PUT') {
             return NextResponse.json({ error: (error as Error).message }, { status: 400 });
         }
         console.error('RSVP API Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
     }
 }
 

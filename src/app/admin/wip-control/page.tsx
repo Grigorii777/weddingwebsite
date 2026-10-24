@@ -12,14 +12,14 @@ interface WipToggle {
 }
 
 const publicPages = [
-  { path: '/', label: 'Home' },
-  { path: '/about', label: 'About' },
-  { path: '/our-story', label: 'Timeline' },
-  { path: '/wedding-party', label: 'Wedding Party' },
-  { path: '/schedule', label: 'Schedule' },
-  { path: '/photos', label: 'Photos' },
-  { path: '/registry', label: 'Registry' },
-  { path: '/rsvp', label: 'RSVP' },
+  { path: '/', label: 'Главная' },
+  { path: '/about', label: 'О нас' },
+  { path: '/our-story', label: 'Наша история' },
+  { path: '/wedding-party', label: 'Наши близкие' },
+  { path: '/schedule', label: 'Программа' },
+  { path: '/photos', label: 'Фотографии' },
+  { path: '/registry', label: 'Подарки' },
+  { path: '/rsvp', label: 'Ответ на приглашение' },
 ];
 
 export default function WipControlPage() {
@@ -151,17 +151,16 @@ export default function WipControlPage() {
   if (loading) {
     return (
       <div className="p-8">
-        <p className="text-gray-600">Loading...</p>
+        <p className="text-gray-600">Загрузка...</p>
       </div>
     );
   }
 
   return (
     <div className="p-8 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-2">Work in Progress Control</h1>
+      <h1 className="text-3xl font-bold mb-2">Видимость страниц</h1>
       <p className="text-gray-600 mb-8">
-        Control which pages are live, showing a WIP message, or hidden from navigation entirely.
-        Admin users always have full access.
+        Выберите доступные страницы, заглушки «Скоро» и скрытые разделы. Администратор всегда имеет полный доступ.
       </p>
 
       {/* Basic Mode Section */}
@@ -169,26 +168,26 @@ export default function WipControlPage() {
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <h2 className="text-2xl font-bold text-gray-900">Basic Mode</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Базовый режим</h2>
               <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                 basicMode ? 'bg-accent text-white' : 'bg-gray-200 text-gray-600'
               }`}>
-                {basicMode ? 'ACTIVE' : 'INACTIVE'}
+                {basicMode ? 'ВКЛЮЧЁН' : 'ВЫКЛЮЧЕН'}
               </span>
             </div>
             <p className="text-gray-700 mb-3">
-              Pre-release mode - Show only essential pages before your site is fully ready
+              Показывать только основные страницы, пока сайт ещё готовится
             </p>
             <div className="bg-white/60 rounded-xl p-4 backdrop-blur-sm">
-              <p className="text-sm font-medium text-gray-800 mb-2">When enabled, visitors will only see:</p>
+              <p className="text-sm font-medium text-gray-800 mb-2">Гости увидят только:</p>
               <ul className="text-sm text-gray-700 space-y-1 ml-4">
-                <li>• <strong>Home</strong> - Full homepage</li>
-                <li>• <strong>About</strong> - Only the introduction section (hides Details & FAQ)</li>
-                <li>• <strong>Timeline</strong> - Your story timeline</li>
-                <li>• <strong>Photos</strong> - Photo gallery</li>
+                <li>• <strong>Главная</strong> - Главную страницу</li>
+                <li>• <strong>О нас</strong> - Введение (подробности и вопросы скрыты)</li>
+                <li>• <strong>Наша история</strong> - Вашу историю</li>
+                <li>• <strong>Фотографии</strong> - Фотогалерею</li>
               </ul>
               <p className="text-sm text-gray-600 mt-3 italic">
-                Other pages (Wedding Party, Schedule, RSVP) won&apos;t appear in navigation at all.
+                Остальные страницы — «Наши близкие», «Программа», ответ на приглашение — будут скрыты из меню.
               </p>
             </div>
 
@@ -197,15 +196,15 @@ export default function WipControlPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-sm font-bold text-gray-900">Share Venue Details</h3>
+                      <h3 className="text-sm font-bold text-gray-900">Показывать место торжества</h3>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
                         basicModeShowVenue ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
                       }`}>
-                        {basicModeShowVenue ? 'ON' : 'OFF'}
+                        {basicModeShowVenue ? 'ВКЛ' : 'ВЫКЛ'}
                       </span>
                     </div>
                     <p className="text-xs text-gray-600">
-                      Show venue location on home page and venue section on about page
+                      Показывать место на главной и в разделе «О нас»
                     </p>
                   </div>
                   <button
@@ -243,19 +242,19 @@ export default function WipControlPage() {
       {/* Individual Page Toggles */}
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
         <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">Individual Page Controls</h2>
+          <h2 className="text-xl font-bold text-gray-900">Настройки отдельных страниц</h2>
           <p className="text-sm text-gray-600 mt-1">
-            <strong>WIP:</strong> visitors see a &quot;coming soon&quot; message &nbsp;|&nbsp;
-            <strong>Hidden:</strong> page is removed from navigation entirely
+            <strong>В разработке:</strong> гости видят сообщение «Скоро» ·
+            <strong>Скрыто:</strong> страница скрыта из меню
           </p>
         </div>
 
         {/* Column headers */}
         <div className="hidden sm:flex items-center px-6 py-2 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-          <div className="flex-1">Page</div>
+          <div className="flex-1">Страница</div>
           <div className="flex items-center gap-8 mr-2">
-            <span className="w-24 text-center">WIP Mode</span>
-            <span className="w-24 text-center">Hidden from Nav</span>
+            <span className="w-24 text-center">В разработке</span>
+            <span className="w-24 text-center">Скрыть из меню</span>
           </div>
         </div>
 
@@ -265,13 +264,13 @@ export default function WipControlPage() {
             const savingHidden = saving === `${toggle.page_path}-is_hidden`;
 
             // Status badge
-            let statusLabel = '✓ Live';
+            let statusLabel = '✓ Опубликовано';
             let statusClass = 'bg-green-100 text-green-800';
             if (toggle.is_hidden) {
-              statusLabel = '🙈 Hidden';
+              statusLabel = '🙈 Скрыто';
               statusClass = 'bg-gray-100 text-gray-600';
             } else if (toggle.is_wip) {
-              statusLabel = '🚧 WIP';
+              statusLabel = '🚧 В разработке';
               statusClass = 'bg-yellow-100 text-yellow-800';
             }
 
@@ -293,11 +292,11 @@ export default function WipControlPage() {
                 <div className="flex items-center gap-8">
                   {/* WIP toggle */}
                   <div className="flex flex-col items-center gap-1 w-24">
-                    <span className="text-xs text-gray-500 font-medium">WIP</span>
+                    <span className="text-xs text-gray-500 font-medium">В разработке</span>
                     <button
                       onClick={() => handleToggle(toggle.page_path, 'is_wip')}
                       disabled={savingWip}
-                      title="Show work-in-progress message to visitors"
+                      title="Показывать гостям сообщение о подготовке страницы"
                       className={`relative inline-flex h-7 w-14 items-center rounded-full transition-all duration-300 ${
                         toggle.is_wip ? 'bg-yellow-500' : 'bg-gray-300'
                       } ${savingWip ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md'}`}
@@ -310,11 +309,11 @@ export default function WipControlPage() {
 
                   {/* Hidden toggle */}
                   <div className="flex flex-col items-center gap-1 w-24">
-                    <span className="text-xs text-gray-500 font-medium">Hidden</span>
+                    <span className="text-xs text-gray-500 font-medium">Скрыто</span>
                     <button
                       onClick={() => handleToggle(toggle.page_path, 'is_hidden')}
                       disabled={savingHidden}
-                      title="Remove page from navigation entirely"
+                      title="Полностью скрыть страницу из меню"
                       className={`relative inline-flex h-7 w-14 items-center rounded-full transition-all duration-300 ${
                         toggle.is_hidden ? 'bg-gray-500' : 'bg-gray-300'
                       } ${savingHidden ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md'}`}
@@ -334,24 +333,24 @@ export default function WipControlPage() {
       <div className="mt-6 p-6 bg-blue-50 rounded-2xl border border-blue-100">
         <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
           <span className="text-xl">ℹ️</span>
-          How it works
+          Как это работает
         </h3>
         <ul className="text-sm text-blue-800 space-y-2">
           <li className="flex items-start gap-2">
             <span className="text-blue-600 mt-0.5">•</span>
-            <span><strong>✓ Live</strong> — Page is fully accessible to all visitors</span>
+            <span><strong>✓ Опубликовано</strong> — страница доступна всем гостям</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-blue-600 mt-0.5">•</span>
-            <span><strong>🚧 WIP</strong> — Visitors who navigate to the page see a &quot;coming soon&quot; message instead</span>
+            <span><strong>🚧 В разработке</strong> — гости увидят сообщение «Скоро»</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-blue-600 mt-0.5">•</span>
-            <span><strong>🙈 Hidden</strong> — Page disappears from navigation entirely; visitors who somehow navigate there are redirected to home</span>
+            <span><strong>🙈 Скрыто</strong> — страница скрыта из меню, прямые переходы перенаправляются на главную</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-blue-600 mt-0.5">•</span>
-            <span>Admin users always see all pages regardless of these settings</span>
+            <span>Администратор видит все страницы независимо от этих настроек</span>
           </li>
         </ul>
       </div>

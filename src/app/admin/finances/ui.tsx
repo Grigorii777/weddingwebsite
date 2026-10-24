@@ -272,7 +272,7 @@ export function DeleteButton({ onClick, label }: { onClick: () => void; label: s
                 md:text-lg md:leading-none md:text-gray-300 md:hover:bg-transparent
                 md:hover:text-rose-500"
         >
-            <span className="md:hidden">Delete</span>
+            <span className="md:hidden">Удалить</span>
             <span aria-hidden className="hidden md:inline">&times;</span>
         </button>
     );
@@ -342,7 +342,7 @@ export function Modal({ title, onClose, children }: {
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 z-10">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="font-semibold text-gray-900">{title}</h3>
-                    <button onClick={onClose} aria-label="Close"
+                    <button onClick={onClose} aria-label="Закрыть"
                         className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
                 </div>
                 {children}

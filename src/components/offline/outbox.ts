@@ -48,6 +48,6 @@ export function describeWrite(method: string, url: string): string {
     const parts = path.split('/').filter(Boolean);
     const thing = (parts[parts.length - 1] || 'item').replace(/-/g, ' ');
     const area = parts.length > 1 ? `${parts[0].replace(/-/g, ' ')} · ` : '';
-    const verb = method.toUpperCase() === 'DELETE' ? 'Delete' : method.toUpperCase() === 'POST' ? 'Add/save' : 'Edit';
+    const verb = method.toUpperCase() === 'DELETE' ? 'Удалить' : method.toUpperCase() === 'POST' ? 'Добавить / сохранить' : 'Изменить';
     return `${verb} ${area}${thing}`;
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { matchHouseholdByName, matchedSeat, existingRsvpFor, buildVerifiedPayload } from '@/lib/rsvpHousehold';
 
-const INVALID = { error: "That doesn't match our records. Check the spelling, or use the email you gave us when you RSVP'd." };
+const INVALID = { error: "Данные не совпадают. Проверьте написание или укажите email из вашего ответа." };
 
 /**
  * 'verify' mode's second step: exchange a name and the email already on file

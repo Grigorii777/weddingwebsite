@@ -13,13 +13,13 @@ import { hasNotificationEmail, isMailConfigured, sendTestMail } from '@/lib/mail
 export async function POST() {
     if (!isMailConfigured()) {
         return NextResponse.json(
-            { error: 'Email is not configured. Set SMTP_HOST and SMTP_USER (and NOTIFICATION_EMAIL for the test recipient) in the stack environment.' },
+            { error: 'Почта не настроена. Задайте SMTP_HOST, SMTP_USER и NOTIFICATION_EMAIL в окружении.' },
             { status: 400 },
         );
     }
     if (!hasNotificationEmail()) {
         return NextResponse.json(
-            { error: 'NOTIFICATION_EMAIL is not set — the test mail has no recipient.' },
+            { error: 'Не задан NOTIFICATION_EMAIL — некому отправить тестовое письмо.' },
             { status: 400 },
         );
     }

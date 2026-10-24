@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
@@ -18,18 +19,18 @@ import { goTab } from './kit/navigate';
 const BASE = '/admin/honeymoon';
 
 export const TABS = [
-    { href: BASE, label: 'Overview', also: [] as string[] },
+    { href: BASE, label: 'Обзор', also: [] as string[] },
     // Second, not last: on the trip itself this is the only tab that matters.
-    { href: `${BASE}/today`, label: 'Today', also: [] as string[] },
-    { href: `${BASE}/itinerary`, label: 'Itinerary', also: [] as string[] },
-    { href: `${BASE}/map`, label: 'Map', also: [] as string[] },
+    { href: `${BASE}/today`, label: 'Сегодня', also: [] as string[] },
+    { href: `${BASE}/itinerary`, label: 'Маршрут', also: [] as string[] },
+    { href: `${BASE}/map`, label: 'Карта', also: [] as string[] },
     // Stays and excursions are segments of Places now, on their own URLs.
-    { href: `${BASE}/places`, label: 'Places', also: [`${BASE}/stays`, `${BASE}/excursions`] },
-    { href: `${BASE}/travel`, label: 'Travel', also: [] as string[] },
-    { href: `${BASE}/checklist`, label: 'Checklist', also: [] as string[] },
-    { href: `${BASE}/files`, label: 'Files', also: [] as string[] },
-    { href: `${BASE}/guide`, label: 'Guide', also: [] as string[] },
-    { href: `${BASE}/settings`, label: 'Settings', also: [] as string[] },
+    { href: `${BASE}/places`, label: 'Места', also: [`${BASE}/stays`, `${BASE}/excursions`] },
+    { href: `${BASE}/travel`, label: 'Переезды', also: [] as string[] },
+    { href: `${BASE}/checklist`, label: 'Списки дел', also: [] as string[] },
+    { href: `${BASE}/files`, label: 'Файлы', also: [] as string[] },
+    { href: `${BASE}/guide`, label: 'Путеводитель', also: [] as string[] },
+    { href: `${BASE}/settings`, label: 'Настройки', also: [] as string[] },
 ];
 
 /** Is this tab the one the path is on? */
@@ -251,14 +252,14 @@ export default function HoneymoonShell({ children }: { children: React.ReactNode
         return (
             <div className="max-w-5xl mx-auto p-4 md:p-8">
                 <div className="bg-rose-50 border border-rose-200 rounded-2xl p-5">
-                    <h2 className="font-semibold text-rose-900 mb-1">Couldn&apos;t load the honeymoon portal</h2>
-                    <p className="text-sm text-rose-700">{error || 'Something went wrong.'}</p>
+                    <h2 className="font-semibold text-rose-900 mb-1">Не удалось загрузить планировщик путешествия</h2>
+                    <p className="text-sm text-rose-700">{error || 'Что-то пошло не так.'}</p>
                     <button
                         onClick={api.refresh}
                         className="mt-3 rounded-full bg-white border border-rose-200 px-4 py-1.5
                             text-sm font-medium text-rose-700 hover:bg-rose-50"
                     >
-                        Try again
+                        Попробовать снова
                     </button>
                 </div>
             </div>
@@ -289,7 +290,7 @@ export default function HoneymoonShell({ children }: { children: React.ReactNode
                         bg-white px-2`} style={{ height: '3.25rem' }}>
                         <Link
                             href="/admin"
-                            aria-label="Back to the admin panel"
+                            aria-label="Назад в панель управления"
                             className="flex size-11 items-center justify-center rounded-full text-xl text-gray-500 hover:bg-gray-50"
                         >
                             ‹
@@ -297,14 +298,14 @@ export default function HoneymoonShell({ children }: { children: React.ReactNode
                         <div className="min-w-0 flex-1">
                             <p className="truncate text-base font-semibold text-gray-900">{data.trip.title}</p>
                             <p className="truncate text-[11px] text-gray-400">
-                                {nights != null ? `${nights} nights · ` : ''}{data.places.length} places
-                                {saving ? ' · saving…' : ''}
+                                {nights != null ? `${nights} ночей · ` : ''}{data.places.length} мест
+                                {saving ? ' · сохраняем…' : ''}
                             </p>
                         </div>
                         <button
                             type="button"
                             onClick={() => setSearching(true)}
-                            aria-label="Find anything"
+                            aria-label="Найти что угодно"
                             className="flex size-11 items-center justify-center rounded-full text-gray-500 hover:bg-gray-50"
                         >
                             <svg viewBox="0 0 20 20" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
@@ -316,31 +317,30 @@ export default function HoneymoonShell({ children }: { children: React.ReactNode
                         <div>
                             <h1 className="text-2xl font-semibold text-gray-900">{data.trip.title}</h1>
                             <p className="text-xs md:text-sm text-gray-400 mt-0.5">
-                                {nights != null && <>{nights} night{nights === 1 ? '' : 's'} · </>}
-                                {data.days.length} day{data.days.length === 1 ? '' : 's'} ·{' '}
-                                {data.places.length} place{data.places.length === 1 ? '' : 's'} ·{' '}
-                                {pinned} pinned
-                                {review > 0 && <span className="text-amber-600"> · {review} to review</span>}
+                                {nights != null && <>{counted(nights, 'ночь', 'ночи', 'ночей')} · </>}
+                                {counted(data.days.length, 'день', 'дня', 'дней')} ·{' '}
+                                {counted(data.places.length, 'место', 'места', 'мест')} ·{' '}
+                                {pinned} на карте
+                                {review > 0 && <span className="text-amber-600"> · {review} на проверку</span>}
                                 {beyond.length > 0 && (
                                     <Link
                                         href={`${BASE}/itinerary`}
                                         className="text-rose-600 hover:underline"
                                     >
-                                        {' '}· {beyond.length} day{beyond.length === 1 ? '' : 's'} past
-                                        the end
+                                        {' '}· {counted(beyond.length, 'день', 'дня', 'дней')} после конца поездки
                                     </Link>
                                 )}
                             </p>
                         </div>
                         <div className="flex items-center gap-3">
-                            {saving && <span className="text-xs text-gray-400">Saving…</span>}
+                            {saving && <span className="text-xs text-gray-400">Сохраняем…</span>}
                             <button
                                 onClick={() => setSearching(true)}
                                 className="rounded-full border border-gray-200 bg-white px-3 py-1.5
                                     text-sm text-gray-500 hover:bg-gray-50 transition"
-                                title="Find a place, note, to-do or day"
+                                title="Найти место, заметку, дело или день"
                             >
-                                Search <kbd className="text-[11px] text-gray-400">⌘K</kbd>
+                                Поиск <kbd className="text-[11px] text-gray-400">⌘K</kbd>
                             </button>
                         </div>
                     </div>
@@ -391,8 +391,8 @@ export default function HoneymoonShell({ children }: { children: React.ReactNode
                             <button
                                 onClick={() => setFullScreen((v) => !v)}
                                 title={fullScreen
-                                    ? 'Bring the navigation back (Esc)'
-                                    : 'Give the map the whole window — the site nav and the sidebar step aside'}
+                                    ? 'Вернуть меню (Esc)'
+                                    : 'Открыть карту на всё окно и скрыть меню'}
                                 className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium
                                     border transition ${fullScreen
                                     ? 'bg-slate-900 border-slate-900 text-white'
@@ -401,7 +401,7 @@ export default function HoneymoonShell({ children }: { children: React.ReactNode
                                 {/* ⤢ rather than ⛶: the same arrow the map's Fit
                                     button uses, and it renders in fonts where
                                     the full-screen glyph is a tofu box. */}
-                                ⤢ {fullScreen ? 'Exit full screen' : 'Full screen'}
+                                ⤢ {fullScreen ? 'Выйти из полноэкранного режима' : 'На весь экран'}
                             </button>
                         )}
                     </div>
@@ -431,7 +431,7 @@ export default function HoneymoonShell({ children }: { children: React.ReactNode
             {goto && (
                 <div className="fixed bottom-5 left-5 z-[75] rounded-2xl bg-gray-900 px-4 py-2
                     text-sm text-white shadow-xl">
-                    Go to… <span className="text-white/60">d t m i v p s e c f u g</span>
+                    Перейти… <span className="text-white/60">d t m i v p s e c f u g</span>
                 </div>
             )}
 
@@ -440,24 +440,24 @@ export default function HoneymoonShell({ children }: { children: React.ReactNode
                     bg-gray-900/40 backdrop-blur-sm">
                     <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
                         <div className="flex items-baseline justify-between gap-2">
-                            <h2 className="text-base font-semibold text-gray-900">Shortcuts</h2>
+                            <h2 className="text-base font-semibold text-gray-900">Горячие клавиши</h2>
                             <button
                                 onClick={() => setShowKeys(false)}
                                 className="text-xl leading-none text-gray-400 hover:text-gray-700"
-                                aria-label="Close"
+                                aria-label="Закрыть"
                             >
                                 ×
                             </button>
                         </div>
                         <dl className="mt-3 space-y-1.5 text-sm">
                             {[
-                                ['⌘K or /', 'Find anything'],
-                                ['⌘Z', 'Undo the last delete'],
-                                ['g then d/t/m/i/v/p/s/e/c/f/u/g', 'Jump to a tab'],
-                                ['n', 'New place'],
-                                ['[ ]', 'Previous / next day on Today'],
-                                ['Esc', 'Leave full screen'],
-                                ['?', 'This list'],
+                                ['⌘K или /', 'Найти что угодно'],
+                                ['⌘Z', 'Отменить последнее удаление'],
+                                ['g, затем d/t/m/i/v/p/s/e/c/f/u/g', 'Перейти на вкладку'],
+                                ['n', 'Новое место'],
+                                ['[ ]', 'Предыдущий / следующий день во вкладке «Сегодня»'],
+                                ['Esc', 'Выйти из полноэкранного режима'],
+                                ['?', 'Этот список'],
                             ].map(([keys, what]) => (
                                 <div key={keys} className="flex items-baseline justify-between gap-3">
                                     <dt className="shrink-0 font-mono text-xs text-gray-500">
@@ -468,7 +468,7 @@ export default function HoneymoonShell({ children }: { children: React.ReactNode
                             ))}
                         </dl>
                         <p className="mt-3 text-[11px] text-gray-400">
-                            Bare keys are ignored while you are typing in a field.
+                            Одиночные клавиши не срабатывают при вводе текста.
                         </p>
                     </div>
                 </div>

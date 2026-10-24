@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
@@ -196,9 +197,9 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
             if (seq !== searchSeq.current) return;
             setHits(body.results ?? []);
             if (body.error) setLookupError(body.error);
-            else if (!body.results?.length) setLookupError('No matches. Try adding the town, or paste a Google Maps link.');
+            else if (!body.results?.length) setLookupError('Ничего не найдено. Добавьте город или вставьте ссылку Google Maps.');
         } catch {
-            if (seq === searchSeq.current) setLookupError('Lookup failed.');
+            if (seq === searchSeq.current) setLookupError('Не удалось выполнить поиск.');
         } finally {
             if (seq === searchSeq.current) setSearching(false);
         }
@@ -235,10 +236,10 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
         if (hit.website) {
             setLinks((prev) => (prev.some((l) => l.url === hit.website)
                 ? prev
-                : [...prev, { label: 'Website', url: hit.website! }]));
+                : [...prev, { label: 'Сайт', url: hit.website! }]));
         }
         if (hit.phone && !description.includes(hit.phone)) {
-            setDescription((prev) => (prev.trim() ? prev : `Phone: ${hit.phone}`));
+            setDescription((prev) => (prev.trim() ? prev : `Телефон: ${hit.phone}`));
         }
 
         setHits([]);
@@ -267,7 +268,7 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
             lat, lng, needsReview, links, source, country, cost, costPer, openingHours, bestTime,
         });
         if (now === pristine.current) return true;
-        return confirm('Discard your changes to this place?');
+        return confirm('Отменить изменения этого места?');
     }, [name, category, regionId, status, description, address, priceNote,
         lat, lng, needsReview, links, source, country, cost, costPer, openingHours, bestTime]);
 
@@ -316,7 +317,7 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                 }}
             >
                 <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1">Name</label>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">Имя</label>
                     <TextField
                         value={name}
                         onChange={(e) => setName(e.target.value)}
@@ -327,7 +328,7 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
 
                 <div className="grid grid-cols-1 @md:grid-cols-2 @4xl:grid-cols-4 gap-3">
                     <div>
-                        <label className="block text-xs font-semibold text-gray-500 mb-1">Category</label>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1">Категория</label>
                         <CategorySelect
                             value={category}
                             places={api.data?.places ?? []}
@@ -337,19 +338,19 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-semibold text-gray-500 mb-1">Country</label>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1">Страна</label>
                         <CustomisableSelect
-                            label="Country"
+                            label="Страна"
                             value={country}
-                            placeholder="Indonesia, Singapore…"
+                            placeholder="Индонезия, Сингапур…"
                             options={[
                                 {
                                     key: '',
                                     // Named rather than blank so it is obvious this is
                                     // inheritance, not "no country".
                                     label: inheritedCountry
-                                        ? `— from region (${inheritedCountry}) —`
-                                        : '— none —',
+                                        ? `— из региона (${inheritedCountry}) —`
+                                        : '— нет —',
                                 },
                                 ...countriesInUse(api.data?.regions ?? [], api.data?.places ?? [])
                                     .map((c) => ({ key: c, label: c })),
@@ -359,21 +360,21 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                         />
                         {country && inheritedCountry && country !== inheritedCountry && (
                             <p className="text-[11px] text-amber-700 mt-1">
-                                Overrides its region ({inheritedCountry}).
+                                Заменяет регион ({inheritedCountry}).
                             </p>
                         )}
                     </div>
                     <div>
-                        <label className="block text-xs font-semibold text-gray-500 mb-1">Region</label>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1">Регион</label>
                         <CustomisableSelect
-                            label="Region"
+                            label="Регион"
                             value={regionId}
                             placeholder="Nusa Penida, Gili Islands…"
                             options={[
-                                { key: '', label: '— none —' },
+                                { key: '', label: '— нет —' },
                                 ...(api.data?.regions ?? []).map((r) => ({
                                     key: String(r.id),
-                                    label: r.country ? `${r.name} · ${r.country}` : `${r.name} · no country`,
+                                    label: r.country ? `${r.name} · ${r.country}` : `${r.name} · страна не указана`,
                                 })),
                             ]}
                             onChange={setRegionId}
@@ -396,7 +397,7 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-semibold text-gray-500 mb-1">Status</label>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1">Статус</label>
                         <StatusSelect value={status} onChange={(e) => setStatus(e.target.value as PlaceStatus)} />
                     </div>
                 </div>
@@ -409,12 +410,9 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                             own cost more height than the control is worth. */}
                         <div className="flex items-center justify-between gap-2">
                             <label className="flex items-center gap-1 text-xs font-semibold text-gray-500">
-                                Location
-                                <Hint label="Finding a place">
-                                    The Find box takes a name to search (&ldquo;Tukad Cepung Waterfall&rdquo;),
-                                    a Google Maps link pasted straight in, or raw &ldquo;lat, lng&rdquo;
-                                    numbers. Right-clicking a pin in Google Maps copies those numbers — the
-                                    most reliable option for anywhere the search cannot find.
+                                Место
+                                <Hint label="Поиск места">
+                                    Введите название, ссылку Google Maps или координаты «широта, долгота». Координаты можно скопировать правой кнопкой по точке в Google Maps — это самый точный способ.
                                 </Hint>
                             </label>
                             {lat != null && lng != null ? (
@@ -426,11 +424,11 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                                         onClick={() => { setLat(null); setLng(null); }}
                                         className="text-[11px] text-gray-400 hover:text-rose-600"
                                     >
-                                        Clear pin
+                                        Убрать отметку
                                     </button>
                                 </span>
                             ) : (
-                                <span className="text-[11px] text-amber-600">Not pinned</span>
+                                <span className="text-[11px] text-amber-600">Нет на карте</span>
                             )}
                         </div>
 
@@ -455,10 +453,10 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                                     e.preventDefault();
                                     autoLookup(text.trim());
                                 }}
-                                placeholder="Search a name, or paste/drop a Google Maps link"
+                                placeholder="Введите название или вставьте ссылку Google Maps"
                             />
                             <Button onClick={() => lookup(query)} disabled={searching || !query.trim()}>
-                                {searching ? '…' : 'Find'}
+                                {searching ? '…' : 'Найти'}
                             </Button>
                         </div>
 
@@ -477,7 +475,7 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                                                 {hit.lat.toFixed(5)}, {hit.lng.toFixed(5)}
                                                 {hit.source === 'photon' && (
                                                     <span className="text-amber-700">
-                                                        {' '}· fuzzy match, check it
+                                                        {' '}· неточное совпадение, проверьте
                                                     </span>
                                                 )}
                                             </div>
@@ -503,7 +501,7 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                                     }}
                                 />
                                 <p className="text-[11px] text-gray-400">
-                                    Drag the pin or click the map to move it.
+                                    Перетащите отметку или нажмите на карту для перемещения.
                                 </p>
                             </>
                         )}
@@ -512,14 +510,14 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                             <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl
                                 bg-amber-50 px-3 py-2">
                                 <span className="text-xs text-amber-800">
-                                    Placed automatically — check the map above before trusting it.
+                                    Размещено автоматически — проверьте точку на карте.
                                 </span>
-                                <Button onClick={() => setNeedsReview(false)}>Looks right</Button>
+                                <Button onClick={() => setNeedsReview(false)}>Всё верно</Button>
                             </div>
                         ) : needsReview ? (
                             <div className="rounded-2xl bg-amber-50 px-3 py-2">
                                 <span className="text-xs text-amber-800">
-                                    No pin yet — search above, or paste a Google Maps link.
+                                    Отметки пока нет — воспользуйтесь поиском или ссылкой Google Maps.
                                 </span>
                             </div>
                         ) : null}
@@ -528,28 +526,28 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
 
                     <div className="space-y-3">
                         <div>
-                            <label className="block text-xs font-semibold text-gray-500 mb-1">Notes</label>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">Заметки</label>
                             <TextArea
                                 rows={3}
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
-                                placeholder="Light rays between 9 and 11am."
+                                placeholder="Лучи света с 9:00 до 11:00."
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-semibold text-gray-500 mb-1">Address</label>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">Адрес</label>
                             <TextField value={address} onChange={(e) => setAddress(e.target.value)} />
                         </div>
 
                         <div className="grid grid-cols-1 @sm:grid-cols-2 gap-3">
                             <div>
-                                <label className="block text-xs font-semibold text-gray-500 mb-1">Source</label>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1">Источник</label>
                                 <TextField
                                     list="honeymoon-sources"
                                     value={source}
                                     onChange={(e) => setSource(e.target.value)}
-                                    placeholder="Who suggested this?"
+                                    placeholder="Кто посоветовал?"
                                 />
                                 <datalist id="honeymoon-sources">
                                     {sourcesOf(api.data?.places ?? []).map((s) => (
@@ -558,11 +556,11 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                                 </datalist>
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold text-gray-500 mb-1">Price note</label>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1">Заметка о цене</label>
                                 <TextField
                                     value={priceNote}
                                     onChange={(e) => setPriceNote(e.target.value)}
-                                    placeholder="~500k IDR entry"
+                                    placeholder="Вход ~500 тыс. IDR"
                                 />
                             </div>
                         </div>
@@ -571,11 +569,9 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="mb-1 flex items-center gap-1 text-xs font-semibold text-gray-500">
-                                    Cost ({costCurrency})
-                                    <Hint label="How the cost is used">
-                                        The one price for this place. A booking multiplies it by the
-                                        nights rather than asking for it again. The price note keeps
-                                        the detail; &ldquo;breakfast included&rdquo; is not arithmetic.
+                                    Стоимость ({costCurrency})
+                                    <Hint label="Как учитывается стоимость">
+                                        Единая цена места. Для бронирования умножается на число ночей. Подробности вроде «завтрак включён» указывайте в заметке о цене.
                                     </Hint>
                                 </label>
                                 <TextField
@@ -590,7 +586,7 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                             </div>
                             <div>
                                 <label className="block text-xs font-semibold text-gray-500 mb-1">
-                                    Per
+                                    За
                                 </label>
                                 <SelectField
                                     value={costPer}
@@ -598,9 +594,9 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                                         e.target.value as 'night' | 'person' | 'total',
                                     )}
                                 >
-                                    <option value="total">Total</option>
-                                    <option value="night">Per night</option>
-                                    <option value="person">Per person</option>
+                                    <option value="total">Итого</option>
+                                    <option value="night">За ночь</option>
+                                    <option value="person">На человека</option>
                                 </SelectField>
                             </div>
                         </div>
@@ -608,11 +604,9 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="mb-1 flex items-center gap-1 text-xs font-semibold text-gray-500">
-                                    Opening hours
-                                    <Hint label="About opening hours">
-                                        OSM syntax, like Mo-Su 09:00-18:00 — filled in from the map
-                                        search when it knows. The itinerary warns when a stop falls
-                                        outside them.
+                                    Часы работы
+                                    <Hint label="О часах работы">
+                                        Формат OSM, например Mo-Su 09:00-18:00. Может заполниться из поиска. Маршрут предупредит о посещении в нерабочее время.
                                     </Hint>
                                 </label>
                                 <TextField
@@ -623,12 +617,12 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                             </div>
                             <div>
                                 <label className="block text-xs font-semibold text-gray-500 mb-1">
-                                    Best time to go
+                                    Лучшее время посещения
                                 </label>
                                 <TextField
                                     value={bestTime}
                                     onChange={(e) => setBestTime(e.target.value)}
-                                    placeholder="Sunrise · avoid weekends"
+                                    placeholder="На рассвете · лучше в будни"
                                 />
                             </div>
                         </div>
@@ -646,7 +640,7 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                         {editing && (
                             <div>
                                 <label className="block text-xs font-semibold text-gray-500 mb-1">
-                                    Booking
+                                    Бронирование
                                 </label>
                                 <BookingPanel
                                     api={api}
@@ -659,13 +653,13 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
 
                         {/* ---- Links ---- */}
                         <div>
-                            <label className="block text-xs font-semibold text-gray-500 mb-1">Links</label>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">Ссылки</label>
                             <div className="space-y-2">
                                 {links.map((link, i) => (
                                     <div key={i} className="flex gap-2">
                                         <TextField
                                             value={link.label}
-                                            placeholder="Website"
+                                            placeholder="Сайт"
                                             className="max-w-[8rem]"
                                             onChange={(e) => setLinks(links.map((l, j) =>
                                                 j === i ? { ...l, label: e.target.value } : l))}
@@ -685,7 +679,7 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                                     </div>
                                 ))}
                                 <Button onClick={() => setLinks([...links, { label: '', url: '' }])}>
-                                    + Add link
+                                    + Добавить ссылку
                                 </Button>
                             </div>
                         </div>
@@ -695,8 +689,8 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                 <ManageListModal
                     open={managing === 'categories'}
                     onClose={() => setManaging(null)}
-                    title="Edit categories"
-                    hint="Renaming keeps every place filed under it. Deleting moves them to Other. The colour and the emoji are what the map draws."
+                    title="Изменить категории"
+                    hint="Переименование сохраняет связи. При удалении места переходят в «Другое». Цвет и эмодзи отображаются на карте."
                     items={(api.data?.categories ?? []).map((c) => {
                         const used = (api.data?.places ?? [])
                             .filter((p) => p.category === c.key).length;
@@ -706,12 +700,12 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                             label: c.label,
                             color: c.color,
                             icon: c.icon,
-                            detail: used ? `${used} place${used === 1 ? '' : 's'}` : 'unused',
+                            detail: used ? `${counted(used, 'место', 'места', 'мест')}` : 'не используется',
                             warn: used
-                                ? `Delete "${c.label}"? ${used} place(s) will move to Other.`
-                                : `Delete "${c.label}"?`,
+                                ? `Удалить «${c.label}"? ${used} мест перейдёт в «Другое».`
+                                : `Удалить «${c.label}"?`,
                             locked: c.key === 'misc'
-                                ? 'Other is the fallback category'
+                                ? '«Другое» — категория по умолчанию'
                                 : undefined,
                         };
                     })}
@@ -723,18 +717,18 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                 <ManageListModal
                     open={managing === 'regions'}
                     onClose={() => setManaging(null)}
-                    title="Edit regions"
-                    hint="Renaming keeps every place in it. Deleting leaves the places but clears their region."
+                    title="Изменить регионы"
+                    hint="Переименование сохраняет связи. При удалении региона места сохраняются без него."
                     items={(api.data?.regions ?? []).map((r) => {
                         const used = (api.data?.places ?? [])
                             .filter((p) => p.region_id === r.id).length;
                         return {
                             id: r.id,
                             label: r.name,
-                            detail: used ? `${used} place${used === 1 ? '' : 's'}` : 'unused',
+                            detail: used ? `${counted(used, 'место', 'места', 'мест')}` : 'не используется',
                             warn: used
-                                ? `Delete "${r.name}"? ${used} place(s) stay but lose their region.`
-                                : `Delete "${r.name}"?`,
+                                ? `Удалить «${r.name}"? ${used} мест сохранится без региона.`
+                                : `Удалить «${r.name}"?`,
                         };
                     })}
                     onRename={(id, name) => api.update('regions', { id, name })}
@@ -742,9 +736,9 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                 />
 
                 <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
-                    <Button onClick={() => { if (confirmDiscard()) onCancel(); }}>Cancel</Button>
+                    <Button onClick={() => { if (confirmDiscard()) onCancel(); }}>Отмена</Button>
                     <Button tone="primary" onClick={save} disabled={!name.trim()}>
-                        {editing ? 'Save' : 'Add place'}
+                        {editing ? 'Сохранить' : 'Добавить место'}
                     </Button>
                 </div>
             </div>

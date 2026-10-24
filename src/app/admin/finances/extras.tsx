@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import { useMemo, useState } from 'react';
 import {
@@ -16,15 +17,15 @@ export function UndoBar({ api }: { api: FinanceApi }) {
     return (
         <div className="fixed inset-x-3 bottom-3 z-40 mx-auto flex max-w-md items-center gap-3
             rounded-2xl bg-gray-900/95 px-4 py-3 text-sm text-white shadow-lg backdrop-blur">
-            <span className="min-w-0 flex-1 truncate">Deleted {api.undo.label}</span>
+            <span className="min-w-0 flex-1 truncate">Удалено {api.undo.label}</span>
             <button
                 onClick={() => api.undo?.restore()}
                 className="shrink-0 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold
                     transition-colors hover:bg-white/25"
             >
-                Undo
+                Отменить
             </button>
-            <button onClick={api.dismissUndo} aria-label="Dismiss"
+            <button onClick={api.dismissUndo} aria-label="Закрыть"
                 className="shrink-0 text-white/50 hover:text-white">&times;</button>
         </div>
     );
@@ -59,7 +60,7 @@ function csvCell(value: unknown) {
 export function ExportButtons({ data }: { data: FinancePayload }) {
     const download = () => {
         const rows: string[][] = [
-            ['Section', 'Line item', 'Unit cost', 'Qty', 'Budgeted', 'Paid', 'Remaining', 'Status'],
+            ['Раздел', 'Статья расходов', 'Цена за единицу', 'Количество', 'В бюджете', 'Оплачено', 'Остаток', 'Статус'],
         ];
         for (const category of data.categories) {
             for (const item of category.items) {
@@ -74,15 +75,15 @@ export function ExportButtons({ data }: { data: FinancePayload }) {
                 ]);
             }
             const cat = data.summary.categories.find((c) => c.id === category.id);
-            rows.push([category.name, 'SECTION TOTAL', '', '',
+            rows.push([category.name, 'ИТОГО ПО РАЗДЕЛУ', '', '',
                 (cat?.total ?? 0).toFixed(2), (cat?.paid ?? 0).toFixed(2),
                 (cat?.remaining ?? 0).toFixed(2), '']);
         }
         rows.push([]);
-        rows.push(['TOTAL BUDGET', '', '', '', data.summary.budgetTotal.toFixed(2),
+        rows.push(['ОБЩИЙ БЮДЖЕТ', '', '', '', data.summary.budgetTotal.toFixed(2),
             data.summary.paidTotal.toFixed(2), data.summary.billRemaining.toFixed(2), '']);
-        rows.push(['Gift money received', '', '', '', '', data.summary.receivedTotal.toFixed(2), '', '']);
-        rows.push(['Left for the couple', '', '', '', '', '', data.summary.stillToSpendCash.toFixed(2), '']);
+        rows.push(['Денежные подарки получены', '', '', '', '', data.summary.receivedTotal.toFixed(2), '', '']);
+        rows.push(['Осталось оплатить молодожёнам', '', '', '', '', '', data.summary.stillToSpendCash.toFixed(2), '']);
 
         // BOM so Excel keeps the currency and accented characters intact.
         const csv = '﻿' + rows.map((r) => r.map(csvCell).join(',')).join('\r\n');
@@ -96,8 +97,8 @@ export function ExportButtons({ data }: { data: FinancePayload }) {
 
     return (
         <div className="flex flex-wrap gap-2">
-            <PillButton onClick={download}>⬇ Export CSV</PillButton>
-            <PillButton onClick={() => window.print()}>🖨 Print / PDF</PillButton>
+            <PillButton onClick={download}>⬇ Экспорт CSV</PillButton>
+            <PillButton onClick={() => window.print()}>🖨 Печать / PDF</PillButton>
         </div>
     );
 }
@@ -134,15 +135,15 @@ export function WhatIf({ data }: { data: FinancePayload }) {
 
     return (
         <Card className="p-5">
-            <h3 className="font-semibold text-gray-900 mb-1">What if…</h3>
+            <h3 className="font-semibold text-gray-900 mb-1">Что, если…</h3>
             <p className="mb-4 text-xs text-gray-400">
-                Try a change without saving anything. Nothing here touches your real numbers.
+                Проверьте другой сценарий без сохранения. Ваши реальные данные не изменятся.
             </p>
 
             <div className="grid gap-4 sm:grid-cols-3">
                 <label className="block">
                     <span className="mb-1 block text-xs font-semibold text-gray-500">
-                        Adult guests
+                        Взрослые гости
                     </span>
                     <TextField
                         type="number" min={0} value={guests}
@@ -151,7 +152,7 @@ export function WhatIf({ data }: { data: FinancePayload }) {
                 </label>
                 <label className="block">
                     <span className="mb-1 block text-xs font-semibold text-gray-500">
-                        Contingency buffer
+                        Резерв на непредвиденное
                     </span>
                     <SelectField value={contingency}
                         onChange={(e) => setContingency(Number(e.target.value))}>
@@ -160,26 +161,26 @@ export function WhatIf({ data }: { data: FinancePayload }) {
                 </label>
                 <label className="block">
                     <span className="mb-1 block text-xs font-semibold text-gray-500">
-                        Unreceived pledges
+                        Неполученные обещанные средства
                     </span>
                     <SelectField
                         value={pledgesLand ? 'yes' : 'no'}
                         onChange={(e) => setPledgesLand(e.target.value === 'yes')}
                     >
-                        <option value="yes">All arrive</option>
-                        <option value="no">None arrive</option>
+                        <option value="yes">Всё поступит</option>
+                        <option value="no">Ничего не поступит</option>
                     </SelectField>
                 </label>
             </div>
 
             <div className="mt-4 grid gap-2 sm:grid-cols-3">
-                <Figure label="projected budget"
+                <Figure label="прогноз бюджета"
                     value={projected.budgetTotal + projected.buffer}
                     delta={delta} />
-                <Figure label="left for you two"
+                <Figure label="осталось оплатить вам"
                     value={Math.max(0, projected.stillToSpendCash + projected.buffer)}
                     delta={(projected.stillToSpendCash + projected.buffer) - data.summary.stillToSpendCash} />
-                <Figure label="each per month"
+                <Figure label="каждому в месяц"
                     value={projected.payers.length
                         ? (projected.stillToSpendCash + projected.buffer) /
                           Math.max(1, projected.payers.length) /
@@ -200,7 +201,7 @@ function Figure({ label, value, delta }: { label: string; value: number; delta?:
             </div>
             {moved && (
                 <div className={`text-[11px] tabular-nums ${delta! > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                    {delta! > 0 ? '+' : ''}{formatMoney(delta!)} vs now
+                    {delta! > 0 ? '+' : ''}{formatMoney(delta!)} по сравнению с текущим
                 </div>
             )}
         </div>
@@ -214,11 +215,10 @@ export function TrendCard({ snapshots }: { snapshots: Snapshot[] }) {
     if (snapshots.length < 2) {
         return (
             <Card className="p-5">
-                <h3 className="font-semibold text-gray-900 mb-1">Trend</h3>
+                <h3 className="font-semibold text-gray-900 mb-1">Динамика</h3>
                 <p className="text-xs text-gray-400">
-                    A reading is saved each day you open this page. Come back tomorrow and the
-                    budget&apos;s drift over time will show up here —
-                    {' '}{snapshots.length === 1 ? '1 reading' : 'no readings'} so far.
+                    Показатели сохраняются каждый день при открытии страницы. Завтра здесь появится динамика бюджета —
+                    {' '}{snapshots.length === 1 ? '1 запись' : 'записей нет'} на данный момент.
                 </p>
             </Card>
         );
@@ -237,15 +237,15 @@ export function TrendCard({ snapshots }: { snapshots: Snapshot[] }) {
 
     return (
         <Card className="p-5">
-            <h3 className="font-semibold text-gray-900 mb-1">Trend</h3>
+            <h3 className="font-semibold text-gray-900 mb-1">Динамика</h3>
             <p className="mb-3 text-xs text-gray-400">
-                {snapshots.length} readings, {first.taken_on} to {last.taken_on}.{' '}
+                {snapshots.length} записей, {first.taken_on} для {last.taken_on}.{' '}
                 {Math.abs(budgetMove) < 0.01
-                    ? 'Your budget total has held steady.'
-                    : `Your budget has ${budgetMove > 0 ? 'grown' : 'shrunk'} by ${formatMoney(Math.abs(budgetMove))}.`}
+                    ? 'Общий бюджет не изменился.'
+                    : `Ваш бюджет ${budgetMove > 0 ? 'вырос' : 'уменьшился'} на ${formatMoney(Math.abs(budgetMove))}.`}
             </p>
             <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-28 w-full" role="img"
-                aria-label="Budget and paid over time">
+                aria-label="Бюджет и оплата в динамике">
                 <polyline points={points((s) => s.budget_total)} fill="none"
                     stroke="var(--accent)" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
                 <polyline points={points((s) => s.paid_total)} fill="none"
@@ -255,11 +255,11 @@ export function TrendCard({ snapshots }: { snapshots: Snapshot[] }) {
             <div className="mt-2 flex gap-4 text-[11px] text-gray-500">
                 <span className="flex items-center gap-1">
                     <span className="inline-block h-0.5 w-4" style={{ background: 'var(--accent)' }} />
-                    budget {formatMoney(last.budget_total)}
+                    бюджет {formatMoney(last.budget_total)}
                 </span>
                 <span className="flex items-center gap-1">
                     <span className="inline-block h-0.5 w-4 bg-emerald-600" />
-                    paid {formatMoney(last.paid_total)}
+                    оплачено {formatMoney(last.paid_total)}
                 </span>
             </div>
         </Card>
@@ -270,49 +270,49 @@ export function TrendCard({ snapshots }: { snapshots: Snapshot[] }) {
 
 const TEMPLATES: Record<string, { name: string; unit_cost: number; qty_source: 'manual' | 'adults' | 'minors' | 'total' | 'drinkers' }[]> = {
     'Venue & catering': [
-        { name: 'Venue hire', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Dinner', unit_cost: 0, qty_source: 'adults' },
-        { name: 'Kids meals', unit_cost: 0, qty_source: 'minors' },
-        { name: 'Bar', unit_cost: 0, qty_source: 'drinkers' },
-        { name: 'Cake / dessert', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Service charge', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Taxes', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Аренда зала', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Ужин', unit_cost: 0, qty_source: 'adults' },
+        { name: 'Детское меню', unit_cost: 0, qty_source: 'minors' },
+        { name: 'Бар', unit_cost: 0, qty_source: 'drinkers' },
+        { name: 'Торт и десерты', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Сервисный сбор', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Налоги', unit_cost: 0, qty_source: 'manual' },
     ],
     'Photo & video': [
-        { name: 'Photographer', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Videographer', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Engagement shoot', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Albums / prints', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Фотограф', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Видеограф', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Съёмка помолвки', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Альбомы и печать', unit_cost: 0, qty_source: 'manual' },
     ],
     'Attire & beauty': [
-        { name: 'Dress', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Alterations', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Suit / tux', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Shoes', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Hair', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Makeup', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Платье', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Подгонка одежды', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Костюм / смокинг', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Обувь', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Причёска', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Макияж', unit_cost: 0, qty_source: 'manual' },
     ],
     'Flowers & decor': [
-        { name: 'Bridal bouquet', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Bridesmaid bouquets', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Boutonnieres', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Centrepieces', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Ceremony flowers', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Букет невесты', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Букеты подруг невесты', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Бутоньерки', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Композиции на столы', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Цветы для церемонии', unit_cost: 0, qty_source: 'manual' },
     ],
     'Stationery': [
-        { name: 'Save the dates', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Invitations', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Postage', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Programs / menus', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Thank you cards', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Уведомления о дате', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Приглашения', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Почтовые расходы', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Программа и меню', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Благодарственные открытки', unit_cost: 0, qty_source: 'manual' },
     ],
     'Music & extras': [
-        { name: 'DJ / band', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Ceremony musician', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Officiant', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Wedding insurance', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Transport', unit_cost: 0, qty_source: 'manual' },
-        { name: 'Favours', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Диджей / группа', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Музыкант на церемонию', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Ведущий церемонии', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Страховка свадьбы', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Транспорт', unit_cost: 0, qty_source: 'manual' },
+        { name: 'Подарки гостям', unit_cost: 0, qty_source: 'manual' },
     ],
 };
 
@@ -352,17 +352,17 @@ export function TemplatePicker({ data, api, onClose }: {
     };
 
     return (
-        <Modal title="Add common line items" onClose={onClose}>
+        <Modal title="Добавить типовые расходы" onClose={onClose}>
             <div className="space-y-4">
                 <label className="block">
-                    <span className="mb-1 block text-xs font-semibold text-gray-500">Add to section</span>
+                    <span className="mb-1 block text-xs font-semibold text-gray-500">Добавить в раздел</span>
                     <SelectField value={categoryId} onChange={(e) => setCategoryId(Number(e.target.value))}>
                         {data.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </SelectField>
                 </label>
 
                 <label className="block">
-                    <span className="mb-1 block text-xs font-semibold text-gray-500">Template</span>
+                    <span className="mb-1 block text-xs font-semibold text-gray-500">Шаблон</span>
                     <SelectField value={group} onChange={(e) => choose(e.target.value)}>
                         {Object.keys(TEMPLATES).map((g) => <option key={g} value={g}>{g}</option>)}
                     </SelectField>
@@ -384,8 +384,8 @@ export function TemplatePicker({ data, api, onClose }: {
                             <span className="flex-1">{line.name}</span>
                             {line.qty_source !== 'manual' && (
                                 <span className="text-[10px] uppercase tracking-wide text-gray-400">
-                                    per {line.qty_source === 'minors' ? 'child'
-                                        : line.qty_source === 'drinkers' ? 'drinker' : 'guest'}
+                                    за {line.qty_source === 'minors' ? 'ребёнка'
+                                        : line.qty_source === 'drinkers' ? 'гостя с алкоголем' : 'гость'}
                                 </span>
                             )}
                         </label>
@@ -393,14 +393,13 @@ export function TemplatePicker({ data, api, onClose }: {
                 </div>
 
                 <p className="text-[11px] text-gray-400">
-                    Costs come in at $0 — fill them in as you get quotes. Per-guest lines are wired to
-                    your headcount already.
+                    Начальная стоимость — $0. Заполняйте по предложениям подрядчиков. Расходы на гостя уже связаны с числом гостей.
                 </p>
 
                 <div className="flex justify-end gap-2">
-                    <PillButton onClick={onClose}>Cancel</PillButton>
+                    <PillButton onClick={onClose}>Отмена</PillButton>
                     <PillButton tone="accent" onClick={add} disabled={busy || !picked.size || !categoryId}>
-                        {busy ? 'Adding…' : `Add ${picked.size} line${picked.size === 1 ? '' : 's'}`}
+                        {busy ? 'Добавляем…' : `Добавить ${counted(picked.size, 'статья', 'статьи', 'статей')}`}
                     </PillButton>
                 </div>
             </div>

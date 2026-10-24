@@ -1,4 +1,5 @@
 import { getSiteConfig } from '@/lib/config';
+import { counted } from '@/lib/locale';
 import RSVPForm from '@/components/RSVPForm';
 
 // Read live config at request time (admin edits to the RSVP deadline, room block,
@@ -12,7 +13,7 @@ function describeDeadline(raw?: string): { text: string; daysRemaining: number |
     if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return { text: raw, daysRemaining: null };
     const [y, m, d] = raw.split('-').map(Number);
     const deadline = new Date(y, m - 1, d);
-    const text = deadline.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const text = deadline.toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' });
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const daysRemaining = Math.round((deadline.getTime() - today.getTime()) / 86_400_000);
@@ -29,10 +30,10 @@ export default function RSVPPage() {
     const { text: deadlineText, daysRemaining } = describeDeadline(config.rsvpDeadline);
     let countdown = '';
     if (daysRemaining !== null) {
-        if (daysRemaining > 1) countdown = `, just ${daysRemaining} days away!`;
-        else if (daysRemaining === 1) countdown = ', just 1 day away!';
-        else if (daysRemaining === 0) countdown = " — that's today!";
-        else countdown = ' (the RSVP window has now closed).';
+        if (daysRemaining > 1) countdown = `, осталось всего ${counted(daysRemaining, 'день', 'дня', 'дней')}!`;
+        else if (daysRemaining === 1) countdown = ', остался всего 1 день!';
+        else if (daysRemaining === 0) countdown = " — это сегодня!";
+        else countdown = ' (приём ответов завершён).';
     }
 
     return (
@@ -41,13 +42,13 @@ export default function RSVPPage() {
                 <div className="max-w-3xl mx-auto">
                     <div className="text-center mb-12">
                         <h1 className="text-4xl font-serif text-gray-900 tracking-tight sm:text-5xl">
-                            RSVP
+                            Ответ на приглашение
                         </h1>
                         <p className="mt-4 text-lg text-gray-600">
-                            We can&apos;t wait to celebrate with you!{' '}
+                            С нетерпением ждём встречи с вами!{' '}
                             {deadlineText
-                                ? <>Please let us know if you can make it by {deadlineText}{countdown}</>
-                                : 'Please let us know if you can make it.'}
+                                ? <>Пожалуйста, сообщите, сможете ли вы прийти, до {deadlineText}{countdown}</>
+                                : 'Пожалуйста, сообщите, сможете ли вы прийти.'}
                         </p>
                     </div>
 
@@ -60,7 +61,7 @@ export default function RSVPPage() {
                     {contactEmail && (
                         <div className="mt-12 text-center text-gray-500">
                             <p>
-                                Having trouble RSVPing? Email us at <a href={`mailto:${contactEmail}`} className="text-accent hover:text-accent-dark">{contactEmail}</a>
+                                Не получается отправить ответ? Напишите нам: <a href={`mailto:${contactEmail}`} className="text-accent hover:text-accent-dark">{contactEmail}</a>
                             </p>
                         </div>
                     )}

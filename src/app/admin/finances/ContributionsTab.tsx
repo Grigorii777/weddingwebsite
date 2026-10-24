@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import { useMemo, useState } from 'react';
 import { contributorExpected, contributorReceived, type Contributor } from '@/lib/finance';
@@ -40,30 +41,28 @@ export default function ContributionsTab({ data, api }: { data: FinancePayload; 
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-                <StatTile label="Pledged" value={formatMoney(summary.pledgedTotal)}
-                    hint={`${contributors.length} contributor${contributors.length === 1 ? '' : 's'}`} />
-                <StatTile label="Received" value={formatMoney(summary.receivedTotal)} tone="good" />
-                <StatTile label="Still expected" value={formatMoney(summary.outstandingPledges)}
+                <StatTile label="Обещано" value={formatMoney(summary.pledgedTotal)}
+                    hint={`${counted(contributors.length, 'участник', 'участника', 'участников')}`} />
+                <StatTile label="Получено" value={formatMoney(summary.receivedTotal)} tone="good" />
+                <StatTile label="Ожидается" value={formatMoney(summary.outstandingPledges)}
                     tone={summary.outstandingPledges > 0 ? 'warn' : 'good'}
-                    hint={summary.outstandingPledges > 0 ? 'Promised but not in hand' : 'All pledges collected'} />
-                <StatTile label="Thanked" value={
+                    hint={summary.outstandingPledges > 0 ? 'Обещано, но ещё не получено' : 'Все обещанные средства получены'} />
+                <StatTile label="Поблагодарили" value={
                     `${contributors.filter((c) => c.thank_you_sent).length}/${contributors.length}`
                 } tone={contributors.length > 0
                     && contributors.every((c) => c.thank_you_sent) ? 'good' : 'warn'}
-                    hint="thank-you notes sent" />
-                <StatTile label="Covers" value={
+                    hint="благодарности отправлены" />
+                <StatTile label="Покрывает" value={
                     summary.budgetTotal > 0
                         ? `${((summary.receivedTotal / summary.budgetTotal) * 100).toFixed(1)}%`
                         : '—'
-                } hint="of the total budget, in cash" />
+                } hint="общего бюджета полученными средствами" />
             </div>
 
             <Card className="p-4 bg-amber-50/50 border-amber-100">
                 <p className="text-xs text-amber-800 leading-relaxed">
-                    <strong>This is money toward the wedding bill</strong> — your parents&apos; $5,000, family
-                    chipping in. Wedding and shower <em>gifts</em> from guests live on the{' '}
-                    <a href="/admin/registry" className="underline font-medium">Registry</a> page instead,
-                    where they stay tied to a guest for thank-you notes.
+                    <strong>Здесь учитывается помощь в оплате свадьбы</strong> — например, помощь родителей или семьи. Свадебные <em>подарки</em> от гостей находятся на странице{' '}
+                    <a href="/admin/registry" className="underline font-medium">Подарки</a> и связаны с гостями, чтобы было удобно отправлять благодарности.
                 </p>
             </Card>
 
@@ -79,7 +78,7 @@ export default function ContributionsTab({ data, api }: { data: FinancePayload; 
             </div>
 
             {!contributors.length && (
-                <Card className="p-6"><EmptyState>No contributors yet.</EmptyState></Card>
+                <Card className="p-6"><EmptyState>Участников пока нет.</EmptyState></Card>
             )}
 
             <Card className="p-4">
@@ -88,12 +87,12 @@ export default function ContributionsTab({ data, api }: { data: FinancePayload; 
                         value={newName}
                         onChange={(e) => setNewName(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') addContributor(); }}
-                        placeholder="Who's contributing? (e.g. Karie & Dave)"
+                        placeholder="Кто помогает с оплатой? (например, родители)"
                         className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-3 py-2 text-base md:text-sm
                             focus:outline-none focus:ring-2 focus:ring-accent/30"
                     />
                     <PillButton tone="accent" onClick={addContributor} disabled={!newName.trim()}>
-                        Add contributor
+                        Добавить участника
                     </PillButton>
                 </div>
             </Card>
@@ -140,7 +139,7 @@ function ContributorCard({ contributor, targetGroups, api }: {
                 </div>
                 <div className="flex items-center gap-4 text-right">
                     <div>
-                        <div className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Pledged</div>
+                        <div className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Обещано</div>
                         <div className="w-24">
                             <InlineNumber
                                 value={contributor.pledged} prefix="$"
@@ -149,7 +148,7 @@ function ContributorCard({ contributor, targetGroups, api }: {
                         </div>
                     </div>
                     <div>
-                        <div className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Received</div>
+                        <div className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Получено</div>
                         <div className="text-sm font-semibold tabular-nums px-2 py-1">
                             <Money value={received} />
                         </div>
@@ -160,25 +159,25 @@ function ContributorCard({ contributor, targetGroups, api }: {
                         id: contributor.id, thank_you_sent: !contributor.thank_you_sent,
                     })}
                     title={contributor.thank_you_sent_at
-                        ? `Sent ${contributor.thank_you_sent_at.slice(0, 10)}`
-                        : 'Not sent yet'}
+                        ? `Отправлено ${contributor.thank_you_sent_at.slice(0, 10)}`
+                        : 'Ещё не отправлено'}
                     className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-medium transition-colors
                         ${contributor.thank_you_sent
                             ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
                             : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                 >
-                    {contributor.thank_you_sent ? '✓ Thanked' : 'Thank you?'}
+                    {contributor.thank_you_sent ? '✓ Поблагодарили' : 'Благодарность?'}
                 </button>
                 <GlyphButton
-                    label={`Archive ${contributor.name}`}
+                    label={`В архив: ${contributor.name}`}
                     className="text-lg leading-none hover:text-rose-500"
                     onClick={() => {
                         // Archived rather than deleted: removing a contributor would
                         // cascade their payment history, which an undo can't rebuild.
                         const count = contributor.receipts.length;
                         const message = count
-                            ? `Archive ${contributor.name} and their ${count} logged payment${count === 1 ? '' : 's'}? Nothing is lost — they stop counting toward your totals and you can restore them from Settings.`
-                            : `Archive ${contributor.name}?`;
+                            ? `В архив: ${contributor.name} и связанные записи: ${counted(count, 'внесённый платёж', 'внесённых платежа', 'внесённых платежей')}? Данные сохранятся, но перестанут учитываться в итогах. Восстановить можно в настройках.`
+                            : `В архив: ${contributor.name}?`;
                         if (confirm(message)) api.update('contributors', { id: contributor.id, archived: true });
                     }}
                 >
@@ -189,15 +188,15 @@ function ContributorCard({ contributor, targetGroups, api }: {
             <div className="px-4 py-2">
                 <Bar pct={pct} />
                 <div className="flex justify-between text-[11px] text-gray-400 mt-1">
-                    <span>{pct.toFixed(0)}% collected</span>
+                    <span>{pct.toFixed(0)}% получено</span>
                     {overDelivered ? (
                         <span className="text-emerald-600 font-medium">
-                            Gave {formatMoney(received - contributor.pledged)} over the pledge
+                            Передано {formatMoney(received - contributor.pledged)} сверх обещанной суммы
                         </span>
                     ) : outstanding > 0 ? (
-                        <span>{formatMoney(outstanding)} still expected</span>
+                        <span>{formatMoney(outstanding)} ещё ожидается</span>
                     ) : (
-                        <span className="text-emerald-600 font-medium">Fully collected</span>
+                        <span className="text-emerald-600 font-medium">Полностью получено</span>
                     )}
                 </div>
             </div>
@@ -212,34 +211,34 @@ function ContributorCard({ contributor, targetGroups, api }: {
                                     md:px-2 md:py-1.5">
                                 <InlineText
                                     value={receipt.note ?? ''}
-                                    placeholder="What it's for…"
+                                    placeholder="Назначение…"
                                     onCommit={(note) => api.update('receipts', { id: receipt.id, note })}
                                     className="md:text-xs"
                                 />
-                                <RowField label="Received">
+                                <RowField label="Получено">
                                     <RowDate
                                         value={(receipt.received_on ?? '').slice(0, 10)}
-                                        aria-label="Date received"
+                                        aria-label="Дата получения"
                                         onChange={(e) => api.update('receipts', {
                                             id: receipt.id, received_on: e.target.value,
                                         })}
                                         className="md:text-[11px]"
                                     />
                                 </RowField>
-                                <RowField label="Earmarked to">
+                                <RowField label="Назначение">
                                     <RowSelect
                                         value={targetValue(receipt)}
-                                        aria-label="What this payment is earmarked to"
+                                        aria-label="На что предназначен платёж"
                                         onChange={(e) => api.update('receipts', {
                                             id: receipt.id, ...targetPatch(e.target.value),
                                         })}
                                         className="md:text-[11px]"
                                     >
-                                        <option value="">— not earmarked —</option>
+                                        <option value="">— не распределено —</option>
                                         {targetGroups.map((group) => (
                                             <optgroup key={group.name} label={group.name}>
                                                 <option value={group.sectionValue}>
-                                                    {group.name} — whole section
+                                                    {group.name} — весь раздел
                                                 </option>
                                                 {group.items.map((i) => (
                                                     <option key={i.value} value={i.value}>{i.name}</option>
@@ -248,17 +247,17 @@ function ContributorCard({ contributor, targetGroups, api }: {
                                         ))}
                                     </RowSelect>
                                 </RowField>
-                                <RowField label="Amount">
+                                <RowField label="Сумма">
                                     <InlineNumber
                                         value={receipt.amount} prefix="$"
                                         onCommit={(amount) => api.update('receipts', { id: receipt.id, amount })}
                                     />
                                 </RowField>
                                 <DeleteButton
-                                    label={`Delete payment ${receipt.note ?? ''}`.trim()}
+                                    label={`Удалить платёж ${receipt.note ?? ''}`.trim()}
                                     onClick={() => api.removeWithUndo(
                                         'receipts', receipt.id,
-                                        `${contributor.name}'s ${receipt.note || 'payment'}`,
+                                        `${contributor.name} — ${receipt.note || 'payment'}`,
                                         {
                                             contributor_id: contributor.id, amount: receipt.amount,
                                             received_on: receipt.received_on, note: receipt.note,
@@ -270,9 +269,9 @@ function ContributorCard({ contributor, targetGroups, api }: {
                         ))}
                     </div>
                 )}
-                <AddButton onClick={addReceipt}>+ Log a payment received</AddButton>
+                <AddButton onClick={addReceipt}>+ Записать полученный платёж</AddButton>
                 <p className="text-[11px] text-gray-400">
-                    A refund or a returned gift goes in as a negative amount.
+                    Возврат средств или подарка указывается отрицательной суммой.
                 </p>
             </div>
         </Card>

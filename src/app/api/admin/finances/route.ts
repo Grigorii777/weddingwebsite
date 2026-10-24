@@ -62,6 +62,6 @@ export async function GET() {
         return NextResponse.json({ ...data, summary, weddingDate, headcount, today });
     } catch (error) {
         console.error('Error loading finances:', error);
-        return NextResponse.json({ error: 'Failed to load finances' }, { status: 500 });
+        return NextResponse.json({ error: 'Не удалось загрузить финансы' }, { status: 500 });
     }
 }

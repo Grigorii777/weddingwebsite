@@ -12,12 +12,12 @@ import { useFinances } from './useFinances';
 import { formatMoney } from './ui';
 
 const TABS = [
-    { key: 'overview', label: 'Overview' },
-    { key: 'budget', label: 'Budget' },
-    { key: 'schedule', label: 'Schedule' },
-    { key: 'purchases', label: 'Purchases' },
-    { key: 'contributions', label: 'Gift Money' },
-    { key: 'settings', label: 'Settings' },
+    { key: 'overview', label: 'Обзор' },
+    { key: 'budget', label: 'Бюджет' },
+    { key: 'schedule', label: 'График платежей' },
+    { key: 'purchases', label: 'Покупки' },
+    { key: 'contributions', label: 'Денежные подарки' },
+    { key: 'settings', label: 'Настройки' },
 ] as const;
 
 type TabKey = typeof TABS[number]['key'];
@@ -43,14 +43,14 @@ export default function AdminFinancesPage() {
         return (
             <div className="w-full">
                 <div className="bg-rose-50 border border-rose-200 rounded-2xl p-5">
-                    <h2 className="font-semibold text-rose-900 mb-1">Couldn&apos;t load your finances</h2>
-                    <p className="text-sm text-rose-700">{error || 'Something went wrong.'}</p>
+                    <h2 className="font-semibold text-rose-900 mb-1">Не удалось загрузить финансы</h2>
+                    <p className="text-sm text-rose-700">{error || 'Что-то пошло не так.'}</p>
                     <button
                         onClick={api.refresh}
                         className="mt-3 rounded-full bg-white border border-rose-200 px-4 py-1.5
                             text-sm font-medium text-rose-700 hover:bg-rose-50"
                     >
-                        Try again
+                        Попробовать снова
                     </button>
                 </div>
             </div>
@@ -63,15 +63,15 @@ export default function AdminFinancesPage() {
     return (
         <div className="w-full" data-finance-suite>
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <h1 className="text-xl font-semibold text-gray-900 md:text-2xl">Finances</h1>
+                <h1 className="text-xl font-semibold text-gray-900 md:text-2xl">Финансы</h1>
                 <p className="text-xs text-gray-400 md:text-sm">
-                    {formatMoney(summary.budgetTotal)} budgeted ·{' '}
-                    {formatMoney(summary.paidTotal)} paid ·{' '}
-                    <span className="text-gray-500">{formatMoney(leftToPay)} left for you two to cover</span>
+                    {formatMoney(summary.budgetTotal)} в бюджете ·{' '}
+                    {formatMoney(summary.paidTotal)} оплачено ·{' '}
+                    <span className="text-gray-500">{formatMoney(leftToPay)} осталось оплатить вам</span>
                 </p>
                 {/* Fixed width, so the row does not reflow every time it appears. */}
                 <span className="ml-auto w-16 text-right text-xs text-gray-400">
-                    {saving ? 'Saving…' : ''}
+                    {saving ? 'Сохраняем…' : ''}
                 </span>
             </div>
 

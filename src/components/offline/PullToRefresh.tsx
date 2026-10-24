@@ -123,7 +123,7 @@ export default function PullToRefresh() {
         >
             {status === 'offline' ? (
                 <p className="rounded-full bg-gray-900/90 px-4 py-1.5 text-xs font-medium text-white shadow-lg backdrop-blur">
-                    Couldn&apos;t connect · showing what this phone has saved
+                    Нет соединения · показана сохранённая на телефоне копия
                 </p>
             ) : (
                 <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-lg backdrop-blur">
@@ -136,7 +136,7 @@ export default function PullToRefresh() {
                             ? <path strokeLinecap="round" d="M12 3a9 9 0 1 0 9 9" />
                             : <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m0 0-6-6m6 6 6-6" />}
                     </svg>
-                    <span className="sr-only">{status === 'checking' ? 'Refreshing' : ready ? 'Let go to refresh' : 'Pull to refresh'}</span>
+                    <span className="sr-only">{status === 'checking' ? 'Обновляем' : ready ? 'Отпустите для обновления' : 'Потяните для обновления'}</span>
                 </span>
             )}
         </div>

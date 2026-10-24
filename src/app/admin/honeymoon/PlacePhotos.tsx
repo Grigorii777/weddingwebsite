@@ -42,7 +42,7 @@ export default function PlacePhotos({ api, place, compact = false }: {
                 const res = await fetch('/api/admin/honeymoon/upload', { method: 'POST', body });
                 const payload = await res.json().catch(() => ({}));
                 if (!res.ok || !payload.filename) {
-                    setError(payload.error ?? 'That upload failed');
+                    setError(payload.error ?? 'Не удалось загрузить');
                     continue;
                 }
                 added.push(payload.filename);
@@ -83,7 +83,7 @@ export default function PlacePhotos({ api, place, compact = false }: {
                                 bg-gray-100">
                                 <Image
                                     src={`/api/photos/${filename}`}
-                                    alt={`${place.name} photo ${index + 1}`}
+                                    alt={`${place.name} фото ${index + 1}`}
                                     fill
                                     unoptimized
                                     className="object-cover"
@@ -92,7 +92,7 @@ export default function PlacePhotos({ api, place, compact = false }: {
                             {index === 0 && (
                                 <span className="absolute left-1 top-1 rounded-full bg-gray-900/80
                                     px-1.5 py-0.5 text-[9px] font-semibold text-white">
-                                    Cover
+                                    Обложка
                                 </span>
                             )}
                             <div className="absolute inset-x-1 bottom-1 flex justify-between
@@ -104,7 +104,7 @@ export default function PlacePhotos({ api, place, compact = false }: {
                                         className="rounded-full bg-white/90 px-1.5 py-0.5 text-[9px]
                                             font-medium text-gray-700"
                                     >
-                                        Cover
+                                        Обложка
                                     </button>
                                 )}
                                 <button
@@ -113,7 +113,7 @@ export default function PlacePhotos({ api, place, compact = false }: {
                                     className="ml-auto rounded-full bg-white/90 px-1.5 py-0.5
                                         text-[9px] font-medium text-rose-700"
                                 >
-                                    Remove
+                                    Удалить
                                 </button>
                             </div>
                         </div>
@@ -130,11 +130,11 @@ export default function PlacePhotos({ api, place, compact = false }: {
                     onChange={(e) => upload(e.target.files)}
                 />
                 <Button onClick={() => input.current?.click()} disabled={busy}>
-                    {busy ? 'Uploading…' : photos.length ? '+ More photos' : '+ Photos'}
+                    {busy ? 'Загружаем…' : photos.length ? '+ Ещё фотографии' : '+ Фотографии'}
                 </Button>
                 {!photos.length && (
                     <span className="text-[11px] text-gray-400">
-                        The first one becomes the cover.
+                        Первая фотография станет обложкой.
                     </span>
                 )}
             </div>

@@ -286,7 +286,7 @@ export function CustomisableSelect({
                     }}
                 />
                 <Button tone="primary" className="!px-3 shrink-0" onClick={commit} disabled={busy}>
-                    {busy ? '…' : 'Add'}
+                    {busy ? '…' : 'Добавить'}
                 </Button>
             </div>
         );
@@ -305,8 +305,8 @@ export function CustomisableSelect({
             }}
         >
             {options.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
-            <option value={CUSTOM}>＋ Custom…</option>
-            {onManage && <option value={MANAGE}>✎ Edit / remove…</option>}
+            <option value={CUSTOM}>＋ Добавить своё…</option>
+            {onManage && <option value={MANAGE}>✎ Изменить / удалить…</option>}
         </Field>
     );
 }
@@ -331,9 +331,9 @@ export function CategorySelect({ value, places, onChange, onManage, onCreateCate
 
     return (
         <CustomisableSelect
-            label="Category"
+            label="Категория"
             value={value}
-            placeholder="Beach club, hot springs…"
+            placeholder="Пляжный клуб, горячие источники…"
             options={all.map((c) => ({ key: c.key, label: `${c.icon} ${c.label}` }))}
             onChange={onChange}
             onCreate={(typed) => (onCreateCategory
@@ -380,7 +380,7 @@ export function ManageListModal({
         <Modal open onClose={onClose} title={title}>
             {hint && <p className="text-xs text-gray-500 mb-3">{hint}</p>}
             {items.length === 0 ? (
-                <EmptyState title="Nothing to edit yet" />
+                <EmptyState title="Пока нечего редактировать" />
             ) : (
                 <ul className="divide-y divide-gray-100">
                     {items.map((item) => (
@@ -396,8 +396,8 @@ export function ManageListModal({
                                         onChange={(e) => onRestyle(item.id, {
                                             color: e.target.value,
                                         })}
-                                        aria-label={`Colour for ${item.label}`}
-                                        title="Pin colour"
+                                        aria-label={`Цвет для ${item.label}`}
+                                        title="Цвет отметки"
                                         className="size-7 shrink-0 cursor-pointer rounded-lg
                                             border border-gray-200 bg-white p-0.5"
                                     />
@@ -407,8 +407,8 @@ export function ManageListModal({
                                             // One glyph: two do not fit in a pin.
                                             icon: [...e.target.value.trim()][0] ?? '',
                                         })}
-                                        aria-label={`Icon for ${item.label}`}
-                                        title="One emoji"
+                                        aria-label={`Значок для ${item.label}`}
+                                        title="Один эмодзи"
                                         className="w-9 shrink-0 rounded-lg border border-gray-200
                                             bg-gray-50 px-1 py-1 text-center text-sm
                                             focus:bg-white focus:outline-none focus:ring-2
@@ -433,19 +433,19 @@ export function ManageListModal({
                             </div>
                             {item.locked ? (
                                 <span className="text-[11px] text-gray-400 shrink-0" title={item.locked}>
-                                    kept
+                                    оставлено
                                 </span>
                             ) : (
                                 <Button
                                     tone="danger"
                                     className="!px-3 shrink-0"
                                     onClick={() => {
-                                        if (confirm(item.warn ?? `Delete "${item.label}"?`)) {
+                                        if (confirm(item.warn ?? `Удалить «${item.label}"?`)) {
                                             onDelete(item.id);
                                         }
                                     }}
                                 >
-                                    Delete
+                                    Удалить
                                 </Button>
                             )}
                         </li>
@@ -453,7 +453,7 @@ export function ManageListModal({
                 </ul>
             )}
             <div className="flex justify-end pt-3">
-                <Button onClick={onClose}>Done</Button>
+                <Button onClick={onClose}>Готово</Button>
             </div>
         </Modal>
     );
@@ -501,7 +501,7 @@ export function TriToggle({ state, onChange, offLabel, onLabel, invertedLabel, t
     return (
         <button
             onClick={() => onChange(nextTriState(state))}
-            title="Click to cycle: off → on → the opposite"
+            title="Нажмите для переключения: выкл. → вкл. → наоборот"
             className={`rounded-2xl px-3 py-2 text-sm font-medium border transition ${className}`}
         >
             {state === 'off' ? offLabel : state === 'on' ? onLabel : invertedLabel}
@@ -576,12 +576,12 @@ export function UndoToast({ label, onUndo, onDismiss, seconds = 10, stacked = 1 
                         className="rounded-full bg-white/15 hover:bg-white/25 px-3 py-1
                             text-sm font-semibold transition"
                     >
-                        Undo
+                        Отменить
                     </button>
                     <button
                         onClick={onDismiss}
                         className="text-white/50 hover:text-white text-lg leading-none"
-                        aria-label="Dismiss"
+                        aria-label="Закрыть"
                     >
                         &times;
                     </button>
@@ -614,7 +614,7 @@ export interface BulkField {
  * steps rather than one long flat list because a flat list would mix "Booked"
  * and "Ubud" and "Indonesia" with no clue which is which.
  */
-export function BulkFieldMenu({ fields, onApply, label = 'Change…' }: {
+export function BulkFieldMenu({ fields, onApply, label = 'Изменить…' }: {
     fields: BulkField[];
     onApply: (key: string, value: unknown) => void;
     label?: string;
@@ -649,7 +649,7 @@ export function BulkFieldMenu({ fields, onApply, label = 'Change…' }: {
                             <>
                                 <p className="px-4 py-1 text-[11px] uppercase tracking-wide
                                     text-gray-400 font-semibold">
-                                    Change for all selected
+                                    Изменить у всех выбранных
                                 </p>
                                 {fields.map((f) => (
                                     <button
@@ -684,7 +684,7 @@ export function BulkFieldMenu({ fields, onApply, label = 'Change…' }: {
                                     </button>
                                 ))}
                                 {!field.options.length && (
-                                    <p className="px-4 py-2 text-sm text-gray-400">Nothing to pick yet.</p>
+                                    <p className="px-4 py-2 text-sm text-gray-400">Пока нечего выбирать.</p>
                                 )}
                             </>
                         )}
@@ -822,7 +822,7 @@ export function OverflowMenu({ items }: { items: OverflowMenuItem[] }) {
                 }}
                 className="inline-flex min-h-11 min-w-11 md:min-h-0 md:min-w-0 items-center justify-center
                     text-lg md:text-base text-gray-400 hover:text-gray-700 px-2 py-1 rounded-full hover:bg-gray-50 active:scale-[0.98] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-                aria-label="More actions"
+                aria-label="Другие действия"
             >
                 ⋯
             </button>
@@ -849,7 +849,7 @@ export function ColumnDivider({ label, onDrag }: { label: string; onDrag: (dx: n
             aria-label={label}
             aria-orientation="vertical"
             tabIndex={0}
-            title={`${label} — drag, or use the arrow keys`}
+            title={`${label} — перетащите или используйте стрелки`}
             onPointerDown={(e) => {
                 e.preventDefault();
                 e.currentTarget.setPointerCapture(e.pointerId);

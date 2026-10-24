@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
@@ -171,12 +172,12 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                 if (error.code === error.PERMISSION_DENIED) {
                     setLocating(false);
                     setMe(null);
-                    setMeNote('Location is blocked for this site. Allow it in the browser\'s '
-                        + 'site settings, then press 📍 Me again.');
+                    setMeNote('Геолокация заблокирована. Разрешите её в '
+                        + 'настройках сайта в браузере и снова нажмите 📍 Я.');
                 } else {
                     // Keep watching: indoors or just after landing, a fix often
                     // arrives late, and the watch delivers it when it does.
-                    setMeNote('Still looking for your location…');
+                    setMeNote('Всё ещё определяем местоположение…');
                 }
             },
             { enableHighAccuracy: true, maximumAge: 10_000, timeout: 30_000 },
@@ -191,10 +192,10 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
             return;
         }
         if (typeof navigator === 'undefined' || !navigator.geolocation) {
-            setMeNote('This browser cannot share its location.');
+            setMeNote('Браузер не поддерживает геолокацию.');
             return;
         }
-        setMeNote('Finding you…');
+        setMeNote('Определяем местоположение…');
         setLocating(true);
     };
 
@@ -388,7 +389,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
         const forDay = (day: Day) => ({
             points: pointsForDay(day),
             color: dayColor(day.day_number),
-            label: `Day ${day.day_number}${day.title ? ` — ${day.title}` : ''}`,
+            label: `День ${day.day_number}${day.title ? ` — ${day.title}` : ''}`,
         });
         if (selectedDay) return [forDay(selectedDay)].filter((r) => r.points.length > 0);
         if (!showItinerary) return [];
@@ -451,10 +452,10 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                 label: [
                     meta.label,
                     route,
-                    `Day ${day.day_number}`,
+                    `День ${day.day_number}`,
                     leg.depart_time ?? '',
                     leg.arrive_day_offset > 0
-                        ? `lands +${leg.arrive_day_offset} day${leg.arrive_day_offset === 1 ? '' : 's'}`
+                        ? `прибытие +${counted(leg.arrive_day_offset, 'день', 'дня', 'дней')}`
                         : '',
                 ].filter(Boolean).join(' · '),
             }];
@@ -506,11 +507,11 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
         const thinned = step > 1 ? loop.filter((_, i) => i % step === 0) : loop;
         if (thinned.length < 3) return;
         const ok = await api.update('regions', { id: regionId, boundary: thinned });
-        if (!ok) { setBoundaryNote('Could not save that boundary.'); return; }
+        if (!ok) { setBoundaryNote('Не удалось сохранить границу.'); return; }
         setBoundaryNote(
-            `Saved as the boundary of ${api.regionById.get(regionId) ?? 'that area'}. `
-            + '“Assign regions by location” on the Places tab now files pins into it '
-            + 'exactly, instead of guessing by nearest centre.',
+            `Сохранено как граница: ${api.regionById.get(regionId) ?? 'этот район'}. `
+            + '«Определить регионы по координатам» теперь относит отметки '
+            + 'по границам, а не по ближайшему центру.',
         );
         setLassoLoop(null);
     };
@@ -600,16 +601,16 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
     const bulkFields = useMemo(() => [
         {
             key: 'category',
-            label: 'Type',
+            label: 'Введите',
             options: (data?.categories ?? []).map((c) => ({
                 value: c.key, label: `${c.icon} ${c.label}`,
             })),
         },
         {
             key: 'region_id',
-            label: 'Region',
+            label: 'Регион',
             options: [
-                { value: null, label: '— no region —' },
+                { value: null, label: '— без региона —' },
                 ...regions.map((r) => ({
                     value: r.id, label: r.country ? `${r.name} · ${r.country}` : r.name,
                 })),
@@ -617,46 +618,46 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
         },
         {
             key: 'country',
-            label: 'Country',
+            label: 'Страна',
             options: [
-                { value: '', label: '— from region —' },
+                { value: '', label: '— из региона —' },
                 ...countries.map((c) => ({ value: c, label: c })),
             ],
         },
         {
             key: 'status',
-            label: 'Status',
+            label: 'Статус',
             options: STATUSES.map((s) => ({ value: s.key, label: s.label })),
         },
         {
             key: 'source',
-            label: 'Source',
+            label: 'Источник',
             options: sourcesOf(places).map((s) => ({ value: s, label: s })),
         },
         {
             key: 'needs_review',
-            label: 'Review flag',
+            label: 'Проверка',
             options: [
-                { value: false, label: 'Reviewed — pin is right' },
-                { value: true, label: 'Needs review' },
+                { value: false, label: 'Проверено — отметка верная' },
+                { value: true, label: 'Нужно проверить' },
             ],
         },
         {
             key: 'is_excursion',
-            label: 'Excursion',
+            label: 'Экскурсия',
             options: [
-                { value: true, label: 'Is an excursion' },
-                { value: false, label: 'Not an excursion' },
+                { value: true, label: 'Это экскурсия' },
+                { value: false, label: 'Не экскурсия' },
             ],
         },
         {
             key: 'rating',
-            label: 'Rating',
+            label: 'Оценка',
             options: [
-                { value: 'yes', label: '👍 Interested' },
-                { value: 'mid', label: '😐 Mid tier' },
-                { value: 'no', label: '👎 Not interested' },
-                { value: '', label: '— unrated —' },
+                { value: 'yes', label: '👍 Интересно' },
+                { value: 'mid', label: '😐 Возможно' },
+                { value: 'no', label: '👎 Неинтересно' },
+                { value: '', label: '— без оценки —' },
             ],
         },
     ], [data?.categories, regions, countries, places]);
@@ -721,16 +722,16 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
         if (!ids.length) return;
         // The confirm stays for a lasso: "116 places" is worth reading twice,
         // even with an undo behind it.
-        if (!confirm(`Delete ${ids.length} place(s)? You can undo it.`)) return;
+        if (!confirm(`Удалить ${ids.length} мест? Можно отменить.`)) return;
         const rows = ids.map((id) => api.placeById.get(id)).filter((p) => p != null);
         await api.removePlaces(rows);
         setLassoed(new Set());
     };
 
     const activeFilters: ActiveFilter[] = [
-        ...(dayFilter ? [{ key: 'day', label: `Day ${days.find((d) => String(d.id) === dayFilter)?.day_number ?? ''}`, clear: () => setDayFilter('') }] : []),
+        ...(dayFilter ? [{ key: 'day', label: `День ${days.find((d) => String(d.id) === dayFilter)?.day_number ?? ''}`, clear: () => setDayFilter('') }] : []),
         ...(sourceFilter ? [{ key: 'source', label: sourceFilter, clear: () => setSourceFilter('') }] : []),
-        ...(regionFilter ? [{ key: 'region', label: (data?.regions ?? []).find((r) => String(r.id) === regionFilter)?.name ?? 'Region', clear: () => setRegionFilter('') }] : []),
+        ...(regionFilter ? [{ key: 'region', label: (data?.regions ?? []).find((r) => String(r.id) === regionFilter)?.name ?? 'Регион', clear: () => setRegionFilter('') }] : []),
         ...(categoryFilter ? [{ key: 'type', label: categoryMeta(categoryFilter).label, clear: () => setCategoryFilter('') }] : []),
         ...(statusFilter ? [{ key: 'status', label: STATUSES.find((st) => st.key === statusFilter)?.label ?? statusFilter, clear: () => setStatusFilter('') }] : []),
     ];
@@ -764,43 +765,43 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                 max-md:[&>*]:pointer-events-auto max-md:[&>*]:shadow-md">
                 <MiniSelect
                     value={country}
-                    aria-label="Country"
-                    title="Saved with the trip — it stays set across refreshes and logins"
+                    aria-label="Страна"
+                    title="Сохраняется вместе с поездкой между входами и обновлениями"
                     onChange={(e) => api.update('trip', { focus_country: e.target.value })}
                 >
-                    <option value="">All countries</option>
+                    <option value="">Все страны</option>
                     {countries.map((c) => <option key={c} value={c}>{c}</option>)}
                 </MiniSelect>
                 <FilterButton active={activeFilters} onReset={resetFilters}>
-                    <FilterField label="Day">
+                    <FilterField label="День">
                         <SelectField value={dayFilter} onChange={(e) => setDayFilter(e.target.value)}>
-                            <option value="">All places</option>
+                            <option value="">Все места</option>
                             {days.map((d) => (
-                                <option key={d.id} value={d.id}>Day {d.day_number}{d.title ? ` — ${d.title}` : ''}</option>
+                                <option key={d.id} value={d.id}>День {d.day_number}{d.title ? ` — ${d.title}` : ''}</option>
                             ))}
                         </SelectField>
                     </FilterField>
-                    <FilterField label="Source">
+                    <FilterField label="Источник">
                         <SelectField value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)} disabled={!!selectedDay}>
-                            <option value="">All sources</option>
+                            <option value="">Все источники</option>
                             {sourcesOf(places).map((src) => <option key={src} value={src}>{src}</option>)}
                         </SelectField>
                     </FilterField>
-                    <FilterField label="Region">
+                    <FilterField label="Регион">
                         <SelectField value={regionFilter} onChange={(e) => setRegionFilter(e.target.value)} disabled={!!selectedDay}>
-                            <option value="">All regions</option>
+                            <option value="">Все регионы</option>
                             {(data?.regions ?? []).map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
                         </SelectField>
                     </FilterField>
-                    <FilterField label="Type">
+                    <FilterField label="Введите">
                         <SelectField value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} disabled={!!selectedDay}>
-                            <option value="">All types ({typeOptions.length})</option>
+                            <option value="">Все типы ({typeOptions.length})</option>
                             {typeOptions.map((c) => <option key={c.key} value={c.key}>{c.icon} {c.label}</option>)}
                         </SelectField>
                     </FilterField>
-                    <FilterField label="Status">
+                    <FilterField label="Статус">
                         <SelectField value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} disabled={!!selectedDay}>
-                            <option value="">Any status</option>
+                            <option value="">Любой статус</option>
                             {STATUSES.map((st) => <option key={st.key} value={st.key}>{st.label}</option>)}
                         </SelectField>
                     </FilterField>
@@ -810,51 +811,51 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                     onClick={() => setShowUnconfirmed((v) => !v)}
                     disabled={!!selectedDay}
                     aria-pressed={showUnconfirmed}
-                    title="Unconfirmed pins are hidden from the map. Turn this on to work through them."
+                    title="Неподтверждённые отметки скрыты. Включите для их проверки."
                     className={`min-h-11 md:min-h-0 shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition
                         disabled:opacity-40 ${showUnconfirmed
                         ? 'border-amber-500 bg-amber-500 text-white'
                         : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                 >
-                    ⚠ Unconfirmed{hiddenUnconfirmed > 0 && !showUnconfirmed ? ` ${hiddenUnconfirmed}` : ''}
+                    ⚠ Неподтверждённые{hiddenUnconfirmed > 0 && !showUnconfirmed ? ` ${hiddenUnconfirmed}` : ''}
                 </button>
                 <button
                     type="button"
                     onClick={() => { setShowItinerary((v) => !v); setRouteListOpen(false); }}
                     disabled={!!selectedDay || days.length === 0}
                     aria-pressed={showItinerary}
-                    title="Overlay each day's stops, in order"
+                    title="Показать остановки каждого дня по порядку"
                     className={`min-h-11 md:min-h-0 shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition
                         disabled:opacity-40 ${showItinerary
                         ? 'border-slate-900 bg-slate-900 text-white'
                         : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                 >
-                    🗓 Itinerary
+                    🗓 Маршрут
                 </button>
                 <div className="flex-1" />
                 <OverflowMenu items={[
                     {
-                        label: `Base map: ${MAP_LAYERS.find((entry) => entry.key === layer)?.label ?? layer}`,
+                        label: `Слой карты: ${MAP_LAYERS.find((entry) => entry.key === layer)?.label ?? layer}`,
                         submenu: MAP_LAYERS.map((entry) => ({
                             label: `${entry.key === layer ? '✓ ' : ''}${entry.label}`,
                             onClick: () => setLayer(entry.key),
                         })),
                     },
                     {
-                        label: colourBy === 'category' ? 'Colour pins by area' : 'Colour pins by type',
+                        label: colourBy === 'category' ? 'Цвет отметок по районам' : 'Цвет отметок по типам',
                         onClick: () => setColourBy(colourBy === 'category' ? 'region' : 'category'),
                     },
-                    { label: 'Reset filters', onClick: resetFilters },
+                    { label: 'Сбросить фильтры', onClick: resetFilters },
                 ]} />
                 <div className="basis-full flex flex-wrap items-center gap-2 max-md:hidden">
                     <FilterChips active={activeFilters} />
                     <p className="text-xs text-gray-400">
-                        {pinnedCount} pinned
+                        {pinnedCount} на карте
                         {unpinnedCount > 0 && (
-                            <span className="text-amber-600"> · {unpinnedCount} without coordinates</span>
+                            <span className="text-amber-600"> · {unpinnedCount} без координат</span>
                         )}
                         {selectedDay && (
-                            <span> · Day {selectedDay.day_number}
+                            <span> · День {selectedDay.day_number}
                                 {formatDayDate(data?.trip.start_date ?? null, selectedDay.day_number)
                                     ? ` (${formatDayDate(data?.trip.start_date ?? null, selectedDay.day_number)})`
                                     : ''}
@@ -862,27 +863,27 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                         )}
                         {unclassified > 0 && (
                             <span className="text-sky-700">
-                                {' '}· {unclassified} with no country set
+                                {' '}· {unclassified} без указанной страны
                             </span>
                         )}
                         {hiddenUnconfirmed > 0 && (
                             <span className="text-amber-600">
-                                {' '}· {hiddenUnconfirmed} unconfirmed hidden
+                                {' '}· {hiddenUnconfirmed} неподтверждённые скрыты
                             </span>
                         )}
                         {showUnconfirmed && unconfirmedShown > 0 && (
                             <span className="text-amber-700">
-                                {' '}· including {unconfirmedShown} unconfirmed — lasso them and Mark reviewed
+                                {' '}· включая {unconfirmedShown} неподтверждённые — выделите и отметьте проверенными
                             </span>
                         )}
                         {showItinerary && routes.length > 0 && (
                             <span className="text-slate-700">
-                                {' '}· {routes.length} day{routes.length === 1 ? '' : 's'} overlaid
+                                {' '}· {counted(routes.length, 'день', 'дня', 'дней')} показано
                             </span>
                         )}
                         {legs.length > 0 && (
                             <span className="text-sky-700">
-                                {' '}· {legs.length} travel leg{legs.length === 1 ? '' : 's'}
+                                {' '}· {counted(legs.length, 'участок пути', 'участка пути', 'участков пути')}
                             </span>
                         )}
                     </p>
@@ -894,7 +895,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                 {showPanels && (
                     <>
                         <SidePanel
-                            title="Itinerary"
+                            title="Маршрут"
                             href="/admin/honeymoon/itinerary"
                             width={widths.left}
                         >
@@ -906,7 +907,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                             />
                         </SidePanel>
                         <ColumnDivider
-                            label="Resize the itinerary column"
+                            label="Изменить ширину маршрута"
                             onDrag={(dx) => resize('left', dx)}
                         />
                     </>
@@ -919,15 +920,15 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                         flex items-center justify-center">
                         <EmptyState
                             title={hiddenUnconfirmed > 0
-                                ? 'No confirmed pins to show'
-                                : 'Nothing to show on the map yet'}
+                                ? 'Нет подтверждённых отметок'
+                                : 'На карте пока ничего нет'}
                             hint={hiddenUnconfirmed > 0
-                                ? `${hiddenUnconfirmed} pin(s) are hidden because they haven't been `
-                                    + 'confirmed yet. Hit ⚠ Show unconfirmed, lasso the ones that look '
-                                    + 'right, and Mark reviewed.'
+                                ? `${hiddenUnconfirmed} отметок скрыто, так как они ещё не `
+                                    + 'подтверждены. Покажите неподтверждённые, выделите верные '
+                                    + 'и отметьте проверенными.'
                                 : places.length
-                                    ? 'These places have no coordinates yet. Open one and use Find to pin it.'
-                                    : 'Add places in the Places tab, or run the seed script to load the Bali guide.'}
+                                    ? 'У этих мест нет координат. Откройте место и нажмите «Найти».'
+                                    : 'Добавьте места во вкладке «Места» или загрузите путеводитель по Бали.'}
                         />
                     </div>
                 ) : (
@@ -975,42 +976,42 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                             flex flex-wrap items-center justify-end gap-1.5`}>
                         <button
                             onClick={toggleMe}
-                            title={locating ? 'Stop showing where you are' : 'Show where you are on the map'}
-                            aria-label={locating ? 'Stop showing where you are' : 'Show where you are'}
+                            title={locating ? 'Скрыть моё местоположение' : 'Показать моё местоположение на карте'}
+                            aria-label={locating ? 'Скрыть моё местоположение' : 'Моё местоположение'}
                             aria-pressed={locating}
                             className={toolClass(locating, 'bg-blue-600 border-blue-600 text-white')}
                         >
-                            {phone ? <Icon name="locate" className="size-5" /> : (locating ? '📍 Me on' : '📍 Me')}
+                            {phone ? <Icon name="locate" className="size-5" /> : (locating ? '📍 Я на карте' : '📍 Я')}
                         </button>
                         <button
                             onClick={() => { setFitPoints(null); setFitSignal((n) => n + 1); }}
-                            title="Frame everything currently shown"
-                            aria-label="Frame everything shown"
+                            title="Показать все видимые места"
+                            aria-label="Показать все видимые места"
                             className={toolClass(false)}
                         >
-                            {phone ? <Icon name="fit" className="size-5" /> : '⤢ Fit'}
+                            {phone ? <Icon name="fit" className="size-5" /> : '⤢ Вместить'}
                         </button>
                         {/* Desktop only: three columns in 900px would leave nothing
                             worth calling a map. */}
                         {wide && (
                             <button
                                 onClick={toggleSplit}
-                                title="Itinerary on the left, places on the right, map in the middle — drag the dividers to resize"
+                                title="Маршрут слева, места справа, карта в центре. Перетащите разделители для изменения размеров."
                                 className={toolClass(split)}
                             >
-                                {split ? '⊞ Split on' : '⊞ Split'}
+                                {split ? '⊞ Панели открыты' : '⊞ Панели'}
                             </button>
                         )}
                         {/* On a phone, adding is the floating button above the tab bar. */}
                         {!phone && (
                             <button
                                 onClick={() => sheet.newPlace()}
-                                title="Add a place"
+                                title="Добавить место"
                                 className="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium
                                     border border-transparent bg-accent text-white
                                     hover:opacity-90 transition"
                             >
-                                + Add
+                                + Добавить
                             </button>
                         )}
                         {/* Measuring and lassoing both own the map's pointer, so
@@ -1021,12 +1022,12 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                                 setTool(tool === 'measure' ? 'none' : 'measure');
                                 setSelectMode(false);
                             }}
-                            title="Click two points for the distance and bearing between them"
-                            aria-label="Measure a distance"
+                            title="Выберите две точки, чтобы узнать расстояние и направление"
+                            aria-label="Измерить расстояние"
                             aria-pressed={tool === 'measure'}
                             className={toolClass(tool === 'measure')}
                         >
-                            {phone ? <Icon name="ruler" className="size-5" /> : '📏 Measure'}
+                            {phone ? <Icon name="ruler" className="size-5" /> : '📏 Измерить'}
                         </button>
                         <button
                             onClick={() => {
@@ -1035,12 +1036,12 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                                 setTool('none');
                                 setBoundaryNote('');
                             }}
-                            title="Drag a loop round the pins you want — then act on them, or save the loop as an area"
-                            aria-label="Lasso pins"
+                            title="Обведите отметки для групповых действий или сохраните контур района"
+                            aria-label="Выделить отметки"
                             aria-pressed={selectMode}
                             className={toolClass(selectMode)}
                         >
-                            {phone ? <Icon name="lasso" className="size-5" /> : (selectMode ? '◯ Lasso on' : '◯ Lasso')}
+                            {phone ? <Icon name="lasso" className="size-5" /> : (selectMode ? '◯ Выделение включено' : '◯ Выделить')}
                         </button>
                     </div>
 
@@ -1065,16 +1066,15 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                         <p className="w-[min(16rem,100%)] rounded-2xl bg-slate-900/95 backdrop-blur
                             px-3 py-2 text-[11px] text-white shadow-lg">
                             {phone
-                                ? 'Tap two points on the map for the distance and bearing. A third tap starts again.'
-                                : 'Click two points on the map for the distance and bearing. A third click starts again.'}
+                                ? 'Коснитесь двух точек для измерения. Третье касание начнёт заново.'
+                                : 'Выберите две точки для измерения. Третий щелчок начнёт заново.'}
                         </p>
                     )}
 
                     {selectMode && !lassoed.size && !lassoLoop && (
                         <p className="w-[min(16rem,100%)] rounded-2xl bg-slate-900/95 backdrop-blur
                             px-3 py-2 text-[11px] text-white shadow-lg">
-                            Drag a loop round the pins you want — hold Shift to add to what is
-                            already picked. The loop can also be saved as an area.
+                            Обведите нужные отметки. Shift добавит к текущему выделению. Контур можно сохранить как район.
                         </p>
                     )}
 
@@ -1088,8 +1088,8 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                             flex flex-wrap items-center gap-2">
                             <span className="text-sm font-medium text-gray-700 pl-1">
                                 {lassoed.size
-                                    ? `${lassoed.size} selected`
-                                    : 'Loop drawn — no pins inside it'}
+                                    ? `${lassoed.size} выбрано`
+                                    : 'Контур создан — внутри нет отметок'}
                             </span>
 
                             {/* A loop round empty water is still a boundary worth
@@ -1108,10 +1108,10 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                                         {/* A native select is sized by its widest option, so
                                             these are abbreviated — the full words live in
                                             the Places tab. */}
-                                        <option value="">Status</option>
-                                        <option value="idea">Idea</option>
-                                        <option value="shortlisted">Short</option>
-                                        <option value="booked">Booked</option>
+                                        <option value="">Статус</option>
+                                        <option value="idea">Идея</option>
+                                        <option value="shortlisted">Коротко</option>
+                                        <option value="booked">Забронировано</option>
                                     </MiniSelect>
                                     {days.length > 0 && (
                                         <MiniSelect
@@ -1120,10 +1120,10 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                                                 if (e.target.value) addToDay(Number(e.target.value));
                                             }}
                                         >
-                                            <option value="">Add to day…</option>
+                                            <option value="">Добавить в день…</option>
                                             {days.map((d) => (
                                                 <option key={d.id} value={d.id}>
-                                                    Day {d.day_number}{d.title ? ` — ${d.title}` : ''}
+                                                    День {d.day_number}{d.title ? ` — ${d.title}` : ''}
                                                 </option>
                                             ))}
                                         </MiniSelect>
@@ -1131,20 +1131,20 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                                     <BulkFieldMenu
                                         fields={bulkFields}
                                         onApply={(key, value) => bulk({ [key]: value })}
-                                        label="Change a field on all selected"
+                                        label="Изменить поле у всех выбранных"
                                     />
                                     <Button
                                         className="!px-3"
                                         onClick={toggleReview}
                                         title={review.needsReview
-                                            ? `Put all ${review.confirmed} back to unconfirmed`
-                                            : `Confirm ${review.unconfirmed} unconfirmed pin`
-                                                + `${review.unconfirmed === 1 ? '' : 's'}`}
+                                            ? `Вернуть все ${review.confirmed} в неподтверждённые`
+                                            : `Подтвердить ${review.unconfirmed} неподтверждённая отметка`
+                                                + `${review.unconfirmed === 1 ? '' : ''}`}
                                     >
                                         {review.label}
                                     </Button>
                                     <Button className="!px-3" tone="danger" onClick={bulkDelete}>
-                                        Delete
+                                        Удалить
                                     </Button>
                                 </>
                             )}
@@ -1154,7 +1154,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                                 tone="ghost"
                                 onClick={() => { setLassoed(new Set()); setLassoLoop(null); }}
                             >
-                                Clear
+                                Сбросить
                             </Button>
 
                             {/* ---- The loop itself, as an area ---- */}
@@ -1166,19 +1166,19 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                                 <div className="w-full border-t border-gray-100 pt-2
                                     flex flex-wrap items-center gap-2">
                                     <span className="text-[11px] text-gray-500">
-                                        Or make this loop an area:
+                                        Или сохранить контур как район:
                                     </span>
                                     <MiniSelect
                                         value=""
                                         onChange={(e) => {
                                             if (e.target.value) saveBoundary(Number(e.target.value));
                                         }}
-                                        aria-label="Save this loop as an area's boundary"
+                                        aria-label="Сохранить контур как границу района"
                                     >
-                                        <option value="">Save as area…</option>
+                                        <option value="">Сохранить район…</option>
                                         {regions.map((region) => (
                                             <option key={region.id} value={region.id}>
-                                                {region.name}{region.boundary ? ' (replace)' : ''}
+                                                {region.name}{region.boundary ? ' (заменить)' : ''}
                                             </option>
                                         ))}
                                     </MiniSelect>
@@ -1199,16 +1199,16 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                 {showItinerary && routes.length > 0 && !routeListOpen && (
                     <button
                         onClick={() => setRouteListOpen(true)}
-                        title="Show the stops of each day, in order"
+                        title="Показать остановки дней по порядку"
                         className="absolute top-3 left-14 max-md:top-[4.5rem] max-md:left-3 z-[500] inline-flex items-center gap-1.5
                             bg-white/95 backdrop-blur rounded-2xl shadow-lg border border-gray-200
                             px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900
                             hover:bg-white transition"
                     >
                         <span aria-hidden>🗓</span>
-                        Itinerary
+                        Маршрут
                         <span className="text-gray-400 tabular-nums">
-                            {routes.length} day{routes.length === 1 ? '' : 's'}
+                            {counted(routes.length, 'день', 'дня', 'дней')}
                         </span>
                         <span className="text-gray-300" aria-hidden>▸</span>
                     </button>
@@ -1219,12 +1219,12 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                         shadow-lg border border-gray-200 p-3">
                         <div className="flex items-center justify-between gap-2 mb-2">
                             <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">
-                                Itinerary
+                                Маршрут
                             </p>
                             <button
                                 onClick={() => setRouteListOpen(false)}
-                                title="Minimise back to the corner"
-                                aria-label="Minimise the itinerary list"
+                                title="Свернуть в угол"
+                                aria-label="Свернуть список маршрута"
                                 className="text-gray-300 hover:text-gray-700 leading-none px-1 -mr-1"
                             >
                                 &minus;
@@ -1267,7 +1267,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                         className="absolute bottom-3 left-3 max-md:bottom-[calc(var(--hm-nav-clearance)+0.75rem)] z-[500] min-h-11 md:min-h-0 rounded-full border border-gray-200
                             bg-white/90 px-3.5 py-1.5 text-xs font-medium text-gray-600 shadow-md backdrop-blur hover:text-gray-900"
                     >
-                        ● Legend
+                        ● Обозначения
                     </button>
                 )}
                 {pinnedCount > 0 && legendOpen && (
@@ -1276,7 +1276,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                         <button
                             type="button"
                             onClick={() => setLegendOpen(false)}
-                            aria-label="Hide the legend"
+                            aria-label="Скрыть обозначения"
                             className="float-right -mr-1 -mt-1 ml-2 size-8 rounded-full text-gray-400 hover:text-gray-700"
                         >
                             ×
@@ -1295,7 +1295,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                             {visible.some((p) => p.needs_review && hasCoords(p)) && (
                                 <span className="inline-flex items-center gap-1 text-[11px] text-amber-700">
                                     <span className="inline-block w-2.5 h-2.5 rounded-full border-2 border-dashed border-amber-500" />
-                                    Unconfirmed
+                                    Не подтверждено
                                 </span>
                             )}
                         </div>
@@ -1306,7 +1306,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                     <button
                         type="button"
                         onClick={() => sheet.newPlace()}
-                        aria-label="Add a place"
+                        aria-label="Добавить место"
                         className="absolute right-3 bottom-[calc(var(--hm-nav-clearance)+0.75rem)] z-[500] flex size-14
                             items-center justify-center rounded-full bg-accent text-white shadow-lg shadow-black/20
                             transition active:scale-95 motion-reduce:active:scale-100"
@@ -1319,11 +1319,11 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                 {showPanels && (
                     <>
                         <ColumnDivider
-                            label="Resize the places column"
+                            label="Изменить ширину списка мест"
                             onDrag={(dx) => resize('right', dx)}
                         />
                         <SidePanel
-                            title="Places"
+                            title="Места"
                             href="/admin/honeymoon/places"
                             width={widths.right}
                         >
@@ -1364,9 +1364,9 @@ function SidePanel({ title, href, width, children }: {
                 <Link
                     href={href}
                     className="text-[11px] text-gray-400 hover:text-gray-700 shrink-0"
-                    title={`Open the full ${title.toLowerCase()} tab`}
+                    title={`Открыть вкладку ${title.toLowerCase()} полностью`}
                 >
-                    Full tab ↗
+                    Полная вкладка ↗
                 </Link>
             </header>
             <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-0.5 pb-1">

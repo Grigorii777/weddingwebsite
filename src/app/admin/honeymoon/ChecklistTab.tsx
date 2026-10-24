@@ -81,7 +81,7 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
     const grouped = useMemo(() => {
         const map = new Map<string, TodoItem[]>();
         for (const todo of visible) {
-            const key = todo.category?.trim() || 'General';
+            const key = todo.category?.trim() || 'Общее';
             const list = map.get(key);
             if (list) list.push(todo); else map.set(key, [todo]);
         }
@@ -104,7 +104,7 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
         await api.create('todos', {
             text: clean,
             kind,
-            category: group.trim() || (kind === 'packing' ? 'Bag' : 'General'),
+            category: group.trim() || (kind === 'packing' ? 'Багаж' : 'Общее'),
             // New items land at the bottom of the list.
             sort_order: (todos.at(-1)?.sort_order ?? 0) + 1,
         });
@@ -138,7 +138,7 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
             .map((entry, index) => ({
                 text: entry.text,
                 kind: 'packing',
-                category: 'Suggested',
+                category: 'Предложено',
                 result: null,
                 sort_order: (todos.at(-1)?.sort_order ?? 0) + 1 + index,
             }));
@@ -154,22 +154,22 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
                 phoneOneRow
                 left={(
                     <Segmented<'task' | 'packing'>
-                        ariaLabel="Which list"
+                        ariaLabel="Какой список"
                         value={kind}
                         onChange={setKind}
                         options={[
-                            { key: 'task', label: 'To do', count: todos.filter((t) => (t.kind ?? 'task') === 'task').length },
-                            { key: 'packing', label: 'Packing', count: todos.filter((t) => (t.kind ?? 'task') === 'packing').length },
+                            { key: 'task', label: 'Дела', count: todos.filter((t) => (t.kind ?? 'task') === 'task').length },
+                            { key: 'packing', label: 'Багаж', count: todos.filter((t) => (t.kind ?? 'task') === 'packing').length },
                         ]}
                     />
                 )}
                 right={(
                     <>
                         <Button onClick={() => setByDue((v) => !v)}>
-                            {byDue ? 'Sort: my order' : 'Sort: by date'}
+                            {byDue ? 'Сортировка: мой порядок' : 'Сортировка: по дате'}
                         </Button>
                         {kind === 'packing' && (
-                            <Button onClick={() => setSuggesting(true)}>Suggest from the trip</Button>
+                            <Button onClick={() => setSuggesting(true)}>Подсказать по плану поездки</Button>
                         )}
                     </>
                 )}
@@ -178,7 +178,7 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
             {/* ---- Due soon ---- */}
             {soon.length > 0 && (
                 <Card className="p-3">
-                    <h3 className="mb-1.5 text-sm font-semibold text-gray-900">Next seven days</h3>
+                    <h3 className="mb-1.5 text-sm font-semibold text-gray-900">Ближайшие семь дней</h3>
                     <ul className="space-y-1">
                         {soon.slice(0, 6).map((entry) => (
                             <li
@@ -193,17 +193,16 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
                                 <span className="min-w-0 truncate">{entry.todo.text}</span>
                                 <span className="shrink-0 text-[11px] tabular-nums">
                                     {entry.bucket === 'overdue'
-                                        ? `${Math.abs(entry.daysAway ?? 0)}d late`
+                                        ? `${Math.abs(entry.daysAway ?? 0)} дн. просрочено`
                                         : entry.bucket === 'today'
-                                            ? 'today'
-                                            : `in ${entry.daysAway}d`}
+                                            ? 'сегодня'
+                                            : `через ${entry.daysAway}d`}
                                 </span>
                             </li>
                         ))}
                     </ul>
                     <p className="mt-1.5 text-[11px] text-gray-400">
-                        From the due dates you have set. Anything due after you leave is flagged on
-                        the Itinerary.
+                        По указанным срокам. Дела со сроком после отъезда отмечены в маршруте.
                     </p>
                 </Card>
             )}
@@ -218,7 +217,7 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
                         value={text}
                         onChange={(e) => setText(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') add(); }}
-                        placeholder={kind === 'packing' ? 'Add something to pack…' : 'Add a to-do…'}
+                        placeholder={kind === 'packing' ? 'Добавить вещь в багаж…' : 'Добавить дело…'}
                         enterKeyHint="done"
                     />
                     <TextField
@@ -227,7 +226,7 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
                         value={group}
                         onChange={(e) => setGroup(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') add(); }}
-                        placeholder="Group (optional)"
+                        placeholder="Группа (необязательно)"
                     />
                     <datalist id="honeymoon-todo-groups">
                         {groups.map((g) => <option key={g} value={g} />)}
@@ -236,10 +235,10 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
                         tone="primary"
                         onClick={add}
                         disabled={!text.trim()}
-                        aria-label="Add"
+                        aria-label="Добавить"
                         className="max-md:flex max-md:size-11 max-md:items-center max-md:justify-center max-md:p-0"
                     >
-                        <span className="max-md:hidden">Add</span>
+                        <span className="max-md:hidden">Добавить</span>
                         <Icon name="plus" className="size-5 md:hidden" strokeWidth={2.4} />
                     </Button>
                 </div>
@@ -250,12 +249,12 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
                 <Card className="p-3">
                     <div className="flex items-center justify-between gap-3 mb-2">
                         <span className="text-sm font-medium text-gray-700">
-                            {done} of {todos.length} done
+                            {done} из {todos.length} готово
                         </span>
                         <div className="flex items-center gap-2">
                             <span className="text-sm text-gray-400 tabular-nums">{pct}%</span>
                             <Button onClick={() => setHideDone((v) => !v)}>
-                                {hideDone ? 'Show done' : 'Hide done'}
+                                {hideDone ? 'Показать выполненное' : 'Скрыть выполненное'}
                             </Button>
                         </div>
                     </div>
@@ -269,11 +268,9 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
             )}
 
             {suggesting && (
-                <Modal open onClose={() => setSuggesting(false)} title="Packing suggestions">
+                <Modal open onClose={() => setSuggesting(false)} title="Что взять с собой">
                     <p className="text-xs text-gray-500">
-                        Worked out from what you have planned — beach days want sunscreen, temples
-                        want covered shoulders, an overnight flight wants an eye mask. Each one
-                        becomes an ordinary checklist row you can edit or delete.
+                        Подсказки по плану: для пляжа — солнцезащитный крем, для храмов — закрытая одежда, для ночного перелёта — маска для сна. Любой пункт можно изменить или удалить.
                     </p>
                     <ul className="mt-3 max-h-64 space-y-1 overflow-auto">
                         {(data ? packingSuggestions(data) : []).map((entry) => (
@@ -290,9 +287,9 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
                         ))}
                     </ul>
                     <div className="mt-4 flex justify-end gap-2">
-                        <Button onClick={() => setSuggesting(false)}>Cancel</Button>
+                        <Button onClick={() => setSuggesting(false)}>Отмена</Button>
                         <Button tone="primary" onClick={addSuggestions}>
-                            Add the ones I don&apos;t have
+                            Добавить недостающие
                         </Button>
                     </div>
                 </Modal>
@@ -302,10 +299,10 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
             {visible.length === 0 ? (
                 <Card>
                     <EmptyState
-                        title={todos.length ? 'Everything here is done' : 'Nothing on the list yet'}
+                        title={todos.length ? 'Всё выполнено' : 'Список пока пуст'}
                         hint={todos.length
-                            ? 'Hit Show done to see what you have ticked off.'
-                            : 'Add the first thing above — passports, insurance, jabs.'}
+                            ? 'Нажмите «Показать выполненное», чтобы увидеть отмеченные дела.'
+                            : 'Добавьте первый пункт выше: паспорта, страховку, прививки.'}
                     />
                 </Card>
             ) : (
@@ -374,7 +371,7 @@ function ResultPrompt({ todo, onClose, onSave }: {
         <Modal open onClose={onClose} title={todo.text}>
             <div className="space-y-3">
                 <label className="block text-xs font-semibold text-gray-500">
-                    How did it go? Booking reference, outcome, anything worth remembering.
+                    Результат, номер брони и всё, что важно запомнить.
                 </label>
                 <TextArea
                     autoFocus
@@ -385,11 +382,11 @@ function ResultPrompt({ todo, onClose, onSave }: {
                         // Enter alone would be a nuisance in a multi-line note.
                         if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) onSave(text.trim());
                     }}
-                    placeholder="Booked with Garuda, ref XY12AB — paid in full"
+                    placeholder="Бронь Garuda, номер XY12AB — полностью оплачено"
                 />
                 <div className="flex justify-end gap-2">
-                    <Button onClick={onClose}>Skip</Button>
-                    <Button tone="primary" onClick={() => onSave(text.trim())}>Save</Button>
+                    <Button onClick={onClose}>Пропустить</Button>
+                    <Button tone="primary" onClick={() => onSave(text.trim())}>Сохранить</Button>
                 </div>
             </div>
         </Modal>
@@ -422,7 +419,7 @@ function TodoRow({ todo, api, onTicked, due, partners }: {
                     {...listeners}
                     className="[@media(pointer:coarse)]:hidden cursor-grab active:cursor-grabbing text-gray-200 hover:text-gray-400
                         touch-none px-1 opacity-0 group-hover:opacity-100 transition"
-                    aria-label="Drag to reorder"
+                    aria-label="Перетащите для изменения порядка"
                 >
                     ⠿
                 </button>
@@ -455,7 +452,7 @@ function TodoRow({ todo, api, onTicked, due, partners }: {
                             onClick={() => onTicked(todo)}
                             className="block min-h-11 md:min-h-0 text-left text-[11px] text-gray-500 px-2 -mt-0.5
                                 hover:text-gray-800 truncate max-w-full"
-                            title="Edit this note"
+                            title="Изменить заметку"
                         >
                             ↳ {todo.result}
                         </button>
@@ -471,13 +468,13 @@ function TodoRow({ todo, api, onTicked, due, partners }: {
                             : !todo.done && due?.bucket === 'today' ? 'border-amber-200 text-amber-700 font-medium'
                                 : todo.due_on ? 'border-gray-200 text-gray-600' : 'border-dashed border-gray-200 text-gray-400'}`}
                 >
-                    {todo.due_on ? `Due ${formatDate(todo.due_on)}` : 'Due ▸'}
+                    {todo.due_on ? `Срок: ${formatDate(todo.due_on)}` : 'Срок ▸'}
                     <input
                         type="date"
                         value={todo.due_on ?? ''}
                         onChange={(e) => api.update('todos', { id: todo.id, due_on: e.target.value })}
                         onClick={(e) => { try { e.currentTarget.showPicker(); } catch { /* older browsers open it themselves */ } }}
-                        aria-label={`Due date for ${todo.text}`}
+                        aria-label={`Срок оплаты: ${todo.text}`}
                         className="absolute inset-0 cursor-pointer opacity-0"
                     />
                 </label>
@@ -488,8 +485,8 @@ function TodoRow({ todo, api, onTicked, due, partners }: {
                         : due.bucket === 'today' ? 'bg-amber-100 text-amber-800'
                             : 'bg-gray-100 text-gray-600'}`}>
                         {due.bucket === 'overdue'
-                            ? `${Math.abs(due.daysAway ?? 0)}d late`
-                            : due.bucket === 'today' ? 'today' : `${due.daysAway}d`}
+                            ? `${Math.abs(due.daysAway ?? 0)} дн. просрочено`
+                            : due.bucket === 'today' ? 'сегодня' : `${due.daysAway}d`}
                     </span>
                 )}
                 {/* Whose bag, on a packing row. Free text through a select of the
@@ -500,11 +497,11 @@ function TodoRow({ todo, api, onTicked, due, partners }: {
                         onChange={(e) => api.update('todos', {
                             id: todo.id, person: e.target.value,
                         })}
-                        aria-label={`Who packs ${todo.text}`}
+                        aria-label={`Кто берёт: ${todo.text}`}
                         className="shrink-0 rounded-lg bg-transparent px-1 py-1 text-xs
                             text-gray-500 hover:bg-gray-50 focus:bg-white focus:outline-none"
                     >
-                        <option value="">both</option>
+                        <option value="">оба</option>
                         {partners.map((person) => (
                             <option key={person} value={person}>{person}</option>
                         ))}
@@ -513,9 +510,9 @@ function TodoRow({ todo, api, onTicked, due, partners }: {
                 <OverflowMenu
                     items={[
                         {
-                            label: 'Delete',
+                            label: 'Удалить',
                             danger: true,
-                            onClick: () => api.removeRow('todos', todo, `Deleted "${todo.text}"`),
+                            onClick: () => api.removeRow('todos', todo, `Удалено «${todo.text}"`),
                         },
                     ]}
                 />

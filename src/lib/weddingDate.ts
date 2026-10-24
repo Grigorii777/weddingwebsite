@@ -15,6 +15,10 @@ const MONTHS: Record<string, number> = {
     jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2, apr: 3, april: 3,
     may: 4, jun: 5, june: 5, jul: 6, july: 6, aug: 7, august: 7, sep: 8, sept: 8,
     september: 8, oct: 9, october: 9, nov: 10, november: 10, dec: 11, december: 11,
+    январь: 0, января: 0, февраль: 1, февраля: 1, март: 2, марта: 2,
+    апрель: 3, апреля: 3, май: 4, мая: 4, июнь: 5, июня: 5,
+    июль: 6, июля: 6, август: 7, августа: 7, сентябрь: 8, сентября: 8,
+    октябрь: 9, октября: 9, ноябрь: 10, ноября: 10, декабрь: 11, декабря: 11,
 };
 
 export interface DateParts { year: number; month: number; day: number }
@@ -28,12 +32,22 @@ export function parseDateParts(raw: string | undefined | null): DateParts | null
     const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
     if (iso) return { year: +iso[1], month: +iso[2] - 1, day: +iso[3] };
 
+    // Russian day.month.year; slash dates below keep their legacy meaning.
+    const ru = text.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:\s*г\.?)?$/);
+    if (ru) return { year: +ru[3], month: +ru[2] - 1, day: +ru[1] };
+
     // US numeric: 9/12/2026 or 09-12-2026
     const us = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
     if (us) return { year: +us[3], month: +us[1] - 1, day: +us[2] };
 
     // Month name anywhere: "June 15, 2024", "15 June 2026", "Sat, Sep 12 2026"
     const lower = text.toLowerCase();
+    const ruMonth = lower.match(/(?:^|\s)(январ[ья]|феврал[ья]|марта?|апрел[ья]|ма[йя]|июн[ья]|июл[ья]|августа?|сентябр[ья]|октябр[ья]|ноябр[ья]|декабр[ья])(?=\s|$|[.,])/u);
+    const ruDate = lower.match(/(?:^|\s)(\d{1,2})\s+[а-яё]+\s+(\d{4})(?:\s|$|[.,])/u);
+    if (ruMonth && ruDate) {
+        const day = Number(ruDate[1]);
+        if (day >= 1 && day <= 31) return { year: Number(ruDate[2]), month: MONTHS[ruMonth[1]], day };
+    }
     const monthMatch = lower.match(/\b(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sept|sep|oct|nov|dec)\b/);
     const yearMatch = lower.match(/\b(\d{4})\b/);
     if (monthMatch && yearMatch) {
@@ -73,7 +87,8 @@ export function weddingDateTime(date: string | undefined | null, time?: string |
     if (!d) return null;
     const t = parseTimeParts(time) ?? { hours: 0, minutes: 0 };
     const result = new Date(d.year, d.month, d.day, t.hours, t.minutes, 0, 0);
-    return Number.isNaN(result.getTime()) ? null : result;
+    return Number.isNaN(result.getTime()) || result.getFullYear() !== d.year
+        || result.getMonth() !== d.month || result.getDate() !== d.day ? null : result;
 }
 
 /**

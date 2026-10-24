@@ -1,6 +1,7 @@
 import Link from 'next/link';
+import { formatWeddingDate, formatWeddingTime } from '@/lib/locale';
 import { getSiteConfig } from '@/lib/config';
-import { publicScheduleEvents, sortByTime } from '@/lib/schedule';
+import { publicScheduleEvents, sortByTime, normalizeEventTime } from '@/lib/schedule';
 import FadeIn from '@/components/FadeIn';
 
 export default function SchedulePage() {
@@ -15,10 +16,10 @@ export default function SchedulePage() {
         ? sortByTime(publicScheduleEvents(config.scheduleEvents))
         : [
             {
-                time: config.weddingTime || '4:00 PM',
-                title: 'Ceremony',
-                description: 'We say "I do"!',
-                location: 'Main Venue'
+                time: formatWeddingTime(config.weddingTime) || '16:00',
+                title: 'Церемония',
+                description: 'Мы скажем друг другу «Да»!',
+                location: 'Место церемонии'
             }
         ];
     const bgColor = config.pageBgColors?.schedule || '#ffffff';
@@ -30,10 +31,10 @@ export default function SchedulePage() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <FadeIn animation="slide-up" className="text-center mb-16">
                     <h1 className="text-4xl font-serif text-gray-900 tracking-tight sm:text-5xl">
-                        Schedule of Events
+                        Программа свадебного дня
                     </h1>
                     <p className="mt-4 text-xl text-gray-500 italic font-serif">
-                        {config.weddingDate}
+                        {formatWeddingDate(config.weddingDate)}
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
@@ -41,20 +42,20 @@ export default function SchedulePage() {
                             href="/rsvp"
                             className="px-8 py-3 bg-accent text-white hover:bg-accent-dark transition-colors rounded-full uppercase tracking-widest text-sm font-bold shadow-lg hover:shadow-xl"
                         >
-                            RSVP Now
+                            Подтвердить участие
                         </Link>
                         <Link
                             href="/#faqs"
                             className="px-8 py-3 bg-transparent border-2 border-accent text-accent hover:bg-accent hover:text-white transition-colors rounded-full uppercase tracking-widest text-sm font-bold shadow-lg hover:shadow-xl"
                         >
-                            View FAQs
+                            Частые вопросы
                         </Link>
                     </div>
                 </FadeIn>
 
                 {events.length === 0 ? (
                     <p className="text-center text-gray-400 italic font-serif">
-                        Timings to come.
+                        Расписание скоро появится.
                     </p>
                 ) : (
                 <div className="max-w-3xl mx-auto">
@@ -68,7 +69,7 @@ export default function SchedulePage() {
 
                                 {/* Time Display (Left on Desktop) */}
                                 <div className="hidden sm:block w-24 pt-1 pr-6 text-right">
-                                    <span className="text-sm font-bold text-accent tracking-wider uppercase">{event.time}</span>
+                                    <span className="text-sm font-bold text-accent tracking-wider uppercase">{normalizeEventTime(event.time)}</span>
                                 </div>
 
                                 {/* Content */}
@@ -76,7 +77,7 @@ export default function SchedulePage() {
                                     <div className="flex items-center mb-2">
                                         {/* Mobile Time */}
                                         <div className="sm:hidden mr-4">
-                                            <span className="text-sm font-bold text-accent tracking-wider uppercase">{event.time}</span>
+                                            <span className="text-sm font-bold text-accent tracking-wider uppercase">{normalizeEventTime(event.time)}</span>
                                         </div>
                                         {/* Dot */}
                                         <div className="absolute left-0 sm:left-[5.5rem] w-4 h-4 rounded-full bg-accent border-4 border-white shadow-sm transform -translate-x-1.5 sm:translate-x-[0.2rem]"></div>
@@ -109,13 +110,13 @@ export default function SchedulePage() {
                     <div className="mt-20 grid gap-8 grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto">
                         {shuttleText && (
                             <FadeIn animation="slide-right" className="bg-gray-900 text-white p-8 rounded-2xl text-center shadow-xl">
-                                <h3 className="text-xl font-serif mb-4">Getting There</h3>
+                                <h3 className="text-xl font-serif mb-4">Как добраться</h3>
                                 <p className="text-gray-300 whitespace-pre-line">{shuttleText}</p>
                             </FadeIn>
                         )}
                         {dressCode && (
                             <FadeIn animation="slide-left" delay={80} className="bg-accent/10 p-8 rounded-2xl text-center border-2 border-accent/20 shadow-lg">
-                                <h3 className="text-xl font-serif mb-4 text-gray-900">Dress Code</h3>
+                                <h3 className="text-xl font-serif mb-4 text-gray-900">Дресс-код</h3>
                                 <p className="text-gray-600 whitespace-pre-line">{dressCode}</p>
                             </FadeIn>
                         )}

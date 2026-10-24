@@ -61,7 +61,7 @@ export default function CompareTable({ api, stays, onPick }: {
     if (!stays.length) {
         return (
             <p className="px-1 py-4 text-sm text-gray-500">
-                Nothing to compare in this bucket.
+                В этой группе нечего сравнивать.
             </p>
         );
     }
@@ -99,7 +99,7 @@ export default function CompareTable({ api, stays, onPick }: {
                                 {stay.cost_per !== 'night' && (
                                     <span className="text-[11px] text-gray-400">
                                         {stay.cost_per === 'person'
-                                            ? ' pp' : ' total'}
+                                            ? ' на человека' : ' всего'}
                                     </span>
                                 )}
                             </span>
@@ -117,7 +117,7 @@ export default function CompareTable({ api, stays, onPick }: {
                 <>
                     {stay.region_id != null
                         ? api.regionById.get(stay.region_id) ?? '—'
-                        : <span className="text-gray-300">no area</span>}
+                        : <span className="text-gray-300">район не указан</span>}
                 </>
             ),
             distance: (
@@ -129,7 +129,7 @@ export default function CompareTable({ api, stays, onPick }: {
                             </span>
                             {nearest != null && (
                                 <span className="text-[11px] text-gray-400">
-                                    {' '}· nearest {formatDistance(nearest)}
+                                    {' '}· ближайшее {formatDistance(nearest)}
                                 </span>
                             )}
                         </>
@@ -171,7 +171,7 @@ export default function CompareTable({ api, stays, onPick }: {
                                 className="rounded-full bg-gray-100 px-2 py-0.5
                                     text-[10px] text-gray-600 hover:bg-gray-200"
                             >
-                                {providerOf(link.url) ?? 'Link'}
+                                {providerOf(link.url) ?? 'Ссылка'}
                             </a>
                         ))}
                     </div>
@@ -191,8 +191,8 @@ export default function CompareTable({ api, stays, onPick }: {
                         <div key={row.stay.id} className="w-[82%] shrink-0 snap-center rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
                             <div className="text-base">{cell.name}</div>
                             <dl className="mt-2 space-y-1.5 text-sm">
-                                {([['Rank', cell.rank], ['Per night', cell.price], ['Area', cell.area],
-                                    ['To your excursions', cell.distance], ['Verdict', cell.verdict], ['Links', cell.links]] as const)
+                                {([['Приоритет', cell.rank], ['За ночь', cell.price], ['Район', cell.area],
+                                    ['До ваших экскурсий', cell.distance], ['Решение', cell.verdict], ['Ссылки', cell.links]] as const)
                                     .map(([label, value]) => (
                                         <div key={label} className="flex items-baseline justify-between gap-3">
                                             <dt className="shrink-0 text-xs text-gray-400">{label}</dt>
@@ -212,20 +212,20 @@ export default function CompareTable({ api, stays, onPick }: {
             <table className="w-full min-w-[46rem] text-sm">
                 <thead>
                     <tr className="border-b border-gray-200 text-left">
-                        <Th>Stay</Th>
-                        <Th>Rank</Th>
-                        <Th>Per night</Th>
-                        <Th>Area</Th>
+                        <Th>Проживание</Th>
+                        <Th>Приоритет</Th>
+                        <Th>За ночь</Th>
+                        <Th>Район</Th>
                         <Th>
-                            To your excursions
+                            До ваших экскурсий
                             <span className="block text-[10px] font-normal text-gray-400">
                                 {wanted.length
-                                    ? `average of ${wanted.length} rated 👍`
-                                    : 'rate some excursions first'}
+                                    ? `в среднем по ${wanted.length} с оценкой 👍`
+                                    : 'сначала оцените экскурсии'}
                             </span>
                         </Th>
-                        <Th>Verdict</Th>
-                        <Th>Links</Th>
+                        <Th>Решение</Th>
+                        <Th>Ссылки</Th>
                     </tr>
                 </thead>
                 <tbody>

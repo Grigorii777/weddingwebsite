@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import { useMemo, useState } from 'react';
 import type { ScheduleKind } from '@/lib/finance';
@@ -18,9 +19,9 @@ import {
  */
 
 const KIND_LABEL: Record<ScheduleKind, string> = {
-    deposit: 'Deposit',
-    installment: 'Instalment',
-    balance: 'Final balance',
+    deposit: 'Аванс',
+    installment: 'Частичный платёж',
+    balance: 'Остаток',
 };
 
 export default function ScheduleTab({ data, api }: { data: FinancePayload; api: FinanceApi }) {
@@ -51,7 +52,7 @@ export default function ScheduleTab({ data, api }: { data: FinancePayload; api: 
 
     const addOne = () =>
         api.create('schedule', {
-            label: 'New payment',
+            label: 'Новый платёж',
             kind: 'installment',
             amount: 0,
             due_on: todayLocal(),
@@ -61,26 +62,25 @@ export default function ScheduleTab({ data, api }: { data: FinancePayload; api: 
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                <StatTile label="Scheduled, unpaid" value={formatMoney(summary.scheduledUnsettled)}
-                    hint={`${outstanding.length} payment${outstanding.length === 1 ? '' : 's'}`} />
-                <StatTile label="Overdue" value={formatMoney(summary.overdueTotal)}
+                <StatTile label="Запланировано, не оплачено" value={formatMoney(summary.scheduledUnsettled)}
+                    hint={`${counted(outstanding.length, 'платёж', 'платежа', 'платежей')}`} />
+                <StatTile label="Просрочено" value={formatMoney(summary.overdueTotal)}
                     tone={summary.overdueTotal > 0 ? 'bad' : 'good'}
-                    hint={summary.overdueTotal > 0 ? 'past its due date' : 'nothing late'} />
-                <StatTile label="Due within 30 days" value={formatMoney(summary.dueSoonTotal)}
+                    hint={summary.overdueTotal > 0 ? 'срок оплаты прошёл' : 'просроченных нет'} />
+                <StatTile label="К оплате в течение 30 дней" value={formatMoney(summary.dueSoonTotal)}
                     tone={summary.dueSoonTotal > 0 ? 'warn' : 'default'} />
-                <StatTile label="Next due"
+                <StatTile label="Ближайший платёж"
                     value={nextDue ? formatMoney(nextDue.amount) : '—'}
                     hint={nextDue
                         ? `${nextDue.label} · ${nextDue.due_on}`
-                        : 'nothing scheduled'} />
+                        : 'не запланировано'} />
             </div>
 
             {summary.overdueTotal > 0 && (
                 <Card className="border-rose-200 bg-rose-50/50 p-4">
                     <p className="text-xs leading-relaxed text-rose-800">
-                        <strong>{formatMoney(summary.overdueTotal)} is past its due date.</strong>{' '}
-                        If you&apos;ve actually paid it, log the payment on the Purchases tab and tick
-                        it off here — ticking it off is what stops it nagging.
+                        <strong>{formatMoney(summary.overdueTotal)} просрочено.</strong>{' '}
+                        Если уже оплатили, внесите платёж во вкладке «Покупки» и отметьте здесь как оплаченный, чтобы убрать напоминание.
                     </p>
                 </Card>
             )}
@@ -88,13 +88,13 @@ export default function ScheduleTab({ data, api }: { data: FinancePayload; api: 
             <Card className="p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                        <div className="text-sm font-semibold text-gray-800">Split a bill</div>
+                        <div className="text-sm font-semibold text-gray-800">Разбить счёт</div>
                         <div className="mt-0.5 text-xs text-gray-400">
-                            Turn one budget line or section into a deposit plus instalments.
+                            Разделите статью или раздел на аванс и последующие платежи.
                         </div>
                     </div>
                     <PillButton tone="accent" onClick={() => setSplitting(true)}>
-                        Split into payments
+                        Разбить на платежи
                     </PillButton>
                 </div>
             </Card>
@@ -103,12 +103,12 @@ export default function ScheduleTab({ data, api }: { data: FinancePayload; api: 
                 <div className="hidden gap-2 border-b border-gray-100 px-4 py-2 text-[10px] font-semibold
                     uppercase tracking-wide text-gray-400 md:grid
                     md:grid-cols-[minmax(0,1.5fr)_7.5rem_minmax(0,1.4fr)_7rem_7rem_4.5rem_1.75rem]">
-                    <div>Payment</div>
-                    <div>Due</div>
-                    <div>For</div>
-                    <div>Kind</div>
-                    <div className="text-right">Amount</div>
-                    <div className="text-center">Paid</div>
+                    <div>Платёж</div>
+                    <div>Срок оплаты</div>
+                    <div>Назначение</div>
+                    <div>Тип</div>
+                    <div className="text-right">Сумма</div>
+                    <div className="text-center">Оплачено</div>
                     <div />
                 </div>
 
@@ -129,37 +129,37 @@ export default function ScheduleTab({ data, api }: { data: FinancePayload; api: 
                                 {sp.isOverdue && (
                                     <span className="shrink-0 rounded-full bg-rose-100 px-1.5 py-0.5
                                         text-[9px] font-semibold uppercase text-rose-700">
-                                        Overdue
+                                        Просрочено
                                     </span>
                                 )}
                                 {!sp.settled && sp.isDueSoon && (
                                     <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5
                                         text-[9px] font-semibold uppercase text-amber-700">
-                                        {sp.daysUntilDue === 0 ? 'Today' : `${sp.daysUntilDue}d`}
+                                        {sp.daysUntilDue === 0 ? 'Сегодня' : `${sp.daysUntilDue}d`}
                                     </span>
                                 )}
                                 <span className="shrink-0 pl-1 text-sm font-medium tabular-nums md:hidden">
                                     {formatMoney(sp.amount)}
                                 </span>
                             </div>
-                            <RowField label="Due">
+                            <RowField label="Срок оплаты">
                                 <RowDate
                                     value={(sp.due_on ?? '').slice(0, 10)}
-                                    aria-label={`Due date for ${sp.label}`}
+                                    aria-label={`Срок оплаты: ${sp.label}`}
                                     onChange={(e) => patch({ due_on: e.target.value })}
                                 />
                             </RowField>
-                            <RowField label="For">
+                            <RowField label="Назначение">
                                 <RowSelect
                                     value={targetValue(sp)}
-                                    aria-label={`What ${sp.label} is for`}
+                                    aria-label={`Что ${sp.label} относится к`}
                                     onChange={(e) => patch(targetPatch(e.target.value))}
                                 >
-                                    <option value="">— whole wedding —</option>
+                                    <option value="">— вся свадьба —</option>
                                     {targets.map((group) => (
                                         <optgroup key={group.name} label={group.name}>
                                             <option value={group.sectionValue}>
-                                                {group.name} — whole section
+                                                {group.name} — весь раздел
                                             </option>
                                             {group.items.map((i) => (
                                                 <option key={i.value} value={i.value}>{i.name}</option>
@@ -168,10 +168,10 @@ export default function ScheduleTab({ data, api }: { data: FinancePayload; api: 
                                     ))}
                                 </RowSelect>
                             </RowField>
-                            <RowField label="Kind">
+                            <RowField label="Тип">
                                 <RowSelect
                                     value={sp.kind}
-                                    aria-label={`Kind of payment for ${sp.label}`}
+                                    aria-label={`Тип платежа: ${sp.label}`}
                                     onChange={(e) => patch({ kind: e.target.value })}
                                 >
                                     {Object.entries(KIND_LABEL).map(([value, label]) => (
@@ -179,21 +179,21 @@ export default function ScheduleTab({ data, api }: { data: FinancePayload; api: 
                                     ))}
                                 </RowSelect>
                             </RowField>
-                            <RowField label="Amount" className="hidden md:flex">
+                            <RowField label="Сумма" className="hidden md:flex">
                                 <InlineNumber value={sp.amount} prefix="$"
                                     onCommit={(amount) => patch({ amount })} />
                             </RowField>
-                            <RowField label="Paid">
+                            <RowField label="Оплачено">
                                 <div className="flex justify-end md:justify-center">
                                     <Toggle
                                         checked={sp.settled}
                                         onChange={(settled) => patch({ settled })}
-                                        label={`Mark ${sp.label} paid`}
+                                        label={`Отметить ${sp.label} оплаченным`}
                                     />
                                 </div>
                             </RowField>
                             <DeleteButton
-                                label={`Delete ${sp.label}`}
+                                label={`Удалить ${sp.label}`}
                                 onClick={() => api.removeWithUndo('schedule', sp.id, sp.label, {
                                     label: sp.label, kind: sp.kind, amount: sp.amount,
                                     due_on: sp.due_on, item_id: sp.item_id, category_id: sp.category_id,
@@ -206,13 +206,12 @@ export default function ScheduleTab({ data, api }: { data: FinancePayload; api: 
 
                 {!summary.schedule.length && (
                     <EmptyState>
-                        Nothing scheduled yet. Use <strong>Split into payments</strong> above, or add a
-                        single payment below.
+                        Платежи ещё не запланированы. Используйте <strong>Разбить на платежи</strong> выше или добавьте отдельный платёж ниже.
                     </EmptyState>
                 )}
 
                 <div className="border-t border-gray-50 px-4 py-2">
-                    <AddButton onClick={addOne}>+ Add a scheduled payment</AddButton>
+                    <AddButton onClick={addOne}>+ Запланировать платёж</AddButton>
                 </div>
             </Card>
 
@@ -276,7 +275,7 @@ function SplitBill({ data, api, onClose }: {
 
         if (deposit > 0) {
             await api.create('schedule', {
-                ...link, label: `${targetName} deposit`, kind: 'deposit',
+                ...link, label: `${targetName} аванс`, kind: 'deposit',
                 amount: deposit, due_on: firstDue, sort_order: order,
             });
             order += 1;
@@ -300,64 +299,64 @@ function SplitBill({ data, api, onClose }: {
     };
 
     return (
-        <Modal title="Split a bill into payments" onClose={onClose}>
+        <Modal title="Разбить счёт на платежи" onClose={onClose}>
             <div className="space-y-4">
                 <label className="block">
-                    <span className="mb-1 block text-xs font-semibold text-gray-500">Which bill</span>
+                    <span className="mb-1 block text-xs font-semibold text-gray-500">Выберите счёт</span>
                     <SelectField value={target} onChange={(e) => setTarget(e.target.value)}>
                         {data.categories.map((c) => (
                             <optgroup key={c.id} label={c.name}>
-                                <option value={`c:${c.id}`}>{c.name} — whole section</option>
+                                <option value={`c:${c.id}`}>{c.name} — весь раздел</option>
                                 {c.items.map((i) => <option key={i.id} value={`i:${i.id}`}>{i.name}</option>)}
                             </optgroup>
                         ))}
                     </SelectField>
                     <span className="mt-1 block text-[11px] text-gray-400">
-                        Budgeted at {formatMoney(targetTotal)}
+                        В бюджете {formatMoney(targetTotal)}
                     </span>
                 </label>
 
                 <div className="grid grid-cols-2 gap-3">
                     <label className="block">
-                        <span className="mb-1 block text-xs font-semibold text-gray-500">Deposit now</span>
+                        <span className="mb-1 block text-xs font-semibold text-gray-500">Первоначальный взнос</span>
                         <TextField type="number" min={0} value={deposit}
                             onChange={(e) => setDeposit(Math.max(0, Number(e.target.value) || 0))} />
                     </label>
                     <label className="block">
-                        <span className="mb-1 block text-xs font-semibold text-gray-500">Then how many</span>
+                        <span className="mb-1 block text-xs font-semibold text-gray-500">Число оставшихся платежей</span>
                         <TextField type="number" min={1} max={24} value={count}
                             onChange={(e) => setCount(Math.min(24, Math.max(1, Math.trunc(Number(e.target.value) || 1))))} />
                     </label>
                     <label className="block">
-                        <span className="mb-1 block text-xs font-semibold text-gray-500">First due</span>
+                        <span className="mb-1 block text-xs font-semibold text-gray-500">Дата первого платежа</span>
                         <TextField type="date" value={firstDue}
                             onChange={(e) => setFirstDue(e.target.value)} />
                     </label>
                     <label className="block">
-                        <span className="mb-1 block text-xs font-semibold text-gray-500">Every (days)</span>
+                        <span className="mb-1 block text-xs font-semibold text-gray-500">Интервал в днях</span>
                         <TextField type="number" min={1} value={everyDays}
                             onChange={(e) => setEveryDays(Math.max(1, Math.trunc(Number(e.target.value) || 30)))} />
                     </label>
                 </div>
 
                 <div className="rounded-2xl bg-gray-50 p-3 text-xs text-gray-600">
-                    {deposit > 0 && <div>Deposit of {formatMoney(deposit)} on {firstDue}</div>}
+                    {deposit > 0 && <div>Аванс {formatMoney(deposit)} дата {firstDue}</div>}
                     <div>
-                        {count} payment{count === 1 ? '' : 's'} of {formatMoney(per)}
+                        {counted(count, 'платёж', 'платежа', 'платежей')} из {formatMoney(per)}
                         {Math.abs(lastPayment - per) > 0.005 && (
-                            <> (last one {formatMoney(lastPayment)} to absorb the rounding)</>
+                            <> (последний платёж {formatMoney(lastPayment)} с учётом округления)</>
                         )}
-                        , every {everyDays} days
+                        , каждые {everyDays} дней
                     </div>
                     <div className="mt-1 font-semibold text-gray-800">
-                        Totals {formatMoney(deposit + per * Math.max(0, count - 1) + lastPayment)}
+                        Итоги {formatMoney(deposit + per * Math.max(0, count - 1) + lastPayment)}
                     </div>
                 </div>
 
                 <div className="flex justify-end gap-2">
-                    <PillButton onClick={onClose}>Cancel</PillButton>
+                    <PillButton onClick={onClose}>Отмена</PillButton>
                     <PillButton tone="accent" onClick={create} disabled={busy || !target}>
-                        {busy ? 'Creating…' : 'Create schedule'}
+                        {busy ? 'Создаём…' : 'Создать график'}
                     </PillButton>
                 </div>
             </div>

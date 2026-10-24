@@ -134,7 +134,7 @@ export type Tally = Record<DietCode, number> & {
  * they cannot drift apart. (When the entrée question lands — SEAT-1 in the
  * parking lot — this is the constant that stops being a constant.)
  */
-export const NO_RESTRICTION_LABEL = 'Chicken';
+export const NO_RESTRICTION_LABEL = 'Курица';
 
 /**
  * Count a group of people by restriction.
@@ -174,8 +174,8 @@ export function tally(people: { diet: DietCode[] }[]): Tally {
  * A restriction nobody has is left out rather than printed as a zero — a line of
  * zeroes is the thing a caterer skims past.
  */
-export function tallyParts(t: Tally, seatCount: number | null = null, lead = 'seated'): string[] {
-    const parts = [seatCount && seatCount > 0 ? `${t.total} ${lead} of ${seatCount}` : `${t.total} ${lead}`];
+export function tallyParts(t: Tally, seatCount: number | null = null, lead = 'рассажено'): string[] {
+    const parts = [seatCount && seatCount > 0 ? `${t.total} ${lead} из ${seatCount}` : `${t.total} ${lead}`];
     for (const code of ALL_DIET_CODES) {
         if (t[code] > 0) parts.push(`${t[code]} ${DIET_LABELS[code].toLowerCase()}`);
     }
@@ -336,15 +336,15 @@ export function alphabetical(data: SeatingExportData, includeUnseated: boolean):
  */
 export function csvHeaders(opts: ExportOptions): string[] {
     return [
-        'Table',
-        'Seat',
-        'Name',
-        ...(opts.household ? ['Household'] : []),
-        ...(opts.side ? ['Side'] : []),
-        ...(opts.vendors ? ['Role', 'Meal'] : []),
+        'Стол',
+        'Место',
+        'Имя',
+        ...(opts.household ? ['Приглашение'] : []),
+        ...(opts.side ? ['Сторона'] : []),
+        ...(opts.vendors ? ['Роль', 'Питание'] : []),
         'RSVP',
         ...ALL_DIET_CODES.map(code => DIET_LABELS[code]),
-        'Note',
+        'Заметка',
     ];
 }
 
@@ -358,19 +358,19 @@ export function csvHeaders(opts: ExportOptions): string[] {
  */
 export function csvRows(data: SeatingExportData, opts: ExportOptions): unknown[][] {
     const rows = (people: ExportPerson[]) => people.map(person => [
-        person.table_name ?? 'Not seated',
+        person.table_name ?? 'Без места',
         person.seat ?? '',
         person.name,
         ...(opts.household ? [person.household] : []),
         ...(opts.side ? [person.side ?? ''] : []),
         // Not eating is the one guest row that is not a meal.
         ...(opts.vendors ? ['', person.diet.includes('NOM') ? 'no' : 'yes'] : []),
-        person.rsvp_status ?? 'no answer',
+        person.rsvp_status ?? 'нет ответа',
         ...ALL_DIET_CODES.map(code => (person.diet.includes(code) ? 'yes' : '')),
         person.note,
     ]);
     const vendorRows = (vendors: ExportVendor[]) => vendors.map(vendor => [
-        'Vendor',
+        'Подрядчик',
         '',
         vendor.name,
         ...(opts.household ? [vendor.company ?? ''] : []),

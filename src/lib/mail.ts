@@ -46,7 +46,7 @@ export function getCoupleName(): string {
     const config = getSiteConfig();
     return config.brideName && config.groomName
         ? `${config.brideName} & ${config.groomName}`
-        : 'The Couple';
+        : 'Молодожёны';
 }
 
 /** The transporter the mail goes out on. Call it only when `isMailConfigured()` holds. */
@@ -70,16 +70,16 @@ export function createTransporter() {
  */
 export async function sendTestMail(): Promise<{ ok: boolean; error?: string }> {
     const to = (process.env.NOTIFICATION_EMAIL ?? '').trim();
-    if (to === '') return { ok: false, error: 'NOTIFICATION_EMAIL is not set — the test mail has no recipient.' };
-    if (!isMailConfigured()) return { ok: false, error: 'Email is not configured.' };
+    if (to === '') return { ok: false, error: 'Не задан NOTIFICATION_EMAIL — некому отправить тестовое письмо.' };
+    if (!isMailConfigured()) return { ok: false, error: 'Почта не настроена.' };
     try {
         const couple = getCoupleName();
         const transporter = createTransporter();
         await transporter.sendMail({
             from: `"${couple.replace(/"/g, '')}" <${getMailFrom()}>`,
             to,
-            subject: 'Wedding website — email test',
-            text: `This is a test mail from the wedding website's admin panel.\n\nIf you are reading this, the SMTP settings on this instance are working.\n\n— ${couple}`,
+            subject: 'Сайт свадьбы — проверка почты',
+            text: `Это тестовое письмо из панели управления свадебным сайтом.\n\nЕсли вы его получили, почта на этом сайте настроена правильно.\n\n— ${couple}`,
         });
         return { ok: true };
     } catch (error) {
@@ -98,15 +98,15 @@ export async function sendTestMail(): Promise<{ ok: boolean; error?: string }> {
  * mistyped.
  */
 export async function sendRsvpLinkMail(to: string, linkUrl: string): Promise<{ ok: boolean; error?: string }> {
-    if (!isMailConfigured()) return { ok: false, error: 'Email is not configured.' };
+    if (!isMailConfigured()) return { ok: false, error: 'Почта не настроена.' };
     try {
         const couple = getCoupleName();
         const transporter = createTransporter();
         await transporter.sendMail({
             from: `"${couple.replace(/"/g, '')}" <${getMailFrom()}>`,
             to,
-            subject: 'Your RSVP link',
-            text: `Click the link below to RSVP for your party.\n\n${linkUrl}\n\n— ${couple}`,
+            subject: 'Ваша ссылка для ответа на приглашение',
+            text: `Перейдите по ссылке ниже, чтобы ответить на приглашение за вашу компанию.\n\n${linkUrl}\n\n— ${couple}`,
         });
         return { ok: true };
     } catch (error) {

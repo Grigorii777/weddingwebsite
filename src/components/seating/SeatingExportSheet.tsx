@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import {
     ALL_DIET_CODES, DIET_LABELS, NO_RESTRICTION_LABEL, PLAN_LANDSCAPE, PLAN_PORTRAIT, PLAN_TABLE,
@@ -107,12 +108,12 @@ function Roster({ people, options, withSeat }: {
         <table className="w-full mt-2 text-[11.5px] border-collapse">
             <thead>
                 <tr className="text-[9px] uppercase tracking-widest text-gray-400">
-                    {withSeat && <th className="text-left font-semibold pb-1 pr-2 w-9">Seat</th>}
-                    <th className="text-left font-semibold pb-1 pr-2">Name</th>
-                    {!withSeat && <th className="text-left font-semibold pb-1 pr-2">Table</th>}
-                    {options.household && <th className="text-left font-semibold pb-1 pr-2">Household</th>}
-                    {options.side && <th className="text-left font-semibold pb-1 pr-2">Side</th>}
-                    <th className="text-right font-semibold pb-1">Dietary</th>
+                    {withSeat && <th className="text-left font-semibold pb-1 pr-2 w-9">Место</th>}
+                    <th className="text-left font-semibold pb-1 pr-2">Имя</th>
+                    {!withSeat && <th className="text-left font-semibold pb-1 pr-2">Стол</th>}
+                    {options.household && <th className="text-left font-semibold pb-1 pr-2">Приглашение</th>}
+                    {options.side && <th className="text-left font-semibold pb-1 pr-2">Сторона</th>}
+                    <th className="text-right font-semibold pb-1">Питание</th>
                 </tr>
             </thead>
             <tbody>
@@ -122,13 +123,13 @@ function Roster({ people, options, withSeat }: {
                         <td className="py-1 pr-2 font-medium text-gray-900">
                             {person.name}
                             {person.rsvp_status === 'declined' && (
-                                <span className="ml-1.5 text-[9px] uppercase tracking-wide text-red-700">not coming</span>
+                                <span className="ml-1.5 text-[9px] uppercase tracking-wide text-red-700">не придёт</span>
                             )}
                             {person.note && <span className="block text-[10px] italic text-gray-500">{person.note}</span>}
                         </td>
                         {!withSeat && (
                             <td className="py-1 pr-2 text-gray-500">
-                                {person.table_name ?? 'Not seated'}
+                                {person.table_name ?? 'Без места'}
                                 {person.seat !== null && <span className="text-gray-400"> · {person.seat}</span>}
                             </td>
                         )}
@@ -167,9 +168,9 @@ function TableBlock({ table, options, compact = false }: {
             {options.detail !== 'counts' && table.people.length > 0 && (
                 <Roster people={table.people} options={options} withSeat />
             )}
-            {table.people.length === 0 && <p className="mt-2 text-[11px] italic text-gray-400">Nobody seated here yet.</p>}
+            {table.people.length === 0 && <p className="mt-2 text-[11px] italic text-gray-400">За этим столом пока никто не сидит.</p>}
             {options.empty && free > 0 && (
-                <p className="mt-1.5 text-[11px] text-gray-400">{free} empty seat{free === 1 ? '' : 's'}</p>
+                <p className="mt-1.5 text-[11px] text-gray-400">{counted(free, 'свободное место', 'свободных места', 'свободных мест')}</p>
             )}
         </section>
     );
@@ -211,8 +212,8 @@ function Kitchen({ people, vendors, showVendors }: {
     const ROW_LABEL = 'text-[9px] uppercase tracking-widest text-gray-400 mb-1.5';
     return (
         <section className="mb-6 break-inside-avoid">
-            <h3 className="text-[9px] uppercase tracking-widest text-gray-400 mb-2">For the kitchen</h3>
-            {withVendors && <p className={ROW_LABEL}>Guests</p>}
+            <h3 className="text-[9px] uppercase tracking-widest text-gray-400 mb-2">Для кухни</h3>
+            {withVendors && <p className={ROW_LABEL}>Гости</p>}
             {/* Plates, not the headcount: it is the number a caterer is being
                 asked for, and once anybody is marked "not eating" the two stop
                 being the same. The chairs are not a kitchen number — each table
@@ -220,7 +221,7 @@ function Kitchen({ people, vendors, showVendors }: {
                 *Not eating* tile and the total line rather than by a tile that
                 would read 0 for every vendor. */}
             <div className={GRID}>
-                <Tile label="Plates" value={t.plates} lead />
+                <Tile label="Порции" value={t.plates} lead />
                 {ALL_DIET_CODES.map(code => <Tile key={code} label={DIET_LABELS[code]} value={t[code]} />)}
                 <Tile label={NO_RESTRICTION_LABEL} value={t.none} />
             </div>
@@ -233,9 +234,9 @@ function Kitchen({ people, vendors, showVendors }: {
                         their contract (`needs_meal`), not a dietary answer, so
                         that tile is counted from the vendors rather than from
                         their tally. */}
-                    <p className={`${ROW_LABEL} mt-3`}>Vendors</p>
+                    <p className={`${ROW_LABEL} mt-3`}>Подрядчики</p>
                     <div className={GRID}>
-                        <Tile label="Plates" value={fed.length} lead />
+                        <Tile label="Порции" value={fed.length} lead />
                         {ALL_DIET_CODES.map(code => (
                             <Tile
                                 key={code}
@@ -247,15 +248,15 @@ function Kitchen({ people, vendors, showVendors }: {
                     </div>
                     <p className="mt-2 text-[10px] text-gray-500 tabular-nums">
                         <span className="font-semibold text-gray-800">
-                            {grandTotal(people, vendors)} plates in total
+                            {grandTotal(people, vendors)} порций всего
                         </span>
-                        {' — '}{t.plates} guest{t.plates === 1 ? '' : 's'}
-                        {' and '}{fed.length} vendor{fed.length === 1 ? '' : 's'}
+                        {' — '}{counted(t.plates, 'гость', 'гостя', 'гостей')}
+                        {' и '}{counted(fed.length, 'подрядчик', 'подрядчика', 'подрядчиков')}
                         {(t.NOM > 0 || unfed > 0) && (
                             <span className="text-gray-400">
-                                {' '}(not eating: {[
-                                    t.NOM > 0 ? `${t.NOM} guest${t.NOM === 1 ? '' : 's'}` : null,
-                                    unfed > 0 ? `${unfed} vendor${unfed === 1 ? '' : 's'}` : null,
+                                {' '}(без питания: {[
+                                    t.NOM > 0 ? `${counted(t.NOM, 'гость', 'гостя', 'гостей')}` : null,
+                                    unfed > 0 ? `${counted(unfed, 'подрядчик', 'подрядчика', 'подрядчиков')}` : null,
                                 ].filter(Boolean).join(', ')})
                             </span>
                         )}
@@ -264,8 +265,8 @@ function Kitchen({ people, vendors, showVendors }: {
             )}
             {!withVendors && t.NOM > 0 && (
                 <p className="mt-2 text-[10px] text-gray-500 tabular-nums">
-                    <span className="font-semibold text-gray-800">{t.plates} plates</span>
-                    {' — '}{t.NOM} of the {t.total} seated {t.NOM === 1 ? 'is' : 'are'} not eating
+                    <span className="font-semibold text-gray-800">{t.plates} порций</span>
+                    {' — '}{t.NOM} из {t.total} рассажены {t.NOM === 1 ? '' : ''} без питания
                 </p>
             )}
         </section>
@@ -298,16 +299,16 @@ function Vendors({ vendors, compact = false }: {
         return (
             <section className="mb-4 break-inside-avoid">
                 <div className="flex items-baseline gap-2 border-b border-gray-300 pb-1">
-                    <h3 className="font-serif text-base font-semibold text-gray-900">Vendors</h3>
-                    <span className="text-[10px] uppercase tracking-widest text-gray-400">not seated</span>
+                    <h3 className="font-serif text-base font-semibold text-gray-900">Подрядчики</h3>
+                    <span className="text-[10px] uppercase tracking-widest text-gray-400">без места</span>
                     <span className="ml-auto font-mono text-[11px] text-gray-500 tabular-nums">
-                        {fed.length}/{list.length} eating
+                        {fed.length}/{list.length} с питанием
                     </span>
                 </div>
                 {fed.length > 0 && <TallyLine people={fed} compact />}
                 {unfed.length > 0 && (
                     <p className="mt-1 text-[10px] text-gray-500">
-                        No meal: {unfed.map(v => v.name).join(', ')}
+                        Без питания: {unfed.map(v => v.name).join(', ')}
                     </p>
                 )}
             </section>
@@ -317,23 +318,23 @@ function Vendors({ vendors, compact = false }: {
     return (
         <section className="mb-7 break-inside-avoid">
             <div className="flex items-baseline gap-2 border-b border-gray-300 pb-1">
-                <h3 className="font-serif text-base font-semibold text-gray-900">Vendors</h3>
-                <span className="text-[10px] uppercase tracking-widest text-gray-400">not seated</span>
+                <h3 className="font-serif text-base font-semibold text-gray-900">Подрядчики</h3>
+                <span className="text-[10px] uppercase tracking-widest text-gray-400">без места</span>
                 <span className="ml-auto font-mono text-[11px] text-gray-500 tabular-nums">
-                    {fed.length}/{list.length} eating
+                    {fed.length}/{list.length} с питанием
                 </span>
             </div>
             {fed.length > 0 && <TallyLine people={fed} lead="plates" />}
             {list.length === 0 ? (
-                <p className="mt-2 text-[11px] italic text-gray-400">No vendors added yet.</p>
+                <p className="mt-2 text-[11px] italic text-gray-400">Подрядчики пока не добавлены.</p>
             ) : (
                 <table className="w-full mt-2 text-[11.5px] border-collapse">
                     <thead>
                         <tr className="text-[9px] uppercase tracking-widest text-gray-400">
-                            <th className="text-left font-semibold pb-1 pr-2">Role</th>
-                            <th className="text-left font-semibold pb-1 pr-2">Name</th>
-                            <th className="text-left font-semibold pb-1 pr-2 w-14">Meal</th>
-                            <th className="text-right font-semibold pb-1">Dietary</th>
+                            <th className="text-left font-semibold pb-1 pr-2">Роль</th>
+                            <th className="text-left font-semibold pb-1 pr-2">Имя</th>
+                            <th className="text-left font-semibold pb-1 pr-2 w-14">Питание</th>
+                            <th className="text-right font-semibold pb-1">Питание</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -346,7 +347,7 @@ function Vendors({ vendors, compact = false }: {
                                     {vendor.note && <span className="block text-[10px] italic text-gray-500">{vendor.note}</span>}
                                 </td>
                                 <td className="py-1 pr-2 text-[10px] uppercase tracking-wide text-gray-500">
-                                    {vendor.needs_meal ? 'Yes' : 'No'}
+                                    {vendor.needs_meal ? 'Да' : 'Нет'}
                                 </td>
                                 <td className="py-1 text-right whitespace-nowrap">
                                     {vendor.needs_meal ? <Diet diet={vendor.diet} /> : <span className="text-gray-300">—</span>}
@@ -373,8 +374,8 @@ function Legend() {
 }
 
 function SheetHeader({ data, subtitle }: { data: SeatingExportData; subtitle: string }) {
-    const printed = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-    const meta = [subtitle, data.date, data.venue, `Printed ${printed}`].filter(Boolean) as string[];
+    const printed = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+    const meta = [subtitle, data.date, data.venue, `Напечатано ${printed}`].filter(Boolean) as string[];
     return (
         <header className="border-b-2 border-gray-900 pb-3 mb-5">
             <h2 className="font-serif text-xl font-semibold text-gray-900">{data.title}</h2>
@@ -502,8 +503,8 @@ function PlanRoomPage({ data, preview }: { data: SeatingExportData; preview: boo
     if (!bounds) {
         return (
             <section>
-                <SheetHeader data={data} subtitle="Floor plan" />
-                <p className="text-[11px] italic text-gray-400">No tables on the plan yet.</p>
+                <SheetHeader data={data} subtitle="План зала" />
+                <p className="text-[11px] italic text-gray-400">На плане пока нет столов.</p>
             </section>
         );
     }
@@ -515,7 +516,7 @@ function PlanRoomPage({ data, preview }: { data: SeatingExportData; preview: boo
             className={`break-inside-avoid ${landscape ? 'print-landscape' : ''}`}
             style={{ width: area.width }}
         >
-            <SheetHeader data={data} subtitle="Floor plan" />
+            <SheetHeader data={data} subtitle="План зала" />
             <div className="flex justify-center"><PlanDrawing tables={data.tables} room={data.room} bounds={bounds} scale={scale} /></div>
         </section>
     );
@@ -523,7 +524,7 @@ function PlanRoomPage({ data, preview }: { data: SeatingExportData; preview: boo
     const shrink = PLAN_PORTRAIT.width / PLAN_LANDSCAPE.width;
     return (
         <div>
-            <p className="mb-2 text-[9px] uppercase tracking-widest text-gray-400">Prints sideways — landscape</p>
+            <p className="mb-2 text-[9px] uppercase tracking-widest text-gray-400">Печать в альбомной ориентации</p>
             <div className="relative" style={{ zoom: shrink }}>{page}</div>
         </div>
     );
@@ -555,9 +556,9 @@ function PlanTablePage({ data, table, options }: {
             {options.detail !== 'names' && <TallyLine people={table.people} seatCount={table.seat_count} />}
             {table.people.length > 0
                 ? <><div className="mt-3"><Legend /></div><Roster people={table.people} options={options} withSeat /></>
-                : <p className="mt-2 text-[11px] italic text-gray-400">Nobody seated here yet.</p>}
+                : <p className="mt-2 text-[11px] italic text-gray-400">За этим столом пока никто не сидит.</p>}
             {options.empty && free > 0 && (
-                <p className="mt-1.5 text-[11px] text-gray-400">{free} empty seat{free === 1 ? '' : 's'}</p>
+                <p className="mt-1.5 text-[11px] text-gray-400">{counted(free, 'свободное место', 'свободных места', 'свободных мест')}</p>
             )}
         </section>
     );
@@ -574,7 +575,7 @@ function PageBreak() {
     return (
         <div className="flex items-center gap-3 my-4 text-[9px] uppercase tracking-widest text-gray-400">
             <span className="flex-1 border-t border-dashed border-gray-300" />
-            new page
+            новая страница
             <span className="flex-1 border-t border-dashed border-gray-300" />
         </div>
     );
@@ -616,19 +617,19 @@ export default function SeatingExportSheet({ data, options, preview = false }: {
                 </div>
             ))}
             {options.plan === 'tables' && data.tables.length === 0 && (
-                <p className="text-[11px] italic text-gray-400">No tables on the plan yet.</p>
+                <p className="text-[11px] italic text-gray-400">На плане пока нет столов.</p>
             )}
 
             {showTables && preview && afterPlan && <PageBreak />}
             {showTables && (
                 <div className={afterPlan ? 'break-before-page' : undefined}>
-                    <SheetHeader data={data} subtitle="Seating chart · by table" />
+                    <SheetHeader data={data} subtitle="Рассадка · по столам" />
                     {options.kitchen && (
                         <Kitchen people={seated} vendors={data.vendors} showVendors={options.vendors} />
                     )}
                     {(showNames || twoColumn) && <Legend />}
                     {data.tables.length === 0 && (
-                        <p className="text-[11px] italic text-gray-400">No tables on the plan yet.</p>
+                        <p className="text-[11px] italic text-gray-400">На плане пока нет столов.</p>
                     )}
                     <div className={countsMode ? `${columns === 3 ? 'columns-3 gap-x-5' : 'columns-2 gap-x-8'}` : undefined}>
                     {data.tables.map((table, i) => (
@@ -653,7 +654,7 @@ export default function SeatingExportSheet({ data, options, preview = false }: {
                     {options.unseated && data.unseated.length > 0 && (
                         <section className={`${twoColumn ? 'mb-4' : 'mb-7'} break-inside-avoid`}>
                             <div className="flex items-baseline gap-2 border-b border-gray-300 pb-1">
-                                <h3 className="font-serif text-base font-semibold text-gray-900">Not seated yet</h3>
+                                <h3 className="font-serif text-base font-semibold text-gray-900">Ещё не рассажены</h3>
                                 <span className="ml-auto font-mono text-[11px] text-gray-500 tabular-nums">
                                     {data.unseated.length}
                                 </span>
@@ -669,7 +670,7 @@ export default function SeatingExportSheet({ data, options, preview = false }: {
             {showList && preview && (showTables || afterPlan) && <PageBreak />}
             {showList && (
                 <div className={showTables || afterPlan ? 'break-before-page pt-2' : ''}>
-                    <SheetHeader data={data} subtitle="Seating chart · every guest, A–Z" />
+                    <SheetHeader data={data} subtitle="Рассадка · гости по алфавиту" />
                     {options.kitchen && !showTables && (
                         <Kitchen people={seated} vendors={data.vendors} showVendors={options.vendors} />
                     )}
@@ -685,7 +686,7 @@ export default function SeatingExportSheet({ data, options, preview = false }: {
                         </>
                     ) : (
                         <p className="mt-2 text-[11px] italic text-gray-400">
-                            Counts only — turn on “Every name” to list the guests here.
+                            Показано только количество. Включите «Все имена», чтобы увидеть список гостей.
                         </p>
                     )}
                 </div>
@@ -702,8 +703,7 @@ export default function SeatingExportSheet({ data, options, preview = false }: {
 
             {(options.sections !== 'none' || options.plan === 'tables') && (
             <p className="mt-6 pt-2 border-t border-gray-100 text-[10px] text-gray-400">
-                Dietary answers come from the RSVP form. A dash means nothing was reported —
-                that plate is the {NO_RESTRICTION_LABEL.toLowerCase()}.
+                Ограничения в питании указаны гостями в ответах. Прочерк означает отсутствие ограничений. Блюдо по умолчанию: {NO_RESTRICTION_LABEL.toLowerCase()}.
             </p>
             )}
         </div>

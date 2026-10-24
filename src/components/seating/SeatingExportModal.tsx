@@ -99,9 +99,9 @@ export default function SeatingExportModal({ onClose }: { onClose: () => void })
     useEffect(() => {
         let cancelled = false;
         fetch('/api/admin/seating/export')
-            .then(res => (res.ok ? res.json() : Promise.reject(new Error('Failed to load the chart'))))
+            .then(res => (res.ok ? res.json() : Promise.reject(new Error('Не удалось загрузить план'))))
             .then(json => { if (!cancelled) setData(json); })
-            .catch(() => { if (!cancelled) setError('Could not load the seating chart.'); });
+            .catch(() => { if (!cancelled) setError('Не удалось загрузить рассадку.'); });
         return () => { cancelled = true; };
     }, []);
 
@@ -181,25 +181,25 @@ export default function SeatingExportModal({ onClose }: { onClose: () => void })
                 className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 print:hidden"
                 role="dialog"
                 aria-modal="true"
-                aria-label="Export seating chart"
+                aria-label="Экспорт рассадки"
                 onClick={e => { if (e.target === e.currentTarget) onClose(); }}
             >
                 <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden">
                     <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
                         <div>
-                            <h2 className="font-serif text-lg font-bold text-gray-800">Export seating chart</h2>
+                            <h2 className="font-serif text-lg font-bold text-gray-800">Экспорт рассадки</h2>
                             <p className="text-xs text-gray-500">
-                                {data ? `${data.tables.length} tables · ${people} people` : 'Loading…'}
+                                {data ? `${data.tables.length} столов · ${people} человек` : 'Загрузка…'}
                                 {data && options.format === 'print' && sheetHeight > 0 && countable && (
                                     <span className={overflows ? 'text-amber-700' : 'text-gray-400'}>
                                         {' · '}
                                         {overflows
-                                            ? `${printPages} pages — too much for one, even shrunk`
+                                            ? `${printPages} стр. — не помещается на одну даже после уменьшения`
                                             : printPages === 1
                                                 ? shrunk
-                                                    ? `fits one page, shrunk to ${Math.round(printScale * 100)}%`
-                                                    : 'fits one page'
-                                                : `${printPages} pages`}
+                                                    ? `одна страница, масштаб ${Math.round(printScale * 100)}%`
+                                                    : 'помещается на одну страницу'
+                                                : `${printPages} стр.`}
                                     </span>
                                 )}
                             </p>
@@ -207,7 +207,7 @@ export default function SeatingExportModal({ onClose }: { onClose: () => void })
                         <button
                             onClick={onClose}
                             className="ml-auto w-8 h-8 rounded-full bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                            aria-label="Close"
+                            aria-label="Закрыть"
                         >
                             ✕
                         </button>
@@ -218,7 +218,7 @@ export default function SeatingExportModal({ onClose }: { onClose: () => void })
                         <div className="md:w-72 shrink-0 border-b md:border-b-0 md:border-r border-gray-100 overflow-y-auto p-5 flex flex-col gap-5">
                             {options.format === 'print' && (
                                 <Segment
-                                    label="Floor plan drawing"
+                                    label="План зала"
                                     value={options.plan}
                                     onChange={v => setOptions(prev => ({
                                         ...prev,
@@ -227,68 +227,68 @@ export default function SeatingExportModal({ onClose }: { onClose: () => void })
                                         sections: v === 'none' && prev.sections === 'none' ? 'table' : prev.sections,
                                     }))}
                                     options={[
-                                        { value: 'none', label: 'None' },
-                                        { value: 'room', label: 'Whole room', hint: '1 page' },
-                                        { value: 'tables', label: 'Each table', hint: '1 page each' },
+                                        { value: 'none', label: 'Нет' },
+                                        { value: 'room', label: 'Весь зал', hint: '1 страница' },
+                                        { value: 'tables', label: 'Каждый стол', hint: 'по одной странице' },
                                     ]}
                                 />
                             )}
                             <Segment
-                                label="What to include"
+                                label="Что включить"
                                 value={options.sections}
                                 onChange={v => set('sections', v)}
                                 options={[
-                                    { value: 'table', label: 'By table', hint: 'seating order' },
-                                    { value: 'list', label: 'Alphabetical list', hint: 'find a name' },
-                                    { value: 'both', label: 'Both', hint: '2 sections' },
+                                    { value: 'table', label: 'По столам', hint: 'порядок рассадки' },
+                                    { value: 'list', label: 'По алфавиту', hint: 'поиск по имени' },
+                                    { value: 'both', label: 'Оба списка', hint: '2 раздела' },
                                     ...(options.format === 'print' && options.plan !== 'none'
-                                        ? [{ value: 'none' as const, label: 'No list', hint: 'drawing only' }]
+                                        ? [{ value: 'none' as const, label: 'Без списка', hint: 'только план' }]
                                         : []),
                                 ]}
                             />
                             <Segment
-                                label="Level of detail"
+                                label="Подробность"
                                 value={options.detail}
                                 onChange={v => set('detail', v)}
                                 options={[
-                                    { value: 'names', label: 'Every name' },
-                                    { value: 'counts', label: 'Counts only' },
-                                    { value: 'both', label: 'Names + counts' },
+                                    { value: 'names', label: 'Все имена' },
+                                    { value: 'counts', label: 'Только количество' },
+                                    { value: 'both', label: 'Имена и количество' },
                                 ]}
                             />
                             <div>
-                                <h3 className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">Also show</h3>
-                                <Check checked={options.kitchen} onChange={v => set('kitchen', v)} label="Kitchen summary" hint="Whole-wedding totals on page one" />
-                                <Check checked={options.household} onChange={v => set('household', v)} label="Household" hint="Which invitation each person came in on" />
-                                <Check checked={options.side} onChange={v => set('side', v)} label="Side" />
-                                <Check checked={options.empty} onChange={v => set('empty', v)} label="Empty seats" />
-                                <Check checked={options.unseated} onChange={v => set('unseated', v)} label="Not seated yet" />
+                                <h3 className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">Также показать</h3>
+                                <Check checked={options.kitchen} onChange={v => set('kitchen', v)} label="Сводка для кухни" hint="Общие итоги на первой странице" />
+                                <Check checked={options.household} onChange={v => set('household', v)} label="Приглашение" hint="К какому приглашению относится гость" />
+                                <Check checked={options.side} onChange={v => set('side', v)} label="Сторона" />
+                                <Check checked={options.empty} onChange={v => set('empty', v)} label="Свободные места" />
+                                <Check checked={options.unseated} onChange={v => set('unseated', v)} label="Ещё не рассажены" />
                                 <Check
                                     checked={options.vendors}
                                     onChange={v => set('vendors', v)}
-                                    label="Vendors"
+                                    label="Подрядчики"
                                     hint={
                                         data && data.vendors.length === 0
-                                            ? 'None added yet — the Vendors tab on the guest list'
-                                            : 'Who is in the building, and who is being fed'
+                                            ? 'Пока не добавлены — вкладка «Подрядчики» в списке гостей'
+                                            : 'Кто присутствует и кому нужно питание'
                                     }
                                 />
-                                <Check checked={options.pageBreak} onChange={v => set('pageBreak', v)} label="New page per table" />
+                                <Check checked={options.pageBreak} onChange={v => set('pageBreak', v)} label="Каждый стол с новой страницы" />
                                 <Check
                                     checked={false}
                                     onChange={() => {}}
                                     disabled
-                                    label="Entrée choice"
-                                    hint="Not collected — the RSVP form asks for restrictions only"
+                                    label="Выбор блюда"
+                                    hint="Не запрашивается — в форме указаны только ограничения в питании"
                                 />
                             </div>
                             <Segment
-                                label="Format"
+                                label="Формат"
                                 value={options.format}
                                 onChange={v => set('format', v)}
                                 options={[
-                                    { value: 'print', label: 'Print / PDF' },
-                                    { value: 'csv', label: 'Spreadsheet', hint: '.csv' },
+                                    { value: 'print', label: 'Печать / PDF' },
+                                    { value: 'csv', label: 'Таблица', hint: '.csv' },
                                 ]}
                             />
                         </div>
@@ -296,18 +296,17 @@ export default function SeatingExportModal({ onClose }: { onClose: () => void })
                         {/* Preview */}
                         <div ref={paneRef} className="flex-1 min-w-0 bg-gray-100 overflow-auto p-4">
                             {error && <p className="text-xs text-red-600">{error}</p>}
-                            {!data && !error && <p className="text-xs text-gray-400">Building the sheet…</p>}
+                            {!data && !error && <p className="text-xs text-gray-400">Готовим документ…</p>}
                             {data && options.format === 'csv' && (
                                 <div className="bg-white rounded-lg shadow p-5 text-[11px] text-gray-600">
                                     <p className="font-medium text-gray-800 mb-2">{exportFilename('csv')}</p>
                                     <p className="mb-3">
-                                        One row per person — {csvRows(data, options).length} rows,{' '}
-                                        {csvHeaders(options).length} columns. Each restriction is its own
-                                        yes/blank column, so a pivot gives the same counts the printed sheet shows.
+                                        Один человек в строке — {csvRows(data, options).length} строк,{' '}
+                                        {csvHeaders(options).length} столбцов. Для каждого ограничения есть отдельный столбец с отметкой, поэтому сводная таблица даст те же итоги, что и печатный лист.
                                     </p>
                                     <pre className="bg-gray-50 rounded p-3 overflow-x-auto font-mono text-[10px] leading-5">
 {[csvHeaders(options).join(','), ...csvRows(data, options).slice(0, 8).map(r => r.join(','))].join('\n')}
-{csvRows(data, options).length > 8 ? `\n… ${csvRows(data, options).length - 8} more rows` : ''}
+{csvRows(data, options).length > 8 ? `\n… ${csvRows(data, options).length - 8} дополнительных строк` : ''}
                                     </pre>
                                 </div>
                             )}
@@ -330,21 +329,21 @@ export default function SeatingExportModal({ onClose }: { onClose: () => void })
                     <div className="px-6 py-4 border-t border-gray-100 flex items-center gap-3">
                         <p className="text-[11px] text-gray-400 hidden sm:block">
                             {options.format === 'print'
-                                ? 'Opens your printer dialog — choose “Save as PDF” there.'
-                                : 'Downloads a spreadsheet you can open in Excel or Sheets.'}
+                                ? 'Откроется окно печати — выберите «Сохранить как PDF».'
+                                : 'Скачает таблицу для Excel или Google Таблиц.'}
                         </p>
                         <button
                             onClick={onClose}
                             className="ml-auto px-5 py-2 rounded-full text-xs font-medium text-gray-600 bg-gray-50 hover:bg-gray-100"
                         >
-                            Cancel
+                            Отмена
                         </button>
                         <button
                             onClick={run}
                             disabled={!data}
                             className="px-5 py-2 rounded-full text-xs font-semibold text-white bg-gray-900 hover:bg-gray-800 disabled:opacity-40"
                         >
-                            {options.format === 'print' ? 'Print' : 'Download'}
+                            {options.format === 'print' ? 'Печать' : 'Скачать'}
                         </button>
                     </div>
                 </div>

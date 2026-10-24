@@ -19,19 +19,19 @@ interface BarItem {
 
 /** The four a thumb reaches for on the trip, plus More. */
 const PRIMARY: BarItem[] = [
-    { href: `${BASE}/today`, label: 'Today', icon: 'today' },
-    { href: `${BASE}/itinerary`, label: 'Itinerary', icon: 'itinerary' },
-    { href: `${BASE}/map`, label: 'Map', icon: 'map' },
-    { href: `${BASE}/places`, label: 'Places', icon: 'places', also: [`${BASE}/stays`, `${BASE}/excursions`] },
+    { href: `${BASE}/today`, label: 'Сегодня', icon: 'today' },
+    { href: `${BASE}/itinerary`, label: 'Маршрут', icon: 'itinerary' },
+    { href: `${BASE}/map`, label: 'Карта', icon: 'map' },
+    { href: `${BASE}/places`, label: 'Места', icon: 'places', also: [`${BASE}/stays`, `${BASE}/excursions`] },
 ];
 
 const MORE: BarItem[] = [
-    { href: BASE, label: 'Overview', icon: 'overview', hint: 'Where the trip stands' },
-    { href: `${BASE}/travel`, label: 'Travel', icon: 'travel', hint: 'Flights, trains and transfers' },
-    { href: `${BASE}/checklist`, label: 'Checklist', icon: 'checklist', hint: 'To-dos and packing' },
-    { href: `${BASE}/files`, label: 'Files', icon: 'files', hint: 'Passports, tickets, bookings' },
-    { href: `${BASE}/guide`, label: 'Guide', icon: 'guide', hint: 'Regions and know-before-you-go' },
-    { href: `${BASE}/settings`, label: 'Settings', icon: 'settings', hint: 'Dates, money, sharing' },
+    { href: BASE, label: 'Обзор', icon: 'overview', hint: 'Подготовка к поездке' },
+    { href: `${BASE}/travel`, label: 'Переезды', icon: 'travel', hint: 'Рейсы, поезда и трансферы' },
+    { href: `${BASE}/checklist`, label: 'Списки дел', icon: 'checklist', hint: 'Дела и багаж' },
+    { href: `${BASE}/files`, label: 'Файлы', icon: 'files', hint: 'Паспорта, билеты, бронирования' },
+    { href: `${BASE}/guide`, label: 'Путеводитель', icon: 'guide', hint: 'Регионы и советы перед поездкой' },
+    { href: `${BASE}/settings`, label: 'Настройки', icon: 'settings', hint: 'Даты, деньги, доступ' },
 ];
 
 function isOn(item: BarItem, pathname: string | null): boolean {
@@ -94,7 +94,7 @@ export default function MobileTabBar() {
         <>
             <nav
                 data-mobile-tabbar
-                aria-label="Honeymoon sections"
+                aria-label="Разделы путешествия"
                 className="hm-tabbar md:hidden fixed inset-x-4 z-40 h-16 rounded-[30px] px-1.5"
             >
                 <ul ref={barRef} className="relative grid h-full grid-cols-5 items-center">
@@ -135,12 +135,12 @@ export default function MobileTabBar() {
                             className={itemClass(moreOn)}
                         >
                             <Icon name="more" className="size-[23px]" />
-                            More
+                            Ещё
                         </button>
                     </li>
                 </ul>
             </nav>
-            <Sheet open={more} onClose={() => setMore(false)} title={<h2 className="font-semibold text-gray-900">More</h2>}>
+            <Sheet open={more} onClose={() => setMore(false)} title={<h2 className="font-semibold text-gray-900">Ещё</h2>}>
                 <ul className="grid grid-cols-2 gap-2 pb-1">
                     {MORE.map((item) => {
                         const on = isOn(item, pathname);

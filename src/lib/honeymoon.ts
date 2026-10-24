@@ -1,3 +1,4 @@
+import { counted } from './locale';
 /**
  * Honeymoon portal — shared types and pure helpers.
  *
@@ -32,18 +33,21 @@ export type PlaceRating = 'yes' | 'mid' | 'no' | null;
 export const RATINGS: {
     key: Exclude<PlaceRating, null>; label: string; icon: string; color: string;
 }[] = [
-    { key: 'yes', label: 'Interested', icon: '👍', color: '#059669' },
-    { key: 'mid', label: 'Mid tier', icon: '😐', color: '#d97706' },
-    { key: 'no', label: 'Not interested', icon: '👎', color: '#be123c' },
+    { key: 'yes', label: 'Интересно', icon: '👍', color: '#059669' },
+    { key: 'mid', label: 'Возможно', icon: '😐', color: '#d97706' },
+    { key: 'no', label: 'Неинтересно', icon: '👎', color: '#be123c' },
 ];
 
-export const SOURCE_YOUTUBE = 'YouTube Travel Guide';
-export const SOURCE_AMY = "Amy's Suggestions";
-export const SOURCE_MANUAL = 'Added by me';
+export const SOURCE_YOUTUBE = 'Путеводитель YouTube';
+export const SOURCE_AMY = "Советы друзей";
+export const SOURCE_MANUAL = 'Добавлено мной';
 
 /** Legacy values, still possible in a database seeded before sources existed. */
 const LEGACY_SOURCE_LABELS: Record<string, string> = {
     guide: SOURCE_YOUTUBE,
+    'YouTube Travel Guide': SOURCE_YOUTUBE,
+    "Amy's Suggestions": SOURCE_AMY,
+    'Added by me': SOURCE_MANUAL,
     manual: SOURCE_MANUAL,
 };
 
@@ -171,8 +175,8 @@ export interface Place {
 export type CostPer = 'night' | 'person' | 'total';
 
 export const COST_PER_LABELS: Record<CostPer, string> = {
-    night: 'per night',
-    person: 'per person',
+    night: 'за ночь',
+    person: 'на человека',
     total: 'total',
 };
 
@@ -434,11 +438,11 @@ export interface Booking {
 export type BookingKind = 'stay' | 'excursion' | 'travel' | 'table' | 'other';
 
 export const BOOKING_KINDS: { key: BookingKind; label: string }[] = [
-    { key: 'stay', label: 'Stay' },
-    { key: 'excursion', label: 'Excursion' },
-    { key: 'travel', label: 'Travel' },
-    { key: 'table', label: 'Table' },
-    { key: 'other', label: 'Other' },
+    { key: 'stay', label: 'Проживание' },
+    { key: 'excursion', label: 'Экскурсия' },
+    { key: 'travel', label: 'Переезды' },
+    { key: 'table', label: 'Стол' },
+    { key: 'other', label: 'Другое' },
 ];
 
 /** A file you would be sorry to be without at a border. */
@@ -459,13 +463,13 @@ export type DocumentKind = 'passport' | 'visa' | 'insurance' | 'ticket'
     | 'vaccination' | 'reservation' | 'other';
 
 export const DOCUMENT_KINDS: { key: DocumentKind; label: string; icon: string }[] = [
-    { key: 'passport', label: 'Passport', icon: '🛂' },
-    { key: 'visa', label: 'Visa', icon: '📄' },
-    { key: 'insurance', label: 'Insurance', icon: '🩺' },
-    { key: 'ticket', label: 'Ticket', icon: '🎫' },
-    { key: 'vaccination', label: 'Vaccination', icon: '💉' },
-    { key: 'reservation', label: 'Reservation', icon: '📌' },
-    { key: 'other', label: 'Other', icon: '📎' },
+    { key: 'passport', label: 'Паспорт', icon: '🛂' },
+    { key: 'visa', label: 'Виза', icon: '📄' },
+    { key: 'insurance', label: 'Страховка', icon: '🩺' },
+    { key: 'ticket', label: 'Билет', icon: '🎫' },
+    { key: 'vaccination', label: 'Прививки', icon: '💉' },
+    { key: 'reservation', label: 'Бронирование', icon: '📌' },
+    { key: 'other', label: 'Другое', icon: '📎' },
 ];
 
 /** A short note on a place, from one of you to the other. */
@@ -562,26 +566,26 @@ export interface HoneymoonPayload {
  * raster tiles — nothing pale, nothing that reads as a road or a park.
  */
 export const CATEGORIES = [
-    { key: 'stay', label: 'Stay', color: '#7c3aed', icon: '🛏️' },
-    { key: 'beach_club', label: 'Beach Club', color: '#0891b2', icon: '🏖️' },
-    { key: 'bar', label: 'Bar', color: '#be123c', icon: '🍸' },
-    { key: 'nightlife', label: 'Nightlife', color: '#9333ea', icon: '🎧' },
-    { key: 'restaurant', label: 'Restaurant', color: '#ea580c', icon: '🍽️' },
-    { key: 'cafe', label: 'Cafe', color: '#a16207', icon: '☕' },
-    { key: 'waterfall', label: 'Waterfall', color: '#0284c7', icon: '💦' },
-    { key: 'beach', label: 'Beach', color: '#f59e0b', icon: '🏝️' },
-    { key: 'hiking', label: 'Hiking', color: '#65a30d', icon: '🥾' },
-    { key: 'nature', label: 'Nature', color: '#15803d', icon: '🌿' },
-    { key: 'temple', label: 'Temple', color: '#b45309', icon: '🛕' },
-    { key: 'attraction', label: 'Attraction', color: '#059669', icon: '📍' },
-    { key: 'activity', label: 'Activity', color: '#16a34a', icon: '🎯' },
-    { key: 'spa', label: 'Spa', color: '#db2777', icon: '💆' },
-    { key: 'beauty', label: 'Hair & Nails', color: '#e11d48', icon: '💅' },
-    { key: 'gym', label: 'Gym', color: '#4d7c0f', icon: '🏋️' },
-    { key: 'cowork', label: 'Cowork', color: '#475569', icon: '💻' },
-    { key: 'shop', label: 'Shopping', color: '#c026d3', icon: '🛍️' },
-    { key: 'transport', label: 'Transport', color: '#334155', icon: '✈️' },
-    { key: 'misc', label: 'Other', color: '#6b7280', icon: '•' },
+    { key: 'stay', label: 'Проживание', color: '#7c3aed', icon: '🛏️' },
+    { key: 'beach_club', label: 'Пляжный клуб', color: '#0891b2', icon: '🏖️' },
+    { key: 'bar', label: 'Бар', color: '#be123c', icon: '🍸' },
+    { key: 'nightlife', label: 'Ночная жизнь', color: '#9333ea', icon: '🎧' },
+    { key: 'restaurant', label: 'Ресторан', color: '#ea580c', icon: '🍽️' },
+    { key: 'cafe', label: 'Кафе', color: '#a16207', icon: '☕' },
+    { key: 'waterfall', label: 'Водопад', color: '#0284c7', icon: '💦' },
+    { key: 'beach', label: 'Пляж', color: '#f59e0b', icon: '🏝️' },
+    { key: 'hiking', label: 'Пешие маршруты', color: '#65a30d', icon: '🥾' },
+    { key: 'nature', label: 'Природа', color: '#15803d', icon: '🌿' },
+    { key: 'temple', label: 'Храм', color: '#b45309', icon: '🛕' },
+    { key: 'attraction', label: 'Достопримечательность', color: '#059669', icon: '📍' },
+    { key: 'activity', label: 'Активный отдых', color: '#16a34a', icon: '🎯' },
+    { key: 'spa', label: 'Спа', color: '#db2777', icon: '💆' },
+    { key: 'beauty', label: 'Красота', color: '#e11d48', icon: '💅' },
+    { key: 'gym', label: 'Спортзал', color: '#4d7c0f', icon: '🏋️' },
+    { key: 'cowork', label: 'Коворкинг', color: '#475569', icon: '💻' },
+    { key: 'shop', label: 'Покупки', color: '#c026d3', icon: '🛍️' },
+    { key: 'transport', label: 'Транспорт', color: '#334155', icon: '✈️' },
+    { key: 'misc', label: 'Другое', color: '#6b7280', icon: '•' },
 ] as const;
 
 export type CategoryKey = typeof CATEGORIES[number]['key'];
@@ -694,9 +698,9 @@ export function categoriesOf(places: { category: string }[]): CategoryMeta[] {
 }
 
 export const STATUSES: { key: PlaceStatus; label: string; color: string }[] = [
-    { key: 'idea', label: 'Idea', color: '#94a3b8' },
-    { key: 'shortlisted', label: 'Shortlisted', color: '#f59e0b' },
-    { key: 'booked', label: 'Booked', color: '#059669' },
+    { key: 'idea', label: 'Идея', color: '#94a3b8' },
+    { key: 'shortlisted', label: 'В избранном', color: '#f59e0b' },
+    { key: 'booked', label: 'Забронировано', color: '#059669' },
 ];
 
 /**
@@ -712,11 +716,11 @@ export const STATUSES: { key: PlaceStatus; label: string; color: string }[] = [
 export const TRAVEL_MODES: {
     key: TravelMode; label: string; icon: string; color: string; dash: string; curve: number;
 }[] = [
-    { key: 'flight', label: 'Flight', icon: '✈️', color: '#0369a1', dash: '2 8', curve: 0.28 },
-    { key: 'boat', label: 'Boat', icon: '⛴️', color: '#0891b2', dash: '6 6', curve: 0.2 },
-    { key: 'car', label: 'Car', icon: '🚗', color: '#b45309', dash: '10 6', curve: 0.10 },
-    { key: 'train', label: 'Train', icon: '🚆', color: '#6d28d9', dash: '12 4 2 4', curve: 0.10 },
-    { key: 'walk', label: 'Walk', icon: '🚶', color: '#4d7c0f', dash: '1 6', curve: 0.05 },
+    { key: 'flight', label: 'Рейс', icon: '✈️', color: '#0369a1', dash: '2 8', curve: 0.28 },
+    { key: 'boat', label: 'Лодка', icon: '⛴️', color: '#0891b2', dash: '6 6', curve: 0.2 },
+    { key: 'car', label: 'Автомобиль', icon: '🚗', color: '#b45309', dash: '10 6', curve: 0.10 },
+    { key: 'train', label: 'Поезд', icon: '🚆', color: '#6d28d9', dash: '12 4 2 4', curve: 0.10 },
+    { key: 'walk', label: 'Пешком', icon: '🚶', color: '#4d7c0f', dash: '1 6', curve: 0.05 },
 ];
 
 /** The mode's drawing style, falling back to flight for anything unknown. */
@@ -850,7 +854,7 @@ export function reviewToggleFor(places: { needs_review: boolean }[]): {
         needsReview,
         unconfirmed,
         confirmed,
-        label: needsReview ? 'Mark unconfirmed' : 'Mark reviewed',
+        label: needsReview ? 'Отметить неподтверждённым' : 'Отметить проверенным',
     };
 }
 
@@ -893,9 +897,9 @@ export function distanceKm(a: LatLng, b: LatLng): number {
 }
 
 export function formatDistance(km: number): string {
-    if (km < 1) return `${Math.round(km * 1000)} m`;
-    if (km < 10) return `${km.toFixed(1)} km`;
-    return `${Math.round(km)} km`;
+    if (km < 1) return `${Math.round(km * 1000)} м`;
+    if (km < 10) return `${km.toLocaleString('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} км`;
+    return `${Math.round(km)} км`;
 }
 
 /**
@@ -1063,6 +1067,22 @@ export function currencySymbol(code: string | null | undefined): string {
  * Re-running it on its own output is a no-op, which matters because the field
  * commits on blur as well as on Enter.
  */
+/** Accept both saved English prices and Russian decimal/group separators. */
+function normalizePriceNumbers(text: string): string {
+    return text
+        .replace(/(\d)[ \u00a0\u202f]+(?=\d{3}(?:\D|$))/g, '$1')
+        .replace(/-?\d[\d.,]*/g, (number) => {
+            if (!number.includes(',')) return number;
+            if (number.includes('.')) {
+                return number.lastIndexOf(',') > number.lastIndexOf('.')
+                    ? number.replace(/\./g, '').replace(',', '.')
+                    : number.replace(/,/g, '');
+            }
+            return /^(?!0,)\d{1,3}(?:,\d{3})+$/.test(number)
+                ? number.replace(/,/g, '') : number.replace(',', '.');
+        });
+}
+
 function formatAmount(raw: string, currency: string | null | undefined, suffix: string): string {
     const trimmed = raw.trim();
     if (!trimmed) return '';
@@ -1072,12 +1092,11 @@ function formatAmount(raw: string, currency: string | null | undefined, suffix: 
     // Strip only what we ourselves add: our currency symbol, a bare $, thousands
     // separators, and our own trailing suffix in its usual spellings. A foreign
     // symbol left behind means this isn't ours to reformat.
-    const stripped = trimmed
-        .replace(/\s*(per\s*night|\/\s*night|p\/?n)\s*$/i, '')
+    const stripped = normalizePriceNumbers(trimmed
+        .replace(/\s*(per\s*night|\/\s*night|p\/?n|за\s*ночь)\s*$/i, '')
         .replace(new RegExp(`^${symbol.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`), '')
         .replace(/^\$/, '')
-        .replace(/,/g, '')
-        .trim();
+        .trim());
 
     if (!/^\d+(\.\d+)?$/.test(stripped)) return trimmed;
 
@@ -1086,7 +1105,7 @@ function formatAmount(raw: string, currency: string | null | undefined, suffix: 
 
     // Keep cents only when they were typed; "$250.00" reads worse.
     const hasCents = stripped.includes('.') && !/\.0+$/.test(stripped);
-    const shown = value.toLocaleString('en-US', {
+    const shown = value.toLocaleString('ru-RU', {
         minimumFractionDigits: hasCents ? 2 : 0,
         maximumFractionDigits: 2,
     });
@@ -1095,7 +1114,7 @@ function formatAmount(raw: string, currency: string | null | undefined, suffix: 
 }
 
 export function formatPerNight(raw: string, currency?: string | null): string {
-    return formatAmount(raw, currency, ' per night');
+    return formatAmount(raw, currency, ' за ночь');
 }
 
 /**
@@ -1118,7 +1137,7 @@ export function formatPrice(raw: string, currency?: string | null): string {
  */
 export function priceValue(note: string | null | undefined): number | null {
     if (!note) return null;
-    const text = note.replace(/,/g, '');
+    const text = normalizePriceNumbers(note);
     // Prefer the figure that is visibly money — "2 bed villa $300" is 300, not
     // 2 — and fall back to the first number when nothing is marked.
     const marked = text.match(/(?:[$€£]|Rp|A\$|C\$|S\$|NZ\$)\s*(\d+(?:\.\d+)?)/i)
@@ -1223,7 +1242,7 @@ export function formatDate(date: string | null | undefined): string | null {
     if (!date) return null;
     const parsed = new Date(`${date}T00:00:00Z`);
     if (Number.isNaN(parsed.getTime())) return null;
-    return parsed.toLocaleDateString('en-US', {
+    return parsed.toLocaleDateString('ru-RU', {
         weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC',
     });
 }
@@ -1231,7 +1250,7 @@ export function formatDate(date: string | null | undefined): string | null {
 export function formatDayDate(startDate: string | null, dayNumber: number): string | null {
     const date = dateForDay(startDate, dayNumber);
     if (!date) return null;
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString('ru-RU', {
         weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC',
     });
 }
@@ -1302,7 +1321,7 @@ export function monthMatrix(
 
     return {
         key: `${monthStart.getUTCFullYear()}-${String(monthStart.getUTCMonth() + 1).padStart(2, '0')}`,
-        label: monthStart.toLocaleDateString('en-US', {
+        label: monthStart.toLocaleDateString('ru-RU', {
             month: 'long', year: 'numeric', timeZone: 'UTC',
         }),
         cells,
@@ -1557,7 +1576,7 @@ function icsFold(line: string): string {
  * `stamp` is passed in rather than read from the clock so the output is
  * reproducible and testable — the same trip always exports the same bytes.
  */
-export function buildIcs(events: IcsEvent[], stamp: string, calendarName = 'Honeymoon'): string {
+export function buildIcs(events: IcsEvent[], stamp: string, calendarName = 'Свадебное путешествие'): string {
     const lines = [
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
@@ -1686,7 +1705,7 @@ export function tripEvents(
         if (!date) continue;
         const iso = isoOf(date);
         const label = (stop: Stop) =>
-            stop.custom_label || (stop.place_id != null ? placeName(stop.place_id) : '') || 'Stop';
+            stop.custom_label || (stop.place_id != null ? placeName(stop.place_id) : '') || 'Остановка';
 
         const lines = day.stops.map((stop) => {
             const time = stop.start_time ? `${formatTime(stop.start_time)} — ` : '• ';
@@ -1696,13 +1715,13 @@ export function tripEvents(
 
         events.push({
             uid: `honeymoon-day-${day.id}@wedding`,
-            summary: `Day ${day.day_number}${day.title ? ` — ${day.title}` : ''}`,
+            summary: `День ${day.day_number}${day.title ? ` — ${day.title}` : ''}`,
             description: lines.join('\n'),
             date: iso,
         });
 
         for (const leg of day.travel) {
-            const mode = TRAVEL_MODES.find((m) => m.key === leg.mode)?.label ?? 'Travel';
+            const mode = TRAVEL_MODES.find((m) => m.key === leg.mode)?.label ?? 'Переезды';
             const route = [leg.from_text, leg.to_text].filter(Boolean).join(' → ');
             const arrivalDate = legIsOvernight(leg)
                 ? dateForDay(trip.start_date, legArrivalDay(leg, day.day_number))
@@ -1711,12 +1730,12 @@ export function tripEvents(
             events.push({
                 uid: `honeymoon-travel-${leg.id}@wedding`,
                 summary: `${mode}${route ? `: ${route}` : ''}`
-                    + (nights > 0 ? ` (+${nights} day${nights === 1 ? '' : 's'})` : ''),
+                    + (nights > 0 ? ` (+${counted(nights, 'день', 'дня', 'дней')})` : ''),
                 description: [
-                    leg.confirmation_ref ? `Ref ${leg.confirmation_ref}` : '',
+                    leg.confirmation_ref ? `Бронь ${leg.confirmation_ref}` : '',
                     leg.flight_no ?? '',
-                    leg.from_terminal ? `From terminal ${leg.from_terminal}` : '',
-                    leg.to_terminal ? `To terminal ${leg.to_terminal}` : '',
+                    leg.from_terminal ? `Терминал отправления ${leg.from_terminal}` : '',
+                    leg.to_terminal ? `Терминал прибытия ${leg.to_terminal}` : '',
                 ].filter(Boolean).join('\n') || undefined,
                 date: iso,
                 ...(arrivalDate ? { endDate: isoOf(arrivalDate) } : {}),
@@ -1867,13 +1886,13 @@ export function searchHoneymoon(
     for (const region of data.regions) {
         const score = scoreOf(needle, region.name, region.description ?? '');
         if (score != null) {
-            hits.push({ kind: 'region', id: region.id, label: region.name, detail: region.country || 'Region', score });
+            hits.push({ kind: 'region', id: region.id, label: region.name, detail: region.country || 'Регион', score });
         }
     }
     for (const note of data.notes) {
         const score = scoreOf(needle, note.title, note.body);
         if (score != null) {
-            hits.push({ kind: 'note', id: note.id, label: note.title, detail: note.category || 'Guide', score });
+            hits.push({ kind: 'note', id: note.id, label: note.title, detail: note.category || 'Путеводитель', score });
         }
     }
     for (const todo of data.todos) {
@@ -1883,7 +1902,7 @@ export function searchHoneymoon(
                 kind: 'todo',
                 id: todo.id,
                 label: todo.text,
-                detail: todo.done ? 'Done' : (todo.category || 'To do'),
+                detail: todo.done ? 'Готово' : (todo.category || 'Дела'),
                 score,
             });
         }
@@ -1893,13 +1912,13 @@ export function searchHoneymoon(
             .map((s) => `${s.custom_label ?? ''} ${s.notes ?? ''} `
                 + `${s.place_id != null ? placeNames.get(s.place_id) ?? '' : ''}`)
             .join(' ');
-        const score = scoreOf(needle, day.title || `Day ${day.day_number}`, `${day.notes ?? ''} ${stops}`);
+        const score = scoreOf(needle, day.title || `День ${day.day_number}`, `${day.notes ?? ''} ${stops}`);
         if (score != null) {
             hits.push({
                 kind: 'day',
                 id: day.id,
-                label: `Day ${day.day_number}${day.title ? ` — ${day.title}` : ''}`,
-                detail: `${day.stops.length} stop${day.stops.length === 1 ? '' : 's'}`,
+                label: `День ${day.day_number}${day.title ? ` — ${day.title}` : ''}`,
+                detail: `${counted(day.stops.length, 'остановка', 'остановки', 'остановок')}`,
                 score,
             });
         }
@@ -1922,7 +1941,7 @@ export function searchHoneymoon(
                     kind: 'travel',
                     id: leg.id,
                     label: `${travelModeMeta(leg.mode).icon} ${label}`,
-                    detail: `Day ${day.day_number}${leg.flight_no ? ` · ${leg.flight_no}` : ''}`,
+                    detail: `День ${day.day_number}${leg.flight_no ? ` · ${leg.flight_no}` : ''}`,
                     score: legScore,
                 });
             }
@@ -1931,8 +1950,8 @@ export function searchHoneymoon(
 
     for (const booking of data.bookings ?? []) {
         const name = booking.place_id != null
-            ? placeNames.get(booking.place_id) ?? 'Booking'
-            : booking.provider || 'Booking';
+            ? placeNames.get(booking.place_id) ?? 'Бронирование'
+            : booking.provider || 'Бронирование';
         const score = scoreOf(needle, `${name} ${booking.confirmation ?? ''}`, [
             booking.provider ?? '', booking.contact ?? '', booking.notes ?? '',
             booking.url ?? '',
@@ -1942,7 +1961,7 @@ export function searchHoneymoon(
                 kind: 'booking',
                 id: booking.id,
                 label: `${name}${booking.confirmation ? ` · ${booking.confirmation}` : ''}`,
-                detail: booking.provider || 'Booking',
+                detail: booking.provider || 'Бронирование',
                 score,
             });
         }

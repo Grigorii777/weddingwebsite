@@ -146,7 +146,7 @@ export const DEFAULT_SITE_CONFIG: SiteConfig = {
     groomName: 'James',
     weddingDate: 'June 15, 2024',
     weddingLocation: 'The Garden Estate',
-    weddingTime: '4:00 PM',
+    weddingTime: '16:00',
 };
 
 export function getSiteConfig(): SiteConfig {

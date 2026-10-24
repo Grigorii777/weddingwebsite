@@ -84,8 +84,8 @@ export default function SharedTodayView({ payload, scope, label }: {
                         </div>
                     )}
                     <div className="mt-8 space-y-1 text-center text-xs text-gray-400">
-                        {label && <p>Shared with {label}</p>}
-                        <p>Read-only. {canBrowse ? 'Every day of the trip.' : 'Today only.'}</p>
+                        {label && <p>Доступ для {label}</p>}
+                        <p>Только просмотр. {canBrowse ? 'Все дни путешествия.' : 'Только сегодня.'}</p>
                     </div>
                 </>
             )}

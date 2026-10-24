@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import { useMemo, useRef, useState } from 'react';
 import { normalizeCategoryKey } from '@/lib/honeymoon';
@@ -25,7 +26,7 @@ export default function ImportPlaces({ api, open, onClose }: {
     onClose: () => void;
 }) {
     const [text, setText] = useState('');
-    const [source, setSource] = useState('A friend’s list');
+    const [source, setSource] = useState('Советы друзей');
     const [category, setCategory] = useState('');
     const [skipped, setSkipped] = useState<Set<number>>(new Set());
     const [busy, setBusy] = useState(false);
@@ -65,7 +66,7 @@ export default function ImportPlaces({ api, open, onClose }: {
                 description: place.description ?? '',
                 price_note: place.price_note ?? '',
                 links: place.links ?? [],
-                source: source.trim() || 'Imported',
+                source: source.trim() || 'Импортировано',
                 // A pin that came from someone else's list is worth a look
                 // before it is trusted — the same rule the geocoder follows.
                 needs_review: place.lat != null,
@@ -73,7 +74,7 @@ export default function ImportPlaces({ api, open, onClose }: {
             const ok = await api.createMany('places', rows);
             await api.refresh();
             if (ok) {
-                setDone(`Added ${rows.length} place${rows.length === 1 ? '' : 's'}.`);
+                setDone(`Добавлено: ${counted(rows.length, 'место', 'места', 'мест')}.`);
                 setText('');
                 setSkipped(new Set());
             }
@@ -83,12 +84,10 @@ export default function ImportPlaces({ api, open, onClose }: {
     };
 
     return (
-        <Modal open={open} onClose={onClose} title="Import places" wide>
+        <Modal open={open} onClose={onClose} title="Импорт мест" wide>
             <div className="space-y-3">
                 <p className="text-xs text-gray-500">
-                    Paste a spreadsheet (any columns, any order — name, category, lat, lng, address,
-                    notes, url are recognised), a KML from Google My Maps, or the JSON from a Google
-                    Takeout of your saved places. Or pick a file.
+                    Вставьте таблицу со столбцами name, category, lat, lng, address, notes, url в любом порядке; KML из Google My Maps или JSON сохранённых мест из Google Takeout. Можно выбрать файл.
                 </p>
 
                 <div className="flex flex-wrap items-center gap-2">
@@ -99,13 +98,13 @@ export default function ImportPlaces({ api, open, onClose }: {
                         className="hidden"
                         onChange={(e) => readFile(e.target.files)}
                     />
-                    <Button onClick={() => fileInput.current?.click()}>Choose a file…</Button>
+                    <Button onClick={() => fileInput.current?.click()}>Выбрать файл…</Button>
                     <div className="min-w-[10rem] flex-1">
                         <SelectField
                             value={category}
                             onChange={(e) => setCategory(e.target.value)}
                         >
-                            <option value="">Type for rows without one — Other</option>
+                            <option value="">Тип для строк без типа — «Другое»</option>
                             {(api.data?.categories ?? []).map((row) => (
                                 <option key={row.key} value={row.key}>
                                     {row.icon} {row.label}
@@ -125,35 +124,33 @@ export default function ImportPlaces({ api, open, onClose }: {
 
                 <div>
                     <label className="mb-1 block text-xs font-semibold text-gray-500">
-                        Label these as
+                        Источник этих мест
                     </label>
                     <TextArea
                         rows={1}
                         value={source}
                         onChange={(e) => setSource(e.target.value)}
-                        placeholder="Amy’s suggestions"
+                        placeholder="Советы друзей"
                     />
                     <p className="mt-1 text-[11px] text-gray-400">
-                        Becomes the source on every imported place, so you can filter to exactly
-                        this batch later — including &ldquo;everything Amy suggested that I haven&apos;t
-                        rated&rdquo;.
+                        Источник будет сохранён у каждого места. Позже можно отфильтровать именно эту подборку, в том числе ещё не оценённые места.
                     </p>
                 </div>
 
                 {parsed && (
                     <div className="rounded-2xl border border-gray-200 p-3">
                         <p className="text-sm text-gray-800">
-                            Read as {parsed.format}: {parsed.places.length} place
-                            {parsed.places.length === 1 ? '' : 's'}
-                            {duplicates.size > 0 && `, ${duplicates.size} already in your library`}
+                            Распознано {parsed.format}: {parsed.places.length} place
+                            {parsed.places.length === 1 ? '' : ''}
+                            {duplicates.size > 0 && `, ${duplicates.size} уже в вашей подборке`}
                             {parsed.skipped.length > 0
-                                && `, ${parsed.skipped.length} row${parsed.skipped.length === 1 ? '' : 's'} skipped`}.
+                                && `, ${counted(parsed.skipped.length, 'строка', 'строки', 'строк')} пропущено`}.
                         </p>
 
                         {parsed.skipped.length > 0 && (
                             <p className="mt-1 text-[11px] text-amber-700">
-                                Skipped: {parsed.skipped.slice(0, 6)
-                                    .map((row) => `line ${row.line} (${row.why})`).join(', ')}
+                                Пропущено: {parsed.skipped.slice(0, 6)
+                                    .map((row) => `строка ${row.line} (${row.why})`).join(', ')}
                                 {parsed.skipped.length > 6 && '…'}
                             </p>
                         )}
@@ -179,19 +176,19 @@ export default function ImportPlaces({ api, open, onClose }: {
                                                 return next;
                                             })}
                                             className="size-4 shrink-0 rounded accent-accent"
-                                            aria-label={`Import ${place.name}`}
+                                            aria-label={`Импортировать ${place.name}`}
                                         />
                                         <span className="min-w-0 flex-1 truncate text-sm">
                                             {place.name}
                                         </span>
                                         {place.lat != null && (
                                             <span className="shrink-0 text-[10px] text-sky-700">
-                                                pinned
+                                                на карте
                                             </span>
                                         )}
                                         {duplicate && (
                                             <span className="shrink-0 text-[10px] text-gray-500">
-                                                already have it
+                                                уже добавлено
                                             </span>
                                         )}
                                     </li>
@@ -204,13 +201,13 @@ export default function ImportPlaces({ api, open, onClose }: {
                 {done && <p className="text-sm text-emerald-700">{done}</p>}
 
                 <div className="flex items-center justify-end gap-2">
-                    <Button onClick={onClose}>Close</Button>
+                    <Button onClick={onClose}>Закрыть</Button>
                     <Button
                         tone="primary"
                         onClick={run}
                         disabled={!willImport.length || busy}
                     >
-                        {busy ? 'Importing…' : `Import ${willImport.length || ''}`.trim()}
+                        {busy ? 'Импортируем…' : `Импортировать ${willImport.length || ''}`.trim()}
                     </Button>
                 </div>
             </div>

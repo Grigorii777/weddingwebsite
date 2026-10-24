@@ -49,7 +49,7 @@ export async function POST(req: Request) {
 
     const lines = csv.split(/\r?\n/).filter(l => l.trim());
     if (lines.length < 2) {
-      return NextResponse.json({ error: 'CSV is empty or has no data rows' }, { status: 400 });
+      return NextResponse.json({ error: 'CSV пуст или не содержит данных' }, { status: 400 });
     }
 
     // Parse header row — normalize to lowercase, strip BOM
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
 
     if (colTitle === -1) {
       return NextResponse.json(
-        { error: 'Could not find a title/name column in CSV. Make sure you exported from Amazon.' },
+        { error: 'В CSV не найден столбец title/name. Проверьте экспорт из Amazon.' },
         { status: 400 }
       );
     }
@@ -116,7 +116,7 @@ export async function POST(req: Request) {
         id: genId(),
         store: 'amazon',
         title,
-        description: colQty !== -1 && cols[colQty] ? `Qty wanted: ${cols[colQty]}` : '',
+        description: colQty !== -1 && cols[colQty] ? `Нужное количество: ${cols[colQty]}` : '',
         image,
         price,
         url,
@@ -131,6 +131,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, added: added.length, skipped: skipped.length, skippedTitles: skipped });
   } catch (err) {
     console.error('CSV import error:', err);
-    return NextResponse.json({ error: 'Failed to import CSV' }, { status: 500 });
+    return NextResponse.json({ error: 'Не удалось импортировать CSV' }, { status: 500 });
   }
 }

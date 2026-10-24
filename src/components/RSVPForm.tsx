@@ -1,4 +1,5 @@
 'use client';
+import { counted } from '@/lib/locale';
 
 import { useState, useEffect, useCallback } from 'react';
 import { DEFAULT_ROOM_BLOCK_MESSAGE } from '@/lib/roomBlock';
@@ -118,12 +119,12 @@ interface RSVPFormProps {
 // copy can never break the link.
 function renderRoomBlockMessage(message: string, names: string, hotel: string, bookingUrl: string) {
     return message.split(/(\{names\}|\{hotel\}|\{book\})/g).map((seg, i) => {
-        if (seg === '{names}') return <span key={i}>{names || 'We'}</span>;
+        if (seg === '{names}') return <span key={i}>{names || 'Мы'}</span>;
         if (seg === '{hotel}') return <span key={i} className="font-medium text-gray-800">{hotel}</span>;
         if (seg === '{book}') {
             return bookingUrl
-                ? <a key={i} href={bookingUrl} target="_blank" rel="noopener noreferrer" className="text-accent font-semibold underline decoration-accent/40 hover:text-accent-dark hover:decoration-accent transition-colors">Book Your Room</a>
-                : <span key={i} className="font-medium text-gray-800">Book Your Room</span>;
+                ? <a key={i} href={bookingUrl} target="_blank" rel="noopener noreferrer" className="text-accent font-semibold underline decoration-accent/40 hover:text-accent-dark hover:decoration-accent transition-colors">Забронировать номер</a>
+                : <span key={i} className="font-medium text-gray-800">Забронировать номер</span>;
         }
         return <span key={i}>{seg}</span>;
     });
@@ -241,12 +242,12 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                     setRsvpToken(token);
                     hydrateVerified(data);
                 } else {
-                    setVerificationError('That link is not valid or has expired — enter your name below and we\'ll send a fresh one.');
+                    setVerificationError('Ссылка недействительна или срок её действия истёк. Введите своё имя ниже, и мы отправим новую.');
                 }
             })
             .catch(err => {
                 console.error('RSVP link error:', err);
-                setVerificationError('That link is not valid or has expired — enter your name below and we\'ll send a fresh one.');
+                setVerificationError('Ссылка недействительна или срок её действия истёк. Введите своё имя ниже, и мы отправим новую.');
             });
         // Once on mount: the token is a one-time read from the URL.
     }, [hydrateVerified]);
@@ -266,7 +267,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
             const data = await response.json();
 
             if (!data.verified) {
-                setVerificationError(data.message || 'Guest not found on the list.');
+                setVerificationError(data.message || 'Гость с таким именем не найден в списке.');
                 return;
             }
 
@@ -289,7 +290,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
             }
         } catch (error) {
             console.error('Verification error:', error);
-            setVerificationError('Error verifying guest. Please try again.');
+            setVerificationError('Не удалось проверить имя. Попробуйте ещё раз.');
         } finally {
             setVerifying(false);
         }
@@ -311,14 +312,14 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
             const data = await response.json().catch(() => ({}));
 
             if (response.ok && data.ok) {
-                setLinkSentMessage(data.message || 'If that name is on our list, an RSVP link is on its way to the email we have for it.');
+                setLinkSentMessage(data.message || 'Если это имя есть в списке гостей, мы отправили ссылку для ответа на указанный в приглашении email.');
                 setNameStage('link-sent');
             } else {
-                setVerificationError(data.error || 'Something went wrong sending the link. Please try again.');
+                setVerificationError(data.error || 'Не удалось отправить ссылку. Попробуйте ещё раз.');
             }
         } catch (error) {
             console.error('Link request error:', error);
-            setVerificationError('Something went wrong sending the link. Please try again.');
+            setVerificationError('Не удалось отправить ссылку. Попробуйте ещё раз.');
         } finally {
             setSendingLink(false);
         }
@@ -342,11 +343,11 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
             if (response.ok && data.verified) {
                 hydrateVerified(data);
             } else {
-                setVerificationError(data.error || "That doesn't match our records. Please try again.");
+                setVerificationError(data.error || "Данные не совпадают с нашим списком. Попробуйте ещё раз.");
             }
         } catch (error) {
             console.error('Email verification error:', error);
-            setVerificationError('Something went wrong. Please try again.');
+            setVerificationError('Что-то пошло не так. Попробуйте ещё раз.');
         } finally {
             setVerifyingEmail(false);
         }
@@ -379,19 +380,19 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
             // Every guest must be explicitly marked attending or not attending first.
             const unanswered = cards.findIndex(c => c.attendance === null);
             if (unanswered !== -1) {
-                const who = cards[unanswered].name.trim() || `Guest ${unanswered + 1}`;
-                setErrorMessage(`Please mark ${who} as attending or not attending before submitting.`);
+                const who = cards[unanswered].name.trim() || `Гость ${unanswered + 1}`;
+                setErrorMessage(`Укажите для гостя ${who}, придёт ли он на свадьбу.`);
                 setStatus('error');
                 return;
             }
             for (let i = 0; i < cards.length; i++) {
                 if (cards[i].attendance === 'yes' && cards[i].nameEditable && !cards[i].name.trim()) {
-                    setErrorMessage(`Please enter a name for Guest ${i + 1} before submitting.`);
+                    setErrorMessage(`Укажите имя гостя №${i + 1} перед отправкой.`);
                     setStatus('error');
                     return;
                 }
                 if (cards[i].attendance === 'yes' && cards[i].other && !cards[i].other_text.trim()) {
-                    setErrorMessage(`Please describe the dietary restriction for ${cards[i].name || `Guest ${i + 1}`}.`);
+                    setErrorMessage(`Опишите ограничения в питании для гостя ${cards[i].name || `Гость ${i + 1}`}.`);
                     setStatus('error');
                     return;
                 }
@@ -441,7 +442,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
 
             const data = await response.json().catch(() => ({}));
             if (!response.ok) {
-                throw new Error(data.error || 'Failed to submit RSVP');
+                throw new Error(data.error || 'Не удалось отправить ответ');
             }
 
             // Remember the saved row so "Make changes" edits it rather than
@@ -460,7 +461,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
         } catch (error) {
             console.error(error);
             setStatus('error');
-            setErrorMessage(error instanceof Error && error.message ? error.message : 'Something went wrong. Please try again later.');
+            setErrorMessage(error instanceof Error && error.message ? error.message : 'Что-то пошло не так. Попробуйте позже.');
         }
     };
 
@@ -476,9 +477,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
         // Receipt summary of who's attending
         const isAttending = formData.attending === 'yes';
         const attendees = isAttending ? cards.filter(c => c.attendance === 'yes' && c.name?.trim()) : [];
-        const numberWords = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
-        const partyWord = numberWords[attendees.length] ?? String(attendees.length);
-        const partyLabel = `Party of ${partyWord}`;
+        const partyLabel = counted(attendees.length, 'гость', 'гостя', 'гостей');
         return (
             <div className="text-center py-12 bg-gray-50 rounded-2xl border border-gray-100 p-8">
                 <div className="confirm-check">
@@ -487,15 +486,15 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                         <path className="confirm-tick" fill="none" d="M14 27 L22.5 35.5 L38 18" />
                     </svg>
                 </div>
-                <h3 className="text-lg leading-6 font-medium text-gray-900">RSVP {wasUpdate ? 'Updated' : 'Received'}!</h3>
+                <h3 className="text-lg leading-6 font-medium text-gray-900">{wasUpdate ? 'Ответ обновлён!' : 'Ответ получен!'}</h3>
                 <p className="mt-2 text-base text-gray-500">
-                    Thank you for letting us know. We&apos;ve sent a confirmation to the happy couple♥
+                    Спасибо за ответ! Мы отправили подтверждение молодожёнам ♥
                 </p>
 
                 {/* Receipt-style summary of the RSVP */}
                 <div className="mt-6 mx-auto max-w-xl text-left bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
                     <div className="flex items-center justify-between border-b border-dashed border-gray-200 pb-3 mb-3">
-                        <span className="text-xs uppercase tracking-widest text-gray-400 font-semibold">Your RSVP</span>
+                        <span className="text-xs uppercase tracking-widest text-gray-400 font-semibold">Ваш ответ</span>
                         {isAttending && (
                             <span className="text-sm font-semibold text-accent capitalize">{partyLabel}</span>
                         )}
@@ -513,12 +512,12 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                                 ))}
                             </ul>
                             <p className="mt-3 text-xs text-gray-400">
-                                {attendees.length} {attendees.length === 1 ? 'guest' : 'guests'} joyfully attending ♥
+                                Участие подтверждено: {partyLabel} ♥
                             </p>
                         </>
                     ) : (
                         <p className="text-sm text-gray-600">
-                            We&apos;ll miss you dearly, but thank you for letting us know. ♥
+                            Нам будет вас не хватать. Спасибо, что сообщили. ♥
                         </p>
                     )}
                 </div>
@@ -532,7 +531,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                         }}
                         className="inline-flex justify-center py-2 px-6 border border-gray-300 rounded-full text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all"
                     >
-                        Make changes
+                        Изменить ответ
                     </button>
                     {hotel && bookingUrl && (
                         <a
@@ -544,7 +543,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01" />
                             </svg>
-                            Book Your Room
+                            Забронировать номер
                         </a>
                     )}
                 </div>
@@ -567,10 +566,9 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
         return (
             <div className="bg-white p-8 rounded-3xl shadow-xl border-t-4 border-accent">
                 <div className="text-center mb-6">
-                    <h2 className="text-2xl font-serif text-gray-900 mb-2">Welcome!</h2>
+                    <h2 className="text-2xl font-serif text-gray-900 mb-2">Добро пожаловать!</h2>
                     <p className="text-gray-600">
-                        Please enter your name to begin. Anyone in your party can use their own
-                        name — you&apos;ll be able to RSVP for everyone together.
+                        Введите своё имя. Любой участник вашей компании может ответить сразу за всех приглашённых.
                     </p>
                 </div>
 
@@ -578,14 +576,14 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                 <form onSubmit={handleVerification} className="space-y-6">
                     <div>
                         <label htmlFor="guestNameInput" className="block text-sm font-medium text-gray-700 ml-1 mb-2">
-                            Full Name *
+                            Имя и фамилия *
                         </label>
                         <input
                             type="text"
                             id="guestNameInput"
                             value={guestNameInput}
                             onChange={(e) => setGuestNameInput(e.target.value)}
-                            placeholder="Enter your full name"
+                            placeholder="Введите имя и фамилию"
                             required
                             className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-2xl shadow-sm placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-accent focus:border-accent sm:text-sm transition-shadow"
                         />
@@ -605,7 +603,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                         disabled={verifying || !guestNameInput.trim()}
                         className="w-full flex justify-center py-3 px-6 border border-transparent rounded-full shadow-md text-base font-medium text-white bg-accent hover:bg-accent-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 transition-all transform hover:-translate-y-0.5"
                     >
-                        {verifying ? 'Verifying...' : 'Continue'}
+                        {verifying ? 'Проверяем...' : 'Продолжить'}
                     </button>
                 </form>
                 )}
@@ -622,11 +620,10 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                         )}
                         <div className="rounded-2xl bg-accent/5 border border-accent/20 p-5 text-center">
                             <p className="text-sm font-medium text-gray-800">
-                                We found {matched?.name ? <span className="font-semibold">{matched.name}</span> : 'your name'} on the list.
+                                Мы нашли {matched?.name ? <span className="font-semibold">{matched.name}</span> : 'ваше имя'} в списке гостей.
                             </p>
                             <p className="text-sm text-gray-600 mt-2">
-                                Your details come from the email we send you, so we&apos;ll mail you a link
-                                that opens your RSVP — no need to type them in here.
+                                Мы отправим на ваш email персональную ссылку для ответа. Ваши данные уже будут заполнены.
                             </p>
                         </div>
                         <button
@@ -635,14 +632,14 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                             disabled={sendingLink}
                             className="w-full flex justify-center py-3 px-6 border border-transparent rounded-full shadow-md text-base font-medium text-white bg-accent hover:bg-accent-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 transition-all transform hover:-translate-y-0.5"
                         >
-                            {sendingLink ? 'Sending your link...' : 'Send me my RSVP link'}
+                            {sendingLink ? 'Отправляем ссылку...' : 'Получить ссылку для ответа'}
                         </button>
                         <button
                             type="button"
                             onClick={resetNameStep}
                             className="w-full flex justify-center py-3 px-6 border border-gray-300 rounded-full text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all"
                         >
-                            Use a different name
+                            Ввести другое имя
                         </button>
                     </div>
                 )}
@@ -652,7 +649,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                         <div className="rounded-2xl bg-green-50 border border-green-200 p-5 text-center">
                             <p className="text-sm font-medium text-green-800">{linkSentMessage}</p>
                             <p className="text-xs text-gray-500 mt-2">
-                                Keep an eye on your inbox — the link opens your RSVP form and is good for an hour.
+                                Проверьте почту. Ссылка откроет форму ответа и будет действовать один час.
                             </p>
                         </div>
                         <button
@@ -660,7 +657,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                             onClick={resetNameStep}
                             className="w-full flex justify-center py-3 px-6 border border-gray-300 rounded-full text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all"
                         >
-                            Use a different name
+                            Ввести другое имя
                         </button>
                     </div>
                 )}
@@ -669,16 +666,15 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                     <form onSubmit={verifyByEmail} className="space-y-6">
                         <div className="rounded-2xl bg-accent/5 border border-accent/20 p-5 text-center">
                             <p className="text-sm font-medium text-gray-800">
-                                We found {matched?.name ? <span className="font-semibold">{matched.name}</span> : 'your name'} on the list,
-                                with an RSVP already on file.
+                                Мы нашли {matched?.name ? <span className="font-semibold">{matched.name}</span> : 'ваше имя'} в списке гостей. Вы уже отправляли ответ.
                             </p>
                             <p className="text-sm text-gray-600 mt-2">
-                                To protect it, please confirm the email you used before.
+                                Чтобы изменить ответ, подтвердите email, указанный ранее.
                             </p>
                         </div>
                         <div>
                             <label htmlFor="verifyEmailInput" className="block text-sm font-medium text-gray-700 ml-1 mb-2">
-                                Email on your RSVP *
+                                Email из вашего ответа *
                             </label>
                             <input
                                 type="email"
@@ -703,14 +699,14 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                             disabled={verifyingEmail || !verifyEmailInput.trim()}
                             className="w-full flex justify-center py-3 px-6 border border-transparent rounded-full shadow-md text-base font-medium text-white bg-accent hover:bg-accent-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 transition-all transform hover:-translate-y-0.5"
                         >
-                            {verifyingEmail ? 'Checking...' : 'Continue'}
+                            {verifyingEmail ? 'Проверяем...' : 'Продолжить'}
                         </button>
                         <button
                             type="button"
                             onClick={resetNameStep}
                             className="w-full flex justify-center py-3 px-6 border border-gray-300 rounded-full text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all"
                         >
-                            Use a different name
+                            Ввести другое имя
                         </button>
                     </form>
                 )}
@@ -726,18 +722,18 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
         const attendees = cards.filter(c => c.attendance === 'yes' && c.name?.trim());
         return (
             <div className="text-center py-12 bg-white rounded-3xl shadow-xl border-t-4 border-accent p-8">
-                <h2 className="text-2xl font-serif text-gray-900 mb-2">RSVPs Are Closed</h2>
+                <h2 className="text-2xl font-serif text-gray-900 mb-2">Приём ответов завершён</h2>
                 <p className="text-gray-600 max-w-md mx-auto">
-                    The wedding day has arrived, so RSVPs can no longer be changed.
-                    {existingRsvp ? " Here's what we have on file for you." : ''}
+                    Наступил день свадьбы. Ответы больше нельзя изменить.
+                    {existingRsvp ? " Ваш сохранённый ответ:" : ''}
                 </p>
 
                 {existingRsvp ? (
                     <div className="mt-6 mx-auto max-w-xl text-left bg-gray-50 border border-gray-200 rounded-2xl p-5">
                         <div className="flex items-center justify-between border-b border-dashed border-gray-300 pb-3 mb-3">
-                            <span className="text-xs uppercase tracking-widest text-gray-400 font-semibold">On file for {matched?.name || verifiedGuest?.name}</span>
+                            <span className="text-xs uppercase tracking-widest text-gray-400 font-semibold">Сохранённый ответ: {matched?.name || verifiedGuest?.name}</span>
                             <span className={`text-sm font-semibold ${existingRsvp.attending ? 'text-green-700' : 'text-gray-500'}`}>
-                                {existingRsvp.attending ? 'Attending' : 'Not Attending'}
+                                {existingRsvp.attending ? 'Придёт' : 'Не придёт'}
                             </span>
                         </div>
                         {existingRsvp.attending ? (
@@ -752,7 +748,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                                 ))}
                             </ul>
                         ) : (
-                            <p className="text-sm text-gray-600">We&apos;ll miss you, but thank you for letting us know.</p>
+                            <p className="text-sm text-gray-600">Нам будет вас не хватать. Спасибо, что сообщили.</p>
                         )}
                         {existingRsvp.message && (
                             <p className="mt-3 text-sm text-gray-500 italic">&quot;{existingRsvp.message}&quot;</p>
@@ -760,7 +756,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                     </div>
                 ) : (
                     <p className="mt-6 text-sm text-gray-500">
-                        We don&apos;t have an RSVP on file for {matched?.name || 'you'}. Please contact us directly.
+                        У нас ещё нет ответа от {matched?.name || 'вас'}. Пожалуйста, свяжитесь с нами напрямую.
                     </p>
                 )}
 
@@ -769,13 +765,13 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                     onClick={() => { setStep('verification'); resetNameStep(); }}
                     className="mt-8 inline-flex justify-center py-2 px-6 border border-gray-300 rounded-full text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all"
                 >
-                    Look up a different name
+                    Найти другое имя
                 </button>
             </div>
         );
     }
 
-    const partyNames = verifiedGuest?.party_members?.map((m: PartyMember, i: number) => m.name || `Guest ${i + 2}`).join(', ');
+    const partyNames = verifiedGuest?.party_members?.map((m: PartyMember, i: number) => m.name || `Гость ${i + 2}`).join(', ');
 
     // Guests still needing an explicit attending / not-attending choice. Only applies
     // when the party is coming at all — declining covers everyone in one go.
@@ -793,20 +789,19 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                     </svg>
                     <div>
                         <p className={`text-sm font-medium ${existingRsvp ? 'text-blue-800' : 'text-green-800'}`}>
-                            Welcome{existingRsvp ? ' back' : ''}, {matched?.name || verifiedGuest?.name}{partyNames ? ` & party` : ''}!
+                            Добро пожаловать{existingRsvp ? ' снова' : ''}, {matched?.name || verifiedGuest?.name}{partyNames ? ` и компания` : ''}!
                         </p>
                         {matched && !matched.isPrimary && (
                             <p className={`text-sm mt-1 ${existingRsvp ? 'text-blue-700' : 'text-green-700'}`}>
-                                You&apos;re part of {verifiedGuest?.name}&apos;s party — this RSVP covers everyone below.
+                                Вы приглашены вместе с {verifiedGuest?.name} — этот ответ относится ко всем, кто указан ниже.
                             </p>
                         )}
                         <p className={`text-sm mt-1 ${existingRsvp ? 'text-blue-700' : 'text-green-700'}`}>
-                            {existingRsvp ? 'You can update your RSVP below.' : 'Please complete your RSVP below.'}
+                            {existingRsvp ? 'Вы можете изменить свой ответ ниже.' : 'Пожалуйста, заполните форму ниже.'}
                         </p>
                         {formData.attending === 'yes' && cards.length > 1 && (
                             <p className={`text-sm mt-2 font-semibold ${existingRsvp ? 'text-blue-800' : 'text-green-800'}`}>
-                                Please mark all guests as attending or not attending — you&apos;ll need to
-                                choose one for every person before you can send your RSVP.
+                                Для каждого гостя укажите, придёт ли он на свадьбу. После этого можно отправить ответ.
                             </p>
                         )}
                     </div>
@@ -816,7 +811,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
             {/* Contact info */}
             <div className="grid grid-cols-1 gap-y-4 gap-x-4 sm:grid-cols-2">
                 <div className="sm:col-span-2">
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 ml-1">Email *</label>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 ml-1">Электронная почта *</label>
                     <input
                         type="email" name="email" id="email" required
                         value={formData.email} onChange={handleChange}
@@ -824,7 +819,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                     />
                 </div>
                 <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 ml-1">Phone *</label>
+                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 ml-1">Телефон *</label>
                     <input
                         type="tel" name="phone" id="phone" required
                         value={formData.phone} onChange={handleChange}
@@ -832,14 +827,14 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                     />
                 </div>
                 <div>
-                    <label htmlFor="attending" className="block text-sm font-medium text-gray-700 ml-1">Will you be attending? *</label>
+                    <label htmlFor="attending" className="block text-sm font-medium text-gray-700 ml-1">Вы придёте? *</label>
                     <select
                         id="attending" name="attending" required
                         value={formData.attending} onChange={handleChange}
                         className="mt-1 block w-full pl-4 pr-10 py-3 text-base border-gray-300 text-gray-900 focus:outline-none focus:ring-accent focus:border-accent sm:text-sm rounded-2xl transition-shadow"
                     >
-                        <option value="yes">Joyfully Accepts</option>
-                        <option value="no">Regretfully Declines</option>
+                        <option value="yes">С радостью приду</option>
+                        <option value="no">К сожалению, не смогу</option>
                     </select>
                 </div>
             </div>
@@ -847,7 +842,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
             {/* Per-member cards */}
             {formData.attending === 'yes' && cards.length > 0 && (
                 <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-3">Your Party</h3>
+                    <h3 className="text-sm font-medium text-gray-700 mb-3">Ваша компания</h3>
                     <div className="space-y-3">
                         {cards.map((card, i) => {
                             const isFirst = i === 0;
@@ -868,13 +863,13 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                                             {card.nameEditable ? (
                                                 <div>
                                                     <label className="block text-xs text-gray-500 mb-1">
-                                                        Guest {i + 1} name <span className="text-red-500">*</span>
+                                                        Имя гостя {i + 1} <span className="text-red-500">*</span>
                                                     </label>
                                                     <input
                                                         type="text"
                                                         value={card.name}
                                                         onChange={(e) => updateCard(i, { name: e.target.value })}
-                                                        placeholder="Enter guest name"
+                                                        placeholder="Введите имя гостя"
                                                         className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-accent focus:border-accent"
                                                     />
                                                 </div>
@@ -886,7 +881,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                                             primary guest is locked on by the answer above. Clicking a
                                             ticked box clears it back to unanswered. */}
                                         {isFirst ? (
-                                            <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-1 rounded-full whitespace-nowrap">Attending</span>
+                                            <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-1 rounded-full whitespace-nowrap">Придёт</span>
                                         ) : (
                                             <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-4 whitespace-nowrap">
                                                 <label className="flex items-center gap-2 cursor-pointer">
@@ -896,7 +891,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                                                         onChange={() => updateCard(i, { attendance: card.attendance === 'yes' ? null : 'yes' })}
                                                         className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent"
                                                     />
-                                                    <span className="text-sm text-gray-600">Attending</span>
+                                                    <span className="text-sm text-gray-600">Придёт</span>
                                                 </label>
                                                 <label className="flex items-center gap-2 cursor-pointer">
                                                     <input
@@ -905,7 +900,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                                                         onChange={() => updateCard(i, { attendance: card.attendance === 'no' ? null : 'no' })}
                                                         className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent"
                                                     />
-                                                    <span className="text-sm text-gray-600">Not attending</span>
+                                                    <span className="text-sm text-gray-600">Не придёт</span>
                                                 </label>
                                             </div>
                                         )}
@@ -914,16 +909,16 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                                     {/* Dietary checkboxes — only when attending */}
                                     {card.attendance === 'yes' && (
                                         <div>
-                                            <p className="text-xs text-gray-500 mb-2">Dietary restrictions</p>
+                                            <p className="text-xs text-gray-500 mb-2">Ограничения в питании</p>
                                             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                                                 {([
-                                                    { field: 'vegetarian', label: 'Vegetarian' },
-                                                    { field: 'vegan', label: 'Vegan' },
-                                                    { field: 'gluten_free', label: 'Gluten Free' },
-                                                    { field: 'nut_allergy', label: 'Nut Allergy' },
-                                                    { field: 'other', label: 'Other' },
-                                                    { field: 'kids_meal', label: "Kids' Meal" },
-                                                    { field: 'no_meal', label: 'Not Eating' },
+                                                    { field: 'vegetarian', label: 'Вегетарианское' },
+                                                    { field: 'vegan', label: 'Веганское' },
+                                                    { field: 'gluten_free', label: 'Без глютена' },
+                                                    { field: 'nut_allergy', label: 'Аллергия на орехи' },
+                                                    { field: 'other', label: 'Другое' },
+                                                    { field: 'kids_meal', label: "Детское меню" },
+                                                    { field: 'no_meal', label: 'Без питания' },
                                                 ] as { field: keyof Pick<MemberCard, 'vegetarian' | 'vegan' | 'gluten_free' | 'nut_allergy' | 'other' | 'kids_meal' | 'no_meal'>; label: string }[]).map(({ field, label }) => (
                                                     <label key={field} className={`flex items-center gap-2 ${
                                                         card.no_meal && field !== 'no_meal'
@@ -960,8 +955,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                                             </div>
                                             {card.no_meal && (
                                                 <p className="mt-2 text-xs text-gray-500">
-                                                    They will still have a seat — we just will not order them a
-                                                    meal. For a baby whose food comes with you.
+                                                    Место за столом останется, но блюдо мы заказывать не будем. Например, для малыша со своим питанием.
                                                 </p>
                                             )}
                                             {card.other && (
@@ -969,7 +963,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                                                     type="text"
                                                     value={card.other_text}
                                                     onChange={(e) => updateCard(i, { other_text: e.target.value })}
-                                                    placeholder="Please describe your dietary restriction"
+                                                    placeholder="Опишите ограничения в питании"
                                                     className="mt-2 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-accent focus:border-accent"
                                                 />
                                             )}
@@ -985,7 +979,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
             {/* Message */}
             <div>
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700 ml-1">
-                    Message for {config?.brideName || 'Bride'} & {config?.groomName || 'Groom'}♥
+                    Сообщение для {config?.brideName || 'Невеста'} & {config?.groomName || 'Жених'}♥
                 </label>
                 <textarea
                     id="message" name="message" rows={3}
@@ -1003,8 +997,8 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
             {unansweredCount > 0 && (
                 <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-2xl p-3">
                     {unansweredCount === 1
-                        ? '1 guest still needs to be marked attending or not attending.'
-                        : `${unansweredCount} guests still need to be marked attending or not attending.`}
+                        ? 'Укажите, придёт ли оставшийся гость.'
+                        : `${unansweredCount} — ещё не указано, придут ли эти гости.`}
                 </p>
             )}
 
@@ -1014,7 +1008,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                     onClick={() => { setStep('verification'); setGuestNameInput(''); setVerificationError(''); }}
                     className="flex justify-center py-3 px-6 border border-gray-300 rounded-full shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all"
                 >
-                    Back
+                    Назад
                 </button>
                 <button
                     type="submit"
@@ -1022,8 +1016,8 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                     className="flex-1 flex justify-center py-3 px-6 border border-transparent rounded-full shadow-md text-base font-medium text-white bg-accent hover:bg-accent-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 transition-all transform hover:-translate-y-0.5"
                 >
                     {status === 'submitting'
-                        ? (existingRsvp ? 'Updating...' : 'Sending...')
-                        : (existingRsvp ? 'Update RSVP' : 'Send RSVP')}
+                        ? (existingRsvp ? 'Обновляем...' : 'Отправляем...')
+                        : (existingRsvp ? 'Обновить ответ' : 'Отправить ответ')}
                 </button>
             </div>
         </form>

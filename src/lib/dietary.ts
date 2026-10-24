@@ -53,13 +53,13 @@ export type RestrictionCode = (typeof DIET_CODES)[number];
 export type DietCode = (typeof ALL_DIET_CODES)[number];
 
 export const DIET_LABELS: Record<DietCode, string> = {
-    VEG: 'Vegetarian',
-    VGN: 'Vegan',
-    GF: 'Gluten free',
-    NUT: 'Nut allergy',
-    OTH: 'Other',
-    KID: 'Kids meal',
-    NOM: 'Not eating',
+    VEG: 'Вегетарианское',
+    VGN: 'Веганское',
+    GF: 'Без глютена',
+    NUT: 'Аллергия на орехи',
+    OTH: 'Другое',
+    KID: 'Детское меню',
+    NOM: 'Без питания',
 };
 
 /** The entry field each code is stored in — the editor toggles these by name. */

@@ -47,8 +47,8 @@ export default function AdminAbout() {
     return (
         <div className="max-w-4xl">
             <AutosaveHeader
-                title="About Page Content"
-                subtitle="Customize your story and venue information. Changes save themselves."
+                title="Содержимое раздела «О нас»"
+                subtitle="Добавьте вашу историю и сведения о месте торжества. Изменения сохраняются автоматически."
                 state={state}
                 onRetry={retry}
             />
@@ -57,106 +57,106 @@ export default function AdminAbout() {
 
                 {/* Story Section */}
                 <div className="space-y-6 bg-gradient-to-br from-accent/5 to-accent-light/10 rounded-xl p-6 border border-accent/10">
-                    <h2 className="text-xl font-semibold text-gray-900">Our Story</h2>
+                    <h2 className="text-xl font-semibold text-gray-900">Наша история</h2>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Page Headline</label>
+                        <label className="block text-sm font-medium text-gray-700">Заголовок страницы</label>
                         <input
                             type="text"
                             value={config.ourStoryTitle || ''}
                             onChange={(e) => setConfig({ ...config, ourStoryTitle: e.target.value })}
                             className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border text-gray-900"
-                            placeholder="e.g. A chance meeting..."
+                            placeholder="Например: Случайная встреча..."
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">&quot;How We Met&quot; Section Title</label>
+                        <label className="block text-sm font-medium text-gray-700">Заголовок раздела «Как мы познакомились»</label>
                         <input
                             type="text"
                             value={config.howWeMetTitle || ''}
                             onChange={(e) => setConfig({ ...config, howWeMetTitle: e.target.value })}
                             className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border text-gray-900"
-                            placeholder="e.g. How We Met, Our Beginning, etc."
+                            placeholder="Например: Как мы познакомились, Начало нашей истории"
                         />
-                        <p className="text-xs text-gray-500 mt-1">This will be the heading above your story. Leave blank to use &quot;How We Met&quot;</p>
+                        <p className="text-xs text-gray-500 mt-1">Заголовок над вашей историей. Если оставить пустым, появится «Как мы познакомились».</p>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">How We Met Story</label>
-                        <p className="text-xs text-gray-500 mb-2">Tell your story in this section. You can use multiple lines here.</p>
+                        <label className="block text-sm font-medium text-gray-700">История знакомства</label>
+                        <p className="text-xs text-gray-500 mb-2">Расскажите вашу историю. Можно использовать несколько абзацев.</p>
                         <textarea
                             rows={8}
                             value={config.ourStoryBody || ''}
                             onChange={(e) => setConfig({ ...config, ourStoryBody: e.target.value })}
                             className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border text-gray-900"
-                            placeholder="Tell your story..."
+                            placeholder="Ваша история..."
                         />
                     </div>
                 </div>
 
                 {/* Venue Section */}
                 <div className="space-y-6 bg-gradient-to-br from-accent/5 to-accent-light/10 rounded-xl p-6 border border-accent/10">
-                    <h2 className="text-xl font-semibold text-gray-900">Venue Info</h2>
+                    <h2 className="text-xl font-semibold text-gray-900">Место торжества</h2>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Venue Description</label>
+                        <label className="block text-sm font-medium text-gray-700">Описание места</label>
                         <textarea
                             rows={3}
                             value={config.venueDescription || ''}
                             onChange={(e) => setConfig({ ...config, venueDescription: e.target.value })}
                             className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border text-gray-900"
-                            placeholder="Short blurb about the venue..."
+                            placeholder="Краткое описание места..."
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Venue Address (for Maps)</label>
-                        <p className="text-xs text-gray-500 mb-2">Entering an address here will create a &quot;Get Directions&quot; link on the website.</p>
+                        <label className="block text-sm font-medium text-gray-700">Адрес для карты</label>
+                        <p className="text-xs text-gray-500 mb-2">Укажите адрес, чтобы на сайте появилась ссылка «Построить маршрут».</p>
                         <input
                             type="text"
                             value={config.venueAddress || ''}
                             onChange={(e) => setConfig({ ...config, venueAddress: e.target.value })}
                             className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border text-gray-900"
-                            placeholder="e.g. 123 Wedding Lane, City, State"
+                            placeholder="Например: Москва, Садовая улица, 10"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">The Ceremony Box Text</label>
-                        <p className="text-xs text-gray-500 mb-2">Text displayed in &quot;The Ceremony&quot; box below the venue description.</p>
+                        <label className="block text-sm font-medium text-gray-700">Текст блока «Церемония»</label>
+                        <p className="text-xs text-gray-500 mb-2">Текст под описанием места в блоке «Церемония».</p>
                         <textarea
                             rows={3}
                             value={config.ceremonyText || ''}
                             onChange={(e) => setConfig({ ...config, ceremonyText: e.target.value })}
                             className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border text-gray-900"
-                            placeholder="e.g. The ceremony will take place at 4:00 PM at the venue."
+                            placeholder="Например: Церемония начнётся в 16:00 на территории усадьбы."
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">The Reception Box Text</label>
-                        <p className="text-xs text-gray-500 mb-2">Text displayed in &quot;The Reception&quot; box below the venue description.</p>
+                        <label className="block text-sm font-medium text-gray-700">Текст блока «Праздничный ужин»</label>
+                        <p className="text-xs text-gray-500 mb-2">Текст под описанием места в блоке «Праздничный ужин».</p>
                         <textarea
                             rows={3}
                             value={config.receptionText || ''}
                             onChange={(e) => setConfig({ ...config, receptionText: e.target.value })}
                             className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border text-gray-900"
-                            placeholder="e.g. Dinner and dancing will follow immediately."
+                            placeholder="Например: После церемонии вас ждут ужин и танцы."
                         />
                     </div>
                 </div>
 
                 {/* Nav Card Subtitle */}
                 <div className="space-y-4 bg-gradient-to-br from-accent/5 to-accent-light/10 rounded-xl p-6 border border-accent/10">
-                    <h2 className="text-xl font-semibold text-gray-900">Nav Card Subtitle</h2>
-                    <p className="text-sm text-gray-500">Short tagline shown on the About card at the bottom of the home page.</p>
+                    <h2 className="text-xl font-semibold text-gray-900">Подпись карточки раздела</h2>
+                    <p className="text-sm text-gray-500">Краткая подпись карточки «О нас» внизу главной страницы.</p>
                     <input
                         type="text"
                         value={config.aboutSubtitle || ''}
                         onChange={(e) => setConfig({ ...config, aboutSubtitle: e.target.value })}
                         className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border text-gray-900"
-                        placeholder="e.g. Where it all began"
+                        placeholder="Например: Как всё начиналось"
                     />
                 </div>
             </div>
