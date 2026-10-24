@@ -11,6 +11,13 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.27 — [Released] Запуск контейнеров через just (`main`, 2026-10-24 22:02)
+
+### Added
+- Команды `just up` и `just down` для сборки и запуска локального сайта с PostgreSQL
+  и остановки контейнеров с сохранением томов базы данных, фотографий и настроек.
+- Инструкции по подготовке `docker/.env` и использованию команд в README.
+
 ## v0.10.26 — [Released] Русский интерфейс сайта и админки (`main`, 2026-10-24 21:42)
 
 ### Changed

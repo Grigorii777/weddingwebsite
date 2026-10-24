@@ -102,6 +102,25 @@ optional and each feature says so in the UI when its variable is missing:
 - **[Deployment](https://github.com/Soccerbeats/weddingwebsite/wiki/Deployment)** — what a merge publishes, and how it reaches a running server on its own
 - **[The demo instance](https://github.com/Soccerbeats/weddingwebsite/wiki/The-Demo-Instance)** — how the read-only copy at [weddingwebsitedemo.com](https://weddingwebsitedemo.com) is put together, and how to host your own
 
+### Локальный запуск через just
+
+Нужны Docker с Compose и `just` (на macOS: `brew install just`). При первом
+запуске скопируйте `docker/.env.example` в `docker/.env` и задайте пароли базы
+данных и админки. Пароль в `DATABASE_URL` должен совпадать с `POSTGRES_PASSWORD`.
+
+Из каталога проекта:
+
+```bash
+just up      # собрать и запустить сайт и PostgreSQL в фоне
+just down    # остановить и удалить контейнеры, сохранив данные
+```
+
+Сайт: http://localhost:3000, админка: http://localhost:3000/admin.
+Команды используют `docker/docker-compose.dev.yml` и `docker/.env`;
+изменения исходников подхватываются автоматически. База данных, фотографии
+и настройки остаются в Docker-томах после `just down` и доступны при следующем
+`just up`. Команда `just` показывает список доступных команд.
+
 ## Русский интерфейс
 
 Публичные страницы и панель управления переведены на русский, включая финансы,

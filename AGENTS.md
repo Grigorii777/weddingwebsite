@@ -38,8 +38,12 @@ The Docker dev stack (source mounted, hot reload) lives in `docker/`:
 
 ```bash
 cp docker/.env.example docker/.env   # once, then edit
-docker compose -f docker/docker-compose.dev.yml up -d
+just up     # builds and starts the dev stack in the background
+just down   # removes containers, keeps the data volumes
 ```
+
+Requires Docker Compose and `just`. The root `justfile` uses
+`docker/docker-compose.dev.yml` with `docker/.env` explicitly.
 
 ## Checks — run before calling a change done
 
