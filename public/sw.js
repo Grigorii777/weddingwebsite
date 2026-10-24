@@ -85,7 +85,7 @@ const DIRECT_TIMEOUT_MS = 20000;
 /** A saved copy older than this is refreshed by the next warm-up. */
 const STALE_AFTER_MS = 12 * 60 * 60 * 1000;
 
-const OFFLINE_WRITE_MESSAGE = "You're offline — this wasn't saved. Try again when you're back online.";
+const OFFLINE_WRITE_MESSAGE = 'Нет подключения к интернету — изменение не сохранено. Повторите попытку после подключения.';
 
 /**
  * Writes that are never kept for later: lookups against other services (they
@@ -144,6 +144,12 @@ function routeFor(req, origin) {
     if (path.startsWith('/api/')) return 'data';
     if (req.mode === 'navigate' || (req.accept || '').includes('text/html')) return 'page';
     return 'asset';
+}
+
+/** Only production files with immutable URLs may skip revalidation. */
+function isImmutableStatic(cacheControl) {
+    const directives = (cacheControl || '').toLowerCase().split(',').map((part) => part.trim());
+    return directives.includes('immutable') && !directives.includes('no-cache') && !directives.includes('no-store');
 }
 
 /** A page may be saved only if it is the page that was asked for. */
@@ -338,7 +344,7 @@ function mergeSiteConfig(config, bodies) {
 /* Under Node (check:offline) only the rules above are wanted. */
 if (typeof module === 'object' && module.exports) {
     module.exports = {
-        routeFor, isCacheablePage, isCacheableData, isStale, redirectTarget, OFFLINE_WRITE_MESSAGE, fallbackWait,
+        routeFor, isImmutableStatic, isCacheablePage, isCacheableData, isStale, redirectTarget, OFFLINE_WRITE_MESSAGE, fallbackWait,
         NETWORK_TIMEOUT_MS, FALLBACK_AFTER_MS, OFFLINE_HOLD_MS, REVALIDATE_AFTER_MS, RSC_TIMEOUT_MS, readPlan, rscBudget,
         isQueueable, tempIdCount, queuedResponseBody, remapIds, remapUrl, createdIds, outcomeFor, mergeSiteConfig,
     };
@@ -347,6 +353,10 @@ if (typeof module === 'object' && module.exports) {
 /* ───────────────────────────── the worker ───────────────────────────── */
 
 if (typeof self !== 'undefined' && typeof self.addEventListener === 'function' && typeof caches !== 'undefined') {
+    // Dev serves changing code under stable URLs, including HTML and RSC
+    // module references. Replace any older caching worker, then leave dev
+    // requests to the browser. Keep saved copies and the outbox intact.
+    const development = new URL(self.location.href).searchParams.get('development') === '1';
     self.addEventListener('install', () => { self.skipWaiting(); });
 
     self.addEventListener('activate', (event) => {
@@ -760,7 +770,7 @@ if (typeof self !== 'undefined' && typeof self.addEventListener === 'function' &
                         } else {
                             const answer = await response.clone().json().catch(() => ({}));
                             await inStore('failed', 'readwrite', (store) => asPromise(store.put({
-                                ...record, status: response.status, error: (answer && answer.error) || `The server said ${response.status}`,
+                                ...record, status: response.status, error: (answer && answer.error) || `Сервер ответил с кодом ${response.status}`,
                             })));
                         }
                         await inStore('writes', 'readwrite', (store) => asPromise(store.delete(record.seq)));
@@ -922,7 +932,7 @@ if (typeof self !== 'undefined' && typeof self.addEventListener === 'function' &
             tell(event, true);
             const fallback = await cache.match('/offline', { ignoreVary: true });
             if (fallback) return fallback;
-            return new Response('<h1>Offline</h1><p>This page has not been saved for offline use yet.</p>', {
+            return new Response('<html lang="ru"><meta charset="utf-8"><h1>Нет подключения к интернету</h1><p>Эта страница ещё не сохранена для работы без интернета.</p></html>', {
                 status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' },
             });
         }
@@ -1023,13 +1033,22 @@ if (typeof self !== 'undefined' && typeof self.addEventListener === 'function' &
     async function cacheFirst(request) {
         const cache = await caches.open(STATIC);
         const saved = await cache.match(request, { ignoreVary: true });
-        if (saved) return saved;
-        const response = await fetch(request);
-        if (response.status === 200) await cache.put(request, response.clone());
-        return response;
+        if (saved && isImmutableStatic(saved.headers.get('Cache-Control'))) return saved;
+        // Next dev reuses chunk URLs after edits. A cached English chunk used
+        // to win forever, even against the server's no-cache header, leaving
+        // the sidebar in Russian and the tabs in English after a translation.
+        try {
+            const response = await withTimeout(fetch(request, { cache: 'no-cache' }), NETWORK_TIMEOUT_MS);
+            if (response.status === 200) await cache.put(request, response.clone());
+            return response;
+        } catch (error) {
+            if (saved) return saved;
+            throw error;
+        }
     }
 
     self.addEventListener('fetch', (event) => {
+        if (development) return;
         const { request } = event;
         const describeRequest = (nested) => ({
             url: request.url,

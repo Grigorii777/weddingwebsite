@@ -288,6 +288,7 @@ let running: Promise<void> | null = null;
  * the admin sidebar always saves everything.
  */
 export function saveForOffline({ onlyIfStale = false } = {}): Promise<void> {
+    if (process.env.NODE_ENV === 'development') return Promise.resolve();
     if (running) return running;
     if (typeof window === 'undefined' || inFrame() || !navigator.onLine) return Promise.resolve();
     running = (async () => {

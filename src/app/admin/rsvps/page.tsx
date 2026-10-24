@@ -1121,7 +1121,7 @@ export default function RSVPDashboard() {
         const match = filteredGuests[0];
         if (!match) {
             // Keep the text so a typo can be corrected rather than retyped.
-            setQuickPick({ text: `Гость не найден: «${query}”`, ok: false });
+            setQuickPick({ text: `Гость не найден: «${query}»`, ok: false });
             return;
         }
         const already = selectedGuests.includes(match.id);
@@ -2519,7 +2519,7 @@ export default function RSVPDashboard() {
                                 disabled={!guestForm.guest_name}
                                 className="px-7 py-2.5 text-sm font-semibold text-white bg-accent rounded-full hover:bg-accent/90 disabled:opacity-50 transition-all duration-300 shadow-md hover:shadow-lg"
                             >
-                                {editingGuest ? 'Обновить' : 'Добавить'} Гость
+                                {editingGuest ? 'Сохранить изменения' : 'Добавить гостя'}
                             </button>
                         </div>
                     </div>

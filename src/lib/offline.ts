@@ -7,6 +7,9 @@
  * excluded page is one that cannot or must not be saved.
  */
 
+/** Dev chunk URLs are reused after edits; the dev worker leaves requests online. */
+export const SITE_WORKER_URL = process.env.NODE_ENV === 'development' ? '/sw.js?development=1' : '/sw.js';
+
 /** The wedding website. Saved for anyone using the installed app. */
 export const PUBLIC_PAGES = [
     '/',

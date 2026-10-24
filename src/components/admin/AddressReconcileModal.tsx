@@ -100,7 +100,7 @@ export default function AddressReconcileModal({ guests, onClose, onApplied }: Pr
                 return cells.some(c => /^names\s*\(/i.test(c)) && cells.some(c => c.toLowerCase() === 'address:');
             });
             if (headerIdx === -1) {
-                setError('Could not find a header row with a "Names (…)" column and an "Address:" column. Is this the right spreadsheet?');
+                setError('Не найдена строка заголовков со столбцами «Names (…)» и «Address:». Проверьте, что выбран нужный файл.');
                 return;
             }
             const header = grid[headerIdx].map(c => c.trim());

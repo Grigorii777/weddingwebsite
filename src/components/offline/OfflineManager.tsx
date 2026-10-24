@@ -4,6 +4,7 @@ import { counted } from '@/lib/locale';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { SITE_WORKER_URL } from '@/lib/offline';
 import { describeWrite } from './outbox';
 import { REFRESHED_EVENT, checkForUpdates, dismissFailed, getServerState, getState, hasLive, inFrame, subscribe } from './offlineStore';
 
@@ -151,7 +152,7 @@ export default function OfflineManager() {
 
     useEffect(() => {
         if (inFrame() || !('serviceWorker' in navigator)) return;
-        navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => undefined);
+        navigator.serviceWorker.register(SITE_WORKER_URL, { scope: '/', updateViaCache: 'none' }).catch(() => undefined);
         // After the page has settled, so the first paint never waits on it.
         const timer = setTimeout(() => { void checkForUpdates({ force: true }); }, 2500);
         const onOnline = () => { void checkForUpdates({ force: true }); };

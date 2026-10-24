@@ -79,7 +79,7 @@ export default function TravelLegCard({ leg, day, api }: {
                 {legIsOvernight(leg) && (
                     <span className="shrink-0 rounded-full bg-slate-900 px-2 py-0.5 text-[10px]
                         font-semibold text-white">
-                        +{leg.arrive_day_offset}d
+                        +{leg.arrive_day_offset} дн.
                     </span>
                 )}
                 <OverflowMenu items={[

@@ -269,7 +269,7 @@ export function TrendCard({ snapshots }: { snapshots: Snapshot[] }) {
 /* ------------------------------------------------------------ templates ---- */
 
 const TEMPLATES: Record<string, { name: string; unit_cost: number; qty_source: 'manual' | 'adults' | 'minors' | 'total' | 'drinkers' }[]> = {
-    'Venue & catering': [
+    'Площадка и питание': [
         { name: 'Аренда зала', unit_cost: 0, qty_source: 'manual' },
         { name: 'Ужин', unit_cost: 0, qty_source: 'adults' },
         { name: 'Детское меню', unit_cost: 0, qty_source: 'minors' },
@@ -278,13 +278,13 @@ const TEMPLATES: Record<string, { name: string; unit_cost: number; qty_source: '
         { name: 'Сервисный сбор', unit_cost: 0, qty_source: 'manual' },
         { name: 'Налоги', unit_cost: 0, qty_source: 'manual' },
     ],
-    'Photo & video': [
+    'Фото и видео': [
         { name: 'Фотограф', unit_cost: 0, qty_source: 'manual' },
         { name: 'Видеограф', unit_cost: 0, qty_source: 'manual' },
         { name: 'Съёмка помолвки', unit_cost: 0, qty_source: 'manual' },
         { name: 'Альбомы и печать', unit_cost: 0, qty_source: 'manual' },
     ],
-    'Attire & beauty': [
+    'Одежда и красота': [
         { name: 'Платье', unit_cost: 0, qty_source: 'manual' },
         { name: 'Подгонка одежды', unit_cost: 0, qty_source: 'manual' },
         { name: 'Костюм / смокинг', unit_cost: 0, qty_source: 'manual' },
@@ -292,21 +292,21 @@ const TEMPLATES: Record<string, { name: string; unit_cost: number; qty_source: '
         { name: 'Причёска', unit_cost: 0, qty_source: 'manual' },
         { name: 'Макияж', unit_cost: 0, qty_source: 'manual' },
     ],
-    'Flowers & decor': [
+    'Цветы и декор': [
         { name: 'Букет невесты', unit_cost: 0, qty_source: 'manual' },
         { name: 'Букеты подруг невесты', unit_cost: 0, qty_source: 'manual' },
         { name: 'Бутоньерки', unit_cost: 0, qty_source: 'manual' },
         { name: 'Композиции на столы', unit_cost: 0, qty_source: 'manual' },
         { name: 'Цветы для церемонии', unit_cost: 0, qty_source: 'manual' },
     ],
-    'Stationery': [
+    'Полиграфия': [
         { name: 'Уведомления о дате', unit_cost: 0, qty_source: 'manual' },
         { name: 'Приглашения', unit_cost: 0, qty_source: 'manual' },
         { name: 'Почтовые расходы', unit_cost: 0, qty_source: 'manual' },
         { name: 'Программа и меню', unit_cost: 0, qty_source: 'manual' },
         { name: 'Благодарственные открытки', unit_cost: 0, qty_source: 'manual' },
     ],
-    'Music & extras': [
+    'Музыка и прочие расходы': [
         { name: 'Диджей / группа', unit_cost: 0, qty_source: 'manual' },
         { name: 'Музыкант на церемонию', unit_cost: 0, qty_source: 'manual' },
         { name: 'Ведущий церемонии', unit_cost: 0, qty_source: 'manual' },
@@ -385,7 +385,7 @@ export function TemplatePicker({ data, api, onClose }: {
                             {line.qty_source !== 'manual' && (
                                 <span className="text-[10px] uppercase tracking-wide text-gray-400">
                                     за {line.qty_source === 'minors' ? 'ребёнка'
-                                        : line.qty_source === 'drinkers' ? 'гостя с алкоголем' : 'гость'}
+                                        : line.qty_source === 'drinkers' ? 'гостя с алкоголем' : 'взрослого'}
                                 </span>
                             )}
                         </label>

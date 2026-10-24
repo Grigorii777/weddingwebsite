@@ -10,6 +10,7 @@ import { savedLabel, useOfflineState } from './OfflineManager';
  */
 export default function OfflineStatus() {
     const state = useOfflineState();
+    if (process.env.NODE_ENV === 'development') return null;
     const saving = state.phase === 'saving';
     const pct = state.total ? Math.round((state.done / state.total) * 100) : 0;
     return (

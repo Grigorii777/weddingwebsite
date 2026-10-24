@@ -750,7 +750,7 @@ function CalendarCellBox({ cell, day, api, beyondRange, arrivals, onOpen }: {
             <div className="flex h-full flex-col items-center justify-between gap-0.5 md:hidden">
                 <span className="text-sm font-semibold tabular-nums text-gray-800">{cell.dayOfMonth}</span>
                 <span className={`text-[9px] font-semibold ${beyondRange ? 'text-rose-700' : 'text-accent'}`}>
-                    D{day.day_number}
+                    Д{day.day_number}
                 </span>
                 <span className="flex items-center gap-0.5" aria-label={`${day.stops.length} остановок${
                     day.travel.length + arrivals.length ? ', переезды' : ''}`}>
@@ -784,7 +784,7 @@ function CalendarCellBox({ cell, day, api, beyondRange, arrivals, onOpen }: {
                     {travelModeMeta(leg.mode).icon}{' '}
                     {leg.depart_time ? fmt(leg.depart_time) : ''} {leg.to_text ?? ''}
                     {legIsOvernight(leg) && (
-                        <span className="font-semibold"> +{leg.arrive_day_offset}d</span>
+                        <span className="font-semibold"> +{leg.arrive_day_offset} дн.</span>
                     )}
                 </p>
             ))}

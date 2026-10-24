@@ -331,7 +331,7 @@ export default function ExcursionsTab({ api, segmentSwitch }: {
                             e.preventDefault();
                             setBulk((prev) => (prev ? `${prev}\n${text.trim()}` : text.trim()));
                         }}
-                        placeholder="https://…  — a tour, a class, a dive shop. One per line."
+                        placeholder="https://… — экскурсия, занятие, дайвинг-центр. По одной ссылке на строку."
                     />
                     <p className="text-[11px] text-gray-400">
                         Название и фото берутся со страницы, если доступны. Тип и стоимость укажите сами.

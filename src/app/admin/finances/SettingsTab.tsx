@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import { formatWeddingDate } from '@/lib/locale';
 import type { FinanceApi, FinancePayload } from './useFinances';
 import { Card, EmptyState, GlyphButton, InlineNumber, InlineText, PillButton, formatMoney } from './ui';
 
@@ -223,7 +224,7 @@ export default function SettingsTab({ data, api }: { data: FinancePayload; api: 
                         />
                         <p className="text-[11px] text-gray-400 mt-1">
                             {summary.horizon.derived
-                                ? `Автоматически: ${summary.horizon.days.toLocaleString('ru-RU')} дней осталось${weddingDate ? ` до ${weddingDate}` : ''}.`
+                                ? `Автоматически: ${summary.horizon.days.toLocaleString('ru-RU')} дней осталось${weddingDate ? ` до ${formatWeddingDate(weddingDate)}` : ''}.`
                                 : `Задано: ${settings.plan_horizon_months} месяцев.`}
                         </p>
                     </div>

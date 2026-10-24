@@ -240,7 +240,7 @@ function PlaceBody({ place, onEdit }: { place: Place; onEdit: () => void }) {
                         compact
                         label={`Район для ${place.name}`}
                         value={place.region_id != null ? String(place.region_id) : ''}
-                        placeholder="Ubud, Seminyak…"
+                                placeholder="Город или район…"
                         options={regionOptions}
                         onChange={(next) => set({ region_id: next === '' ? null : Number(next) })}
                         onCreate={async (typed) => {

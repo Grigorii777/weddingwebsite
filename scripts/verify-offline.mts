@@ -118,7 +118,90 @@ for (const [label, record] of [['none', null], ['old build', { at: now - 60_000,
         isWarmStale(record, 'b1', now) === sw.isStale(record, 'b1', now));
 }
 check('the offline message says what happened and what to do',
-    /offline/i.test(sw.OFFLINE_WRITE_MESSAGE) && /wasn.t saved/i.test(sw.OFFLINE_WRITE_MESSAGE));
+    /нет подключения к интернету/i.test(sw.OFFLINE_WRITE_MESSAGE) && /не сохранено/i.test(sw.OFFLINE_WRITE_MESSAGE));
+
+console.log('\nUpdated development code replaces cached English tabs');
+{
+    // Exercise the worker's real fetch handler, including Cache Storage and
+    // response headers. Dev chunk URLs stay the same after a translation.
+    async function loadStatic({ header = 'no-cache, must-revalidate', offline = false, status = 200, saved = true } = {}) {
+        let cached: Response | undefined = saved
+            ? new Response('RSVP & Guest Management', { headers: { 'Cache-Control': header } })
+            : undefined;
+        let networkCalls = 0;
+        let cacheWrites = 0;
+        const handlers = new Map<string, (event: unknown) => void>();
+        const cache = {
+            match: async () => cached?.clone(),
+            put: async (_request: Request, response: Response) => { cached = response.clone(); cacheWrites += 1; },
+        };
+        vm.runInNewContext(fs.readFileSync('public/sw.js', 'utf8'), {
+            URL, Response, setTimeout, clearTimeout,
+            self: {
+                location: { origin: O, href: `${O}/sw.js` },
+                addEventListener: (type: string, handler: (event: unknown) => void) => handlers.set(type, handler),
+            },
+            caches: { open: async () => cache },
+            fetch: async () => {
+                networkCalls += 1;
+                if (offline) throw new Error('server unreachable');
+                return new Response('Ответы и список гостей', { status, headers: { 'Cache-Control': header } });
+            },
+        });
+        let answer: Promise<Response> | undefined;
+        handlers.get('fetch')?.({
+            request: new Request(`${O}/_next/static/chunks/admin-rsvps.js`),
+            respondWith: (response: Promise<Response>) => { answer = response; },
+        });
+        if (!answer) throw new Error('worker did not handle the static request');
+        const response = await answer;
+        return {
+            body: await response.text(), status: response.status, networkCalls, cacheWrites,
+            cachedBody: cached ? await cached.text() : null,
+        };
+    }
+    const changed = await loadStatic();
+    check('a cached English dev tab is replaced by the current Russian code',
+        changed.body === 'Ответы и список гостей' && changed.networkCalls === 1);
+    check('the refreshed dev code replaces the old cached code',
+        changed.cachedBody === 'Ответы и список гостей' && changed.cacheWrites === 1);
+    const noStore = await loadStatic({ header: 'no-store' });
+    check('no-store code is revalidated too', noStore.networkCalls === 1 && noStore.body === 'Ответы и список гостей');
+    const production = await loadStatic({ header: 'public, max-age=31536000, immutable' });
+    check('production immutable chunks still open without a server request',
+        production.networkCalls === 0 && production.cacheWrites === 0);
+    const copy = await loadStatic({ offline: true });
+    check('a non-immutable saved chunk survives a server outage', copy.body === 'RSVP & Guest Management');
+    const error = await loadStatic({ status: 503 });
+    check('a server error is not saved over the last working code',
+        error.status === 503 && error.cacheWrites === 0 && error.cachedBody === 'RSVP & Guest Management');
+    const first = await loadStatic({ saved: false });
+    check('a first visit fetches and saves the current code', first.networkCalls === 1 && first.cacheWrites === 1);
+    try {
+        await loadStatic({ saved: false, offline: true });
+        check('an uncached chunk cannot pretend to work offline', false);
+    } catch {
+        check('an uncached chunk cannot pretend to work offline', true);
+    }
+
+    const developmentHandlers = new Map<string, (event: unknown) => void>();
+    vm.runInNewContext(fs.readFileSync('public/sw.js', 'utf8'), {
+        URL,
+        self: {
+            location: { origin: O, href: `${O}/sw.js?development=1` },
+            addEventListener: (type: string, handler: (event: unknown) => void) => developmentHandlers.set(type, handler),
+        },
+        caches: {},
+    });
+    for (const resource of ['/admin/rsvps', '/admin/rsvps?_rsc=1', '/_next/static/chunks/admin.js', '/api/admin/site-config']) {
+        let intercepted = false;
+        developmentHandlers.get('fetch')?.({
+            request: new Request(`${O}${resource}`),
+            respondWith: () => { intercepted = true; },
+        });
+        check(`dev leaves the current response to the browser (${resource})`, !intercepted);
+    }
+}
 
 console.log('\nWhich edits wait in the outbox');
 const json = 'application/json';

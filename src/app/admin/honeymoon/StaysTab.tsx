@@ -894,7 +894,7 @@ export default function StaysTab({ api, segmentSwitch }: {
                             e.preventDefault();
                             setBulk((prev) => (prev ? `${prev}\n${text.trim()}` : text.trim()));
                         }}
-                        placeholder="https://www.booking.com/hotel/id/…  — one per line, or several at once"
+                                placeholder="https://www.booking.com/hotel/id/… — по одной ссылке на строку или несколько сразу"
                     />
                     <p className="text-[11px] text-gray-400">
                         Название, фото, адрес и координаты берутся из предложения. Цену и заметки укажите сами.

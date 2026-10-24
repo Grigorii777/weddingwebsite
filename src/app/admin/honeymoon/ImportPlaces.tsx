@@ -140,8 +140,7 @@ export default function ImportPlaces({ api, open, onClose }: {
                 {parsed && (
                     <div className="rounded-2xl border border-gray-200 p-3">
                         <p className="text-sm text-gray-800">
-                            Распознано {parsed.format}: {parsed.places.length} place
-                            {parsed.places.length === 1 ? '' : ''}
+                            Распознано {parsed.format}: {counted(parsed.places.length, 'место', 'места', 'мест')}
                             {duplicates.size > 0 && `, ${duplicates.size} уже в вашей подборке`}
                             {parsed.skipped.length > 0
                                 && `, ${counted(parsed.skipped.length, 'строка', 'строки', 'строк')} пропущено`}.

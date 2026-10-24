@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import TodaySheet, { useNightMode, useNowMinutes } from '@/components/honeymoon/TodaySheet';
 import { planForDay, planForToday } from '@/lib/honeymoonToday';
+import { SITE_WORKER_URL } from '@/lib/offline';
 import { useTripIntel } from './useTripIntel';
 import { useOfflineFiles } from './FilesTab';
 import type { HoneymoonApi } from './useHoneymoon';
@@ -31,17 +32,13 @@ export default function TodayTab({ api }: { api: HoneymoonApi }) {
     const [offline, setOffline] = useState<'off' | 'ready' | 'failed'>('off');
 
     /*
-     * The offline snapshot.
-     *
-     * A service worker registered from this page caches the shell and the last
-     * good payload, so the itinerary opens on a boat, in a taxi, or in the
-     * hour before a flight when roaming has not woken up yet. Registered here
-     * rather than globally: the guest-facing site has no use for it, and a
-     * worker that caches pages nobody asked it to is how stale sites happen.
+     * The shared site worker keeps the shell and last good payload in a
+     * production build. Development always reads the running server instead
+     * of mixing changing module references with an old saved page.
      */
     useEffect(() => {
-        if (!('serviceWorker' in navigator)) return;
-        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        if (process.env.NODE_ENV === 'development' || !('serviceWorker' in navigator)) return;
+        navigator.serviceWorker.register(SITE_WORKER_URL, { scope: '/', updateViaCache: 'none' })
             .then(() => setOffline('ready'))
             .catch(() => setOffline('failed'));
     }, []);
@@ -122,13 +119,15 @@ export default function TodayTab({ api }: { api: HoneymoonApi }) {
                         >
                             🗂️ Документы поездки
                         </Link>
-                        <p>
-                            {offline === 'ready'
-                                ? 'Сохранено на устройстве — страница доступна без интернета.'
-                                : offline === 'failed'
-                                    ? 'В этом браузере копия без интернета недоступна.'
-                                    : 'Готовим копию для работы без интернета…'}
-                        </p>
+                        {process.env.NODE_ENV !== 'development' && (
+                            <p>
+                                {offline === 'ready'
+                                    ? 'Сохранено на устройстве — страница доступна без интернета.'
+                                    : offline === 'failed'
+                                        ? 'В этом браузере копия без интернета недоступна.'
+                                        : 'Готовим копию для работы без интернета…'}
+                            </p>
+                        )}
                     </div>
                 )}
             />

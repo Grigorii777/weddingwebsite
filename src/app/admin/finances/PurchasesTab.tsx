@@ -157,7 +157,7 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
                 <StatTile label="Учтено в бюджете" value={formatMoney(summary.paidTotal)}
                     hint={`${counted(rows.length, 'платёж', 'платежа', 'платежей')} записано`} />
                 {summary.payers.map((p) => (
-                    <StatTile key={p.id} label={`${p.name} оплаченным`} value={formatMoney(p.spent)} />
+                    <StatTile key={p.id} label={`Оплатил(а): ${p.name}`} value={formatMoney(p.spent)} />
                 ))}
                 <StatTile label="Из подаренных денег" value={formatMoney(summary.giftAppliedTotal)} tone="good"
                     hint={summary.giftUnapplied > 0
@@ -332,7 +332,7 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
                                         aria-label={`Кто оплатил: ${row.label}`}
                                         onChange={(e) => patch({ payer_id: e.target.value || null })}
                                     >
-                                        <option value="">Без места</option>
+                                        <option value="">Плательщик не указан</option>
                                         {payers.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                                     </RowSelect>
                                 )}
@@ -497,7 +497,7 @@ function BulkEdit({ data, api, ids, onClose, onDone }: {
                     <span className="mb-1 block text-xs font-semibold text-gray-500">Кто оплатил</span>
                     <SelectField value={payer} onChange={(e) => setPayer(e.target.value)}>
                         <option value="">Не менять</option>
-                        <option value="none">Без места</option>
+                        <option value="none">Плательщик не указан</option>
                         {data.payers.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </SelectField>
                 </label>

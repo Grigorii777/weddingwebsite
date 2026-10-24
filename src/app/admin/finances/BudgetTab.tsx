@@ -140,13 +140,12 @@ export default function BudgetTab({ data, api }: { data: FinancePayload; api: Fi
                         {summary.items.filter((i) => i.state === 'paid').length} полностью оплачено
                         <div className="mt-0.5">
                             Гостей: {settings.adult_count} взрослых и {settings.minor_count} несовершеннолетних
-                            {settings.drinking_count > 0 && ` · ${settings.drinking_count}с алкоголем`}
+                            {settings.drinking_count > 0 && ` · ${settings.drinking_count} с алкоголем`}
                         </div>
                         {summary.items.some((i) => i.stateConflict) && (
                             <div className="mt-1 text-amber-600">
-                                {summary.items.filter((i) => i.stateConflict).length} статья
-                                {summary.items.filter((i) => i.stateConflict).length === 1 ? '' : ''}
-                                {' '}отметка об оплате не совпадает с платежами
+                                Отметка об оплате не совпадает с платежами:{' '}
+                                {counted(summary.items.filter((i) => i.stateConflict).length, 'статья', 'статьи', 'статей')}
                             </div>
                         )}
                     </div>
@@ -491,7 +490,7 @@ function SectionPayments({ category, data, api }: {
                                             })}
                                             className="md:text-[11px]"
                                         >
-                                            <option value="">Без места</option>
+                                            <option value="">Плательщик не указан</option>
                                             {data.payers.map((payer) => (
                                                 <option key={payer.id} value={payer.id}>{payer.name}</option>
                                             ))}
@@ -752,7 +751,7 @@ function ItemDetail({ item, data, api }: { item: BudgetItem; data: FinancePayloa
     const { settings } = data;
     const linkedPurchases = data.purchases.filter((p) => p.item_id === item.id);
     const payerName = (id: number | null) =>
-        data.payers.find((p) => p.id === id)?.name ?? 'Без места';
+        data.payers.find((p) => p.id === id)?.name ?? 'Плательщик не указан';
 
     const addSubItem = () =>
         api.create('subitems', {

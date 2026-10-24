@@ -1,5 +1,6 @@
 'use client';
 import { counted } from '@/lib/locale';
+import { SITE_WORKER_URL } from '@/lib/offline';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -605,7 +606,7 @@ export function useOfflineFiles(documents: TripDocument[]) {
     const key = urls.join('|');
 
     useEffect(() => {
-        if (!('serviceWorker' in navigator) || !window.isSecureContext) {
+        if (process.env.NODE_ENV === 'development' || !('serviceWorker' in navigator) || !window.isSecureContext) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setSupported(false);
             return;
@@ -614,7 +615,7 @@ export function useOfflineFiles(documents: TripDocument[]) {
             if (event.data?.type === 'honeymoon-sw:files-done') setSaved(Number(event.data.saved) || 0);
         };
         navigator.serviceWorker.addEventListener('message', onMessage);
-        void navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        void navigator.serviceWorker.register(SITE_WORKER_URL, { scope: '/', updateViaCache: 'none' })
             .then(() => navigator.serviceWorker.ready)
             .then((registration) => {
                 registration.active?.postMessage({ type: 'honeymoon-sw:files', urls: key ? key.split('|') : [] });

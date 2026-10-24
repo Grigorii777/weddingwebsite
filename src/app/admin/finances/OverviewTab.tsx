@@ -1,5 +1,5 @@
 'use client';
-import { counted } from '@/lib/locale';
+import { counted, formatWeddingDate } from '@/lib/locale';
 
 import { useState } from 'react';
 import type { PayerSummary } from '@/lib/finance';
@@ -213,7 +213,7 @@ export default function OverviewTab({ data }: { data: FinancePayload }) {
                         Распределено на {summary.horizon.days.toLocaleString('ru-RU')} дней
                         {' '}({summary.horizon.months.toFixed(1)} месяцев, ~{Math.floor(summary.horizon.paychecks)} зарплат)
                         {summary.horizon.derived && weddingDate
-                            ? ` до ${weddingDate}.`
+                            ? ` до ${formatWeddingDate(weddingDate)}.`
                             : ' по заданному сроку планирования.'}
                     </p>
                 )}
@@ -321,7 +321,7 @@ export default function OverviewTab({ data }: { data: FinancePayload }) {
                             +{formatMoney(summary.guestCost.marginalPerAdult)}
                         </div>
                         <div className="text-[11px] text-gray-400">
-                            {summary.guestCost.marginalLines.length} статья на гостя
+                            {counted(summary.guestCost.marginalLines.length, 'статья с расчётом на гостя', 'статьи с расчётом на гостя', 'статей с расчётом на гостя')}
                             {summary.guestCost.marginalLines.length === 1 ? '' : ''}
                         </div>
                     </div>

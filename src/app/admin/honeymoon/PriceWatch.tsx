@@ -21,10 +21,10 @@ import { Button, Card, TextArea } from './ui';
 const BOOKMARKLET = `javascript:(function(){
 var sel=['[data-testid="price-and-discounted-price"]','[data-testid="price"]','.prco-valign-middle-helper','._1p7iugi','[data-section-id="BOOK_IT_SIDEBAR"] span','[class*="price"]'];
 var t='';for(var i=0;i<sel.length&&!t;i++){var e=document.querySelector(sel[i]);if(e&&e.textContent)t=e.textContent.trim();}
-if(!t){t=prompt('Could not find a price on this page. Type it in?','')||'';}
+if(!t){t=prompt('Не удалось найти цену на странице. Введите её вручную:','')||'';}
 if(!t)return;
 var line=location.href+'\\t'+t.replace(/\\s+/g,' ');
-navigator.clipboard.writeText(line).then(function(){alert('Copied:\\n'+line+'\\n\\nPaste it into the honeymoon portal.');},function(){prompt('Copy this line:',line);});
+navigator.clipboard.writeText(line).then(function(){alert('Скопировано:\\n'+line+'\\n\\nВставьте строку в планировщик путешествия.');},function(){prompt('Скопируйте эту строку:',line);});
 })();`.replace(/\n/g, '');
 
 export default function PriceWatch({ api }: { api: HoneymoonApi }) {

@@ -269,7 +269,7 @@ export default function SettingsTab({ api }: { api: HoneymoonApi }) {
                     <TextField
                         key={trip.partner_names}
                         defaultValue={trip.partner_names}
-                        placeholder="Austin, Heaven"
+                                placeholder="Анна, Иван"
                         onBlur={(e) => {
                             if (e.target.value !== trip.partner_names) {
                                 api.update('trip', { partner_names: e.target.value });

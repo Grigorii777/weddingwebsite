@@ -79,7 +79,7 @@ export default function ShareLinks({ api }: { api: HoneymoonApi }) {
                     <label className="mb-1 block text-xs font-semibold text-gray-500">Для кого</label>
                     <TextField
                         value={label}
-                        placeholder="Heaven"
+                                placeholder="Анна"
                         onChange={(e) => setLabel(e.target.value)}
                     />
                 </div>

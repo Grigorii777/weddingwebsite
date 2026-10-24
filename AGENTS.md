@@ -45,6 +45,11 @@ just down   # removes containers, keeps the data volumes
 Requires Docker Compose and `just`. The root `justfile` uses
 `docker/docker-compose.dev.yml` with `docker/.env` explicitly.
 
+Development registers `/sw.js?development=1`, a network-only worker replacing any
+older caching registration. Dev HTML and chunk URLs are reused, so caching them
+can mix old English tabs with a new Russian shell. Offline saving and UI checks
+use a production build; dev never deletes saved copies or the outbox.
+
 ## Checks — run before calling a change done
 
 None need a network except `check:finance:db` (live database) and
@@ -62,7 +67,7 @@ image:
 | `npm run check:finance` | Budget arithmetic |
 | `npm run check:finance:db` | The same against a live database |
 | `npm run check:finance:ui` | The finance UI's contracts (needs a browser; fetches Playwright on demand) |
-| `npm run check:offline` | 147 checks with no browser, in CI: the offline worker's routing and saving rules, how long a read waits before its saved copy answers, where signing in returns you to, staleness and the update rule, which writes the outbox keeps, temporary-id rewriting, repeats applied once, the honeymoon portal's offline view, and that every page in `src/app` is in the offline lists |
+| `npm run check:offline` | 181 checks with no browser, in CI: the offline worker's routing and saving rules, how long a read waits before its saved copy answers, where signing in returns you to, staleness and the update rule, which writes the outbox keeps, temporary-id rewriting, repeats applied once, the honeymoon portal's offline view, and that every page in `src/app` is in the offline lists |
 | `npm run check:offline:ui` | The whole site offline in a real browser, 72 checks: save, cut the server off (through a proxy), open every page, edit offline and reconnect, lose a save's answer, let the installed app notice a server change, sign out. Needs a **production build** (`BASE=… ADMIN_PASSWORD=…`) and writes (cleans up after itself) |
 | `npm run check:honeymoon:ui` | The honeymoon portal in a real browser, 53 checks (none of them write): the same place panel and sections from every entry point, the itinerary toolbar staying on screen, travel on both timeline shapes, overview cards never overlapping, and at 390×844 no sideways scroll and no control under 44px on any of its pages. Needs a browser and a server with honeymoon data (`BASE=… ADMIN_PASSWORD=…`, or `DEMO=1` against the demo) |
 | `npm run check:hero` | The home page's hero collapse in a real browser, at five viewport-and-input pairings — phone portrait, **phone landscape**, tablet portrait, tablet landscape, desktop — each driven by the input that device actually sends. Needs a browser and a server whose site config has a hero photo, or every case reports the placeholder instead of a pass |

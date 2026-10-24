@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { addDays, daysBetween, monthMatrix, todayIso } from '@/lib/honeymoon';
 import { Button } from './ui';
 
-const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const WEEKDAYS = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 
 /**
  * Pick a trip by dragging across a calendar.

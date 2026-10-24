@@ -174,7 +174,7 @@ function relativeTime(iso: string, now: number) {
   const days = Math.round(hours / 24);
   if (days < 7) return `${days} дн. назад`;
   const weeks = Math.round(days / 7);
-  if (days < 60) return `${weeks}w ago`;
+  if (days < 60) return `${weeks} нед. назад`;
   return new Date(iso).toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
 }
 

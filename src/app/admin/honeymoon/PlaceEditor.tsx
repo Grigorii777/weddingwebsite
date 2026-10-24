@@ -321,7 +321,7 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                     <TextField
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="Tukad Cepung Waterfall"
+                        placeholder="Например: водопад или пляж"
                         autoFocus={!editing}
                     />
                 </div>
@@ -369,7 +369,7 @@ export function PlaceForm({ api, place, defaults, onDone, onCancel, registerGuar
                         <CustomisableSelect
                             label="Регион"
                             value={regionId}
-                            placeholder="Nusa Penida, Gili Islands…"
+                        placeholder="Например: острова рядом…"
                             options={[
                                 { key: '', label: '— нет —' },
                                 ...(api.data?.regions ?? []).map((r) => ({
