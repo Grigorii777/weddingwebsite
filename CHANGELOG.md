@@ -11,6 +11,12 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.29 — [Released] Ссылка на главную после локального запуска (`main`, 2026-10-29 17:08)
+
+### Added
+- После успешного `just up` в терминале отображается ссылка на главную страницу
+  локального сайта: http://localhost:3000.
+
 ## v0.10.28 — [Released] Русское содержимое вкладок админки без старого кеша (`main`, 2026-10-24 22:20)
 
 ### Fixed
