@@ -144,7 +144,7 @@ const CONFIG_PATH = path.join(CONFIG_DIR, 'site.json');
 export const DEFAULT_SITE_CONFIG: SiteConfig = {
     brideName: 'Ирина',
     groomName: 'Гриша',
-    weddingDate: 'June 15, 2024',
+    weddingDate: 'June 15, 2026',
     weddingLocation: 'The Garden Estate',
     weddingTime: '16:00',
 };

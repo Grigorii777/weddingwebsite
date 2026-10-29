@@ -11,6 +11,11 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.32 — [Released] Исправлен год на 2026 (`main`, 2026-10-29 17:17)
+
+### Fixed
+- Шаблонный год свадьбы исправлен с 2024 на 2026, в том числе в подписи футера.
+
 ## v0.10.31 — [Released] Ирина и Гриша и компактный футер (`main`, 2026-10-29 17:15)
 
 ### Changed
