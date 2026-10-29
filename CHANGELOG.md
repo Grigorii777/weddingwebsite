@@ -11,6 +11,12 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.30 — [Released] Локальный сайт на порту 3001 (`main`, 2026-10-29 17:11)
+
+### Changed
+- Docker-стек разработки, запускаемый через `just up`, доступен на порту 3001.
+  Ссылка в терминале и инструкции по локальному запуску обновлены.
+
 ## v0.10.29 — [Released] Ссылка на главную после локального запуска (`main`, 2026-10-29 17:08)
 
 ### Added

@@ -44,6 +44,7 @@ just down   # removes containers, keeps the data volumes
 
 Requires Docker Compose and `just`. The root `justfile` uses
 `docker/docker-compose.dev.yml` with `docker/.env` explicitly.
+The Docker dev site is at http://localhost:3001 (admin: /admin).
 
 Development registers `/sw.js?development=1`, a network-only worker replacing any
 older caching registration. Dev HTML and chunk URLs are reused, so caching them

@@ -7,7 +7,7 @@ default:
 # Собрать и запустить сайт и PostgreSQL в фоне.
 up:
     {{ compose }} up -d --build
-    @echo "Главная страница: http://localhost:3000"
+    @echo "Главная страница: http://localhost:3001"
 
 # Остановить и удалить контейнеры, сохранив тома с данными.
 down:
