@@ -59,7 +59,7 @@ export default function Home() {
           className="text-5xl md:text-7xl lg:text-8xl font-serif text-white tracking-tight mb-8 px-4 text-center"
           style={{ animation: 'page-enter 800ms cubic-bezier(0.25, 0.46, 0.45, 0.94) 400ms both' }}
         >
-          {config.brideName} & {config.groomName}
+          {config.brideName} и {config.groomName}
         </h1>
         <p
           data-hero-role="date"

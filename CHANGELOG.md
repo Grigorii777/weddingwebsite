@@ -11,6 +11,14 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.31 — [Released] Ирина и Гриша и компактный футер (`main`, 2026-10-29 17:15)
+
+### Changed
+- Имена по умолчанию заменены на Ирину и Гришу. В названии сайта, шапке,
+  главном заголовке, подвале, формах, письмах и экспорте между именами выводится «и».
+- Убран цветочный фон футера по умолчанию и лишняя высота: без выбранной фотографии
+  внизу сайта отображается компактная подпись на белом фоне.
+
 ## v0.10.30 — [Released] Локальный сайт на порту 3001 (`main`, 2026-10-29 17:11)
 
 ### Changed

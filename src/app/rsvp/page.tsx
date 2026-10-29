@@ -53,7 +53,7 @@ export default function RSVPPage() {
                     </div>
 
                     <RSVPForm
-                        coupleNames={`${config.brideName} & ${config.groomName}`}
+                        coupleNames={`${config.brideName} и ${config.groomName}`}
                         roomBlockHotel={config.roomBlockHotel || ''}
                         roomBlockUrl={config.roomBlockUrl || ''}
                     />

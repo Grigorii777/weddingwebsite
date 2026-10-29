@@ -469,7 +469,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
         // Prefer the live-fetched config (the RSVP page is statically rendered, so
         // server-passed props would be baked in empty at build time).
         const names = (config?.brideName && config?.groomName)
-            ? `${config.brideName} & ${config.groomName}`
+            ? `${config.brideName} и ${config.groomName}`
             : coupleNames;
         const hotel = config?.roomBlockHotel ?? roomBlockHotel;
         const bookingUrl = config?.roomBlockUrl ?? roomBlockUrl;
@@ -979,7 +979,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
             {/* Message */}
             <div>
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700 ml-1">
-                    Сообщение для {config?.brideName || 'Невеста'} & {config?.groomName || 'Жених'}♥
+                    Сообщение для {config?.brideName || 'Невеста'} и {config?.groomName || 'Жених'}♥
                 </label>
                 <textarea
                     id="message" name="message" rows={3}

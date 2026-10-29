@@ -19,7 +19,7 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata(): Promise<Metadata> {
   const config = getSiteConfig();
   const couple = config.brideName && config.groomName
-    ? `${config.brideName} & ${config.groomName}`
+    ? `${config.brideName} и ${config.groomName}`
     : 'Наша свадьба';
   return {
     title: `${couple} | Наша свадьба`,

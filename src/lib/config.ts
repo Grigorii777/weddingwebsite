@@ -142,8 +142,8 @@ const CONFIG_DIR = path.join(process.cwd(), 'public/config');
 const CONFIG_PATH = path.join(CONFIG_DIR, 'site.json');
 
 export const DEFAULT_SITE_CONFIG: SiteConfig = {
-    brideName: 'Sarah',
-    groomName: 'James',
+    brideName: 'Ирина',
+    groomName: 'Гриша',
     weddingDate: 'June 15, 2024',
     weddingLocation: 'The Garden Estate',
     weddingTime: '16:00',
@@ -168,7 +168,7 @@ export function getSiteConfig(): SiteConfig {
  * `writeFileSync` straight onto the target leaves a truncated file if the
  * process dies mid-write — and a truncated `site.json` is not an error anyone
  * sees: `getSiteConfig()` fails to parse it and quietly returns the template
- * defaults, so the whole site turns back into "Sarah & James, June 15, 2024".
+ * defaults, so the whole site loses its saved wedding details.
  * Writing beside the file and renaming is atomic on every filesystem we run on.
  */
 export function writeJsonAtomic(filePath: string, data: unknown) {

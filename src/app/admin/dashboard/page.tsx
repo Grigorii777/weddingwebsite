@@ -605,7 +605,7 @@ export default function DashboardPage() {
               Подготовка к свадьбе
             </p>
             <h1 className="text-5xl leading-tight" style={{ fontFamily: 'var(--font-script), cursive', fontWeight: 400 }}>
-              {siteConfig.brideName || 'Невеста'} &amp; {siteConfig.groomName || 'Жених'}
+              {siteConfig.brideName || 'Невеста'} и {siteConfig.groomName || 'Жених'}
             </h1>
             <p className="mt-2 opacity-75 text-sm" style={{ fontFamily: gs }}>
               {siteConfig.weddingDate || 'Дата не задана'}

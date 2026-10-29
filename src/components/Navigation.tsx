@@ -27,8 +27,8 @@ interface NavigationProps {
 }
 
 export default function Navigation({
-    brideName = 'Sarah',
-    groomName = 'James',
+    brideName = 'Ирина',
+    groomName = 'Гриша',
     logoMode = false,
     weddingLogo = '',
     isAdmin = false,
@@ -250,7 +250,7 @@ export default function Navigation({
                                 unoptimized
                             />
                         ) : (
-                            <>{brideName} & {groomName}</>
+                            <>{brideName} и {groomName}</>
                         )}
                     </Link>
                 </div>

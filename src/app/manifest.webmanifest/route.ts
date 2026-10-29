@@ -26,9 +26,9 @@ export async function GET(request: NextRequest) {
     const config = getSiteConfig();
     const isAdmin = request.nextUrl.searchParams.get('app') === 'admin';
 
-    // Both names or neither — "Our & Wedding" is worse than a generic title.
+    // Use the couple's names only when both are configured.
     const couple = config.brideName && config.groomName
-        ? `${config.brideName} & ${config.groomName}`
+        ? `${config.brideName} и ${config.groomName}`
         : null;
 
     const themeColor = config.accentColor || '#D4AF37';

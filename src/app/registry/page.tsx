@@ -259,7 +259,7 @@ export default function RegistryPage() {
                 {/* Header */}
                 <div className="text-center mb-10">
                     <p className="text-accent uppercase tracking-widest text-sm font-medium mb-3">
-                        {data.brideName} & {data.groomName}
+                        {data.brideName} и {data.groomName}
                     </p>
                     <h1 className="text-4xl font-serif text-gray-900 tracking-tight sm:text-5xl mb-4">
                         {fund.title || 'Подарки'}

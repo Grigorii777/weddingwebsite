@@ -45,7 +45,7 @@ export function hasNotificationEmail(): boolean {
 export function getCoupleName(): string {
     const config = getSiteConfig();
     return config.brideName && config.groomName
-        ? `${config.brideName} & ${config.groomName}`
+        ? `${config.brideName} и ${config.groomName}`
         : 'Молодожёны';
 }
 

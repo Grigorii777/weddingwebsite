@@ -85,7 +85,7 @@ export async function GET() {
 
         const config = getSiteConfig();
         const header = {
-            title: [config.brideName, config.groomName].filter(Boolean).join(' & ') || 'План рассадки',
+            title: [config.brideName, config.groomName].filter(Boolean).join(' и ') || 'План рассадки',
             date: config.weddingDate || null,
             venue: config.weddingVenue || config.weddingLocation || null,
         };
